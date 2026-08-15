@@ -1,0 +1,17 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { observability } from './services/observability';
+
+// Inicializar camada de telemetria unificada (Sentry, OTel, Datadog, NewRelic)
+observability.init();
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>,
+);

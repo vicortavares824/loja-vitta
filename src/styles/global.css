@@ -1,0 +1,156 @@
+/* ==========================================================================
+   GLOBAL DESIGN SYSTEM & THEME CUSTOM PROPERTIES
+   Vitta Basics - Minimalist High Contrast Black & White
+   ========================================================================== */
+
+:root {
+  /* Fontes Globais */
+  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Paleta Monocromática P&B */
+  --color-bg-dark: #000000;
+  --color-bg-surface: #0a0a0c;
+  --color-bg-card: #121216;
+  --color-bg-darker: #050507;
+  
+  /* Cores de Destaque P&B */
+  --color-accent-white: #ffffff;
+  --color-accent-light: #f4f4f5;
+  --color-accent-gray: #e4e4e7;
+
+  /* Vidro & Superfícies */
+  --glass-bg: rgba(18, 18, 22, 0.75);
+  --glass-card: rgba(22, 22, 28, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-light: rgba(255, 255, 255, 0.25);
+
+  /* Texto - Alto Contraste e Claridade */
+  --text-main: #ffffff;
+  --text-muted: #e4e4e7;
+  --text-subtle: #a1a1aa;
+
+  /* Arredondamento */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+
+  /* Transição & Sombras */
+  --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-luxury: 0 20px 40px -15px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 255, 255, 0.04);
+  --shadow-card-float: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+@layer base {
+  /* Reset básico e tipografia global */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-bg-dark);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.75;
+    letter-spacing: 0.03em;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+    line-height: 1.25;
+  }
+}
+
+/* Utilitários Typography */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.store-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Utilitários de Superfície e Painéis */
+.glass-panel {
+  background-color: var(--glass-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-pill {
+  background-color: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+}
+
+.btn-primary:hover {
+  background-color: #e4e4e7;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+/* Scrollbar Customizada */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}

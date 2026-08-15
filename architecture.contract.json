@@ -1,0 +1,50 @@
+{
+  "$schema": "https://arch-contracts.dev/schema.json",
+  "name": "Vitta Basics Architecture Contract",
+  "layers": [
+    {
+      "name": "types",
+      "path": "src/types/**",
+      "allowedDependencies": []
+    },
+    {
+      "name": "services",
+      "path": "src/services/**",
+      "allowedDependencies": ["types"]
+    },
+    {
+      "name": "context",
+      "path": "src/context/**",
+      "allowedDependencies": ["types", "services"]
+    },
+    {
+      "name": "ui",
+      "path": "src/components/ui/**",
+      "allowedDependencies": []
+    },
+    {
+      "name": "components",
+      "path": "src/components/**",
+      "allowedDependencies": ["types", "services", "context", "ui"]
+    },
+    {
+      "name": "pages",
+      "path": "src/components/pages/**",
+      "allowedDependencies": ["types", "services", "context", "ui", "components"]
+    },
+    {
+      "name": "admin",
+      "path": "src/components/admin/**",
+      "allowedDependencies": ["types", "services", "context", "ui"]
+    },
+    {
+      "name": "app",
+      "path": "src/App.tsx",
+      "allowedDependencies": ["types", "services", "context", "ui", "components", "pages", "admin"]
+    }
+  ],
+  "rules": {
+    "noCircularDependencies": true,
+    "strictLayerHierarchy": true
+  }
+}

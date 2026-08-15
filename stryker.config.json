@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "This config was generated for Vitta Basics test suite",
+  "testRunner": "vitest",
+  "mutate": [
+    "src/services/tomatoApi.ts",
+    "src/context/CartContext.tsx"
+  ],
+  "reporters": ["progress", "clear-text", "html"],
+  "coverageAnalysis": "perTest",
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 50
+  }
+}
