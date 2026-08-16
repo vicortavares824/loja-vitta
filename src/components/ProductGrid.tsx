@@ -51,13 +51,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-[0.25em] mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Coleção Essencial</span>
+            <p>O básico que combina com você.</p>
           </div>
           <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-white uppercase tracking-tight">
-            Vitta Collection
+            Vitta Basics
           </h2>
           <p className="text-gray-300 text-sm mt-3 font-normal max-w-xl mx-auto leading-relaxed">
-            Peças desenvolvidas com tecidos premium, caimento impecável e acabamento minucioso para o guarda-roupa contemporâneo.
+           Peças essenciais, versáteis e feitas para acompanhar todos os seus dias.
           </p>
         </div>
 

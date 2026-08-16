@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Search, Globe, Menu, X, Server, Layers, Package, Home } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Globe, Menu, X, Server, Layers, Package, Home, User, LogOut } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import type { Currency } from '../types/ecommerce';
 import { Magnet } from './react-bits/Magnet';
 import { STORE_CONFIG } from '../config/storeConfig';
@@ -12,6 +13,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate }) => {
   const { itemsCount, wishlist, currency, setCurrency, setIsCartOpen } = useCart();
+  const { isAuthenticated, user, isAdmin, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -166,6 +168,48 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
               </button>
             </Magnet>
 
+            {/* Login / User area */}
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-xs font-semibold text-gray-300 tracking-wide max-w-[100px] truncate">
+                  {user.name.split(' ')[0]}
+                </span>
+                {isAdmin && (
+                  <Magnet strength={10}>
+                    <button
+                      onClick={() => handleNavClick('admin')}
+                      className="hidden sm:flex w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white items-center justify-center transition-all border border-white/10"
+                      aria-label="Painel Admin"
+                      title="Painel Admin"
+                    >
+                      <Server className="w-4 h-4" />
+                    </button>
+                  </Magnet>
+                )}
+                <Magnet strength={10}>
+                  <button
+                    onClick={() => { logout(); handleNavClick('home'); }}
+                    className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all border border-white/10"
+                    aria-label="Sair"
+                    title="Sair"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </Magnet>
+              </div>
+            ) : (
+              <Magnet strength={10}>
+                <button
+                  onClick={() => handleNavClick('login-client')}
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider py-2 px-4 rounded-full border border-white/15 transition-all"
+                  aria-label="Entrar"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Entrar</span>
+                </button>
+              </Magnet>
+            )}
+
             {/* Mobile Menu Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -224,15 +268,37 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
                 <span>Busca Avançada</span>
               </button>
 
-              <button
-                onClick={() => handleNavClick('admin')}
-                className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                  currentTab === 'admin' ? 'bg-white text-black' : 'text-white bg-white/15'
-                }`}
-              >
-                <Server className="w-5 h-5" />
-                <span>Painel Tomato Admin</span>
-              </button>
+              {isAuthenticated && !isAdmin && (
+                <button
+                  onClick={() => { logout(); handleNavClick('home'); }}
+                  className="flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all text-gray-300 bg-white/5"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Sair ({user?.name.split(' ')[0]})</span>
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => handleNavClick('admin')}
+                  className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
+                    currentTab === 'admin' ? 'bg-white text-black' : 'text-white bg-white/15'
+                  }`}
+                >
+                  <Server className="w-5 h-5" />
+                  <span>Painel Admin</span>
+                </button>
+              )}
+              {!isAuthenticated && (
+                <button
+                  onClick={() => handleNavClick('login-client')}
+                  className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
+                    currentTab === 'login-client' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
+                  }`}
+                >
+                  <User className="w-5 h-5" />
+                  <span>Entrar</span>
+                </button>
+              )}
             </div>
           </div>
 

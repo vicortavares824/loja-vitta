@@ -27,7 +27,7 @@ export const STORE_CONFIG: StoreConfig = {
   shortName: 'VB',
   subtitle: 'Minimalist Luxury Fashion',
   tagline: 'ESSENTIALS FOR EVERYDAY',
-  description: 'Premium basic wear for the modern individual. A black and white aesthetic.',
+  description: 'Vitta Basics é uma marca de moda minimalista e essencial, oferecendo peças atemporais e de alta qualidade para o dia a dia. Com integração à TomatoPHP REST API e animações WebGL, proporcionamos uma experiência de compra moderna e envolvente.',
   heroBadge: 'New Collection 2026',
   heroTitle: 'SIMPLICITY IS THE ULTIMATE SOPHISTICATION.',
   currencyDefault: 'BRL',

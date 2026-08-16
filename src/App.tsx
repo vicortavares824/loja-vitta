@@ -13,6 +13,11 @@ import { ProductsPage } from './components/pages/ProductsPage';
 import { CategoriesPage } from './components/pages/CategoriesPage';
 import { SearchPage } from './components/pages/SearchPage';
 import { TomatoAdminPanel } from './components/admin/TomatoAdminPanel';
+import { ClientLoginPage } from './components/pages/ClientLoginPage';
+import { AdminLoginPage } from './components/pages/AdminLoginPage';
+import { ClientSignUpPage } from './components/pages/ClientSignUpPage';
+import { AdminSignUpPage } from './components/pages/AdminSignUpPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // React Bits Animations
 import MagicRings from './components/reactbits/MagicRings';
@@ -48,13 +53,41 @@ const ToastContainer = () => {
 };
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<'home' | 'products' | 'categories' | 'search' | 'admin'>('home');
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const { isAuthenticated, isAdmin } = useAuth();
+  
+  // Allow direct URL access
+  const getInitialTab = () => {
+    const path = window.location.pathname;
+    if (path === '/admin' || path === '/login-admin') return 'admin';
+    if (path === '/signup-admin') return 'signup-admin';
+    if (path === '/login' || path === '/login-client') return 'login-client';
+    if (path === '/signup' || path === '/signup-client') return 'signup-client';
+    if (path === '/products') return 'products';
+    if (path === '/categories') return 'categories';
+    if (path === '/search') return 'search';
+    return 'home';
+  };
+
+  const [currentTab, setCurrentTab] = useState<'home' | 'products' | 'categories' | 'search' | 'admin' | 'login-client' | 'login-admin' | 'signup-client' | 'signup-admin'>(getInitialTab);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Configuração global para fundo escuro
   useEffect(() => {
     document.body.style.backgroundColor = '#000000';
     document.body.style.color = '#ffffff';
+    
+    // Handle browser back/forward buttons
+    const handlePopState = () => setCurrentTab(getInitialTab());
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const handleNavigate = (tab: string, categorySlug?: string) => {
@@ -62,6 +95,16 @@ export default function App() {
       setSelectedCategory(categorySlug);
     }
     setCurrentTab(tab as any);
+    
+    // Update URL to match current tab
+    let path = '/';
+    if (tab === 'admin' || tab === 'login-admin') path = '/admin';
+    else if (tab === 'signup-admin') path = '/signup-admin';
+    else if (tab === 'login-client') path = '/login';
+    else if (tab === 'signup-client') path = '/signup';
+    else if (tab !== 'home') path = `/${tab}`;
+    
+    window.history.pushState({}, '', path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -110,7 +153,7 @@ export default function App() {
                 </h2>
 
                 <p className="text-gray-400 text-xs sm:text-sm max-w-md mx-auto font-light tracking-widest uppercase pt-2">
-                  Simplicity is the ultimate sophistication
+                  Simplicidade e minimalismo em cada peça, com qualidade e conforto incomparáveis. Descubra a essência da moda básica com Vitta Basics.
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
@@ -135,7 +178,7 @@ export default function App() {
             {/* MARQUEE TEXT */}
             <section className="py-20 bg-black border-y border-white/10">
               <ScrollVelocity
-                texts={['ESSENTIALS FOR EVERYDAY', 'SIMPLICITY IS THE ULTIMATE SOPHISTICATION', 'MINIMALIST FASHION']}
+                texts={['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION']}
                 className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white"
                 velocity={45}
               />
@@ -145,10 +188,10 @@ export default function App() {
             <section className="py-28 bg-[#050507] relative flex flex-col items-center border-b border-white/10">
               <div className="container mx-auto px-4 mb-16 text-center">
                 <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight text-white mx-auto">
-                  <WarpText text="THE NEW COLLECTION" />
+                  <WarpText text="DESCUBRA SEU ESTILO" />
                 </h2>
                 <p className="text-gray-400 text-sm mt-3 font-normal max-w-md mx-auto">
-                  Silhuetas minimalistas com corte sob medida e precisão artesanal.
+                 Vista menos tendências. Vista mais você.
                 </p>
               </div>
               
@@ -156,7 +199,7 @@ export default function App() {
                 <ScrollExpand scaleFrom={0.75} scaleTo={1} borderRadius="28px">
                   <div className="relative w-full h-[65vh] group overflow-hidden border border-white/20 rounded-[28px] shadow-2xl">
                     <img 
-                      src="https://images.unsplash.com/photo-1550614000-4b95d415d140?auto=format&fit=crop&q=80&w=2000" 
+                      src="https://imgs.search.brave.com/Bu0-d1osQDJB132vDOrFLtG7qXmTloZ2cRMrae7Stpg/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdDIu/ZGVwb3NpdHBob3Rv/cy5jb20vMTc2NjE4/Ni82OTExL2kvNDUw/L2RlcG9zaXRwaG90/b3NfNjkxMTExOTEt/c3RvY2stcGhvdG8t/ZmFzaGlvbi1zaG93/LmpwZw" 
                       alt="New Collection Showcase" 
                       className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-1000"
                     />
@@ -190,26 +233,18 @@ export default function App() {
 
             {/* LASER FLOW SECTION */}
             <section className="relative h-[75vh] flex items-center justify-center overflow-hidden bg-black border-y border-white/10">
-              <div className="absolute inset-0 z-0 opacity-30">
-                <LaserFlow 
-                  color="#ffffff" 
-                  flowSpeed={1.4}
-                />
-              </div>
+
               <div className="relative z-10 max-w-3xl mx-auto px-6 text-center mix-blend-difference pointer-events-none space-y-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-gray-400 font-extrabold block">
-                  Manifesto Vitta
-                </p>
-                <h3 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight leading-tight text-white">
-                  Redefining the standard of basic wear through uncompromised quality.
+                <h3 className="text-3xl md:text-2xl font-extrabold uppercase tracking-tight leading-tight text-white">
+  VITTA acredita que o básico também pode ser extraordinário. Peças essenciais que unem conforto, qualidade e estilo atemporal
                 </h3>
               </div>
             </section>
 
             {/* CUBES FEATURE GRID */}
             <section className="py-28 bg-[#0a0a0c] relative overflow-hidden">
-              <div className="absolute inset-0 opacity-15 pointer-events-none">
-                <Cubes faceColor="#ffffff" autoAnimate={true} />
+              <div className="absolute inset-0 opacity-40 pointer-events-auto flex items-center justify-center">
+                <Cubes faceColor="#555555" rippleColor="#ffffff" autoAnimate={true} />
               </div>
               <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 <h2 className="text-3xl font-extrabold uppercase tracking-[0.2em] mb-16 text-white text-center">
@@ -256,7 +291,51 @@ export default function App() {
         {/* VIEW 5: TOMATO ADMIN PANEL */}
         {currentTab === 'admin' && (
           <div className="animate-fadeIn">
-            <TomatoAdminPanel />
+            {isAuthenticated && isAdmin ? (
+              <TomatoAdminPanel />
+            ) : (
+              <AdminLoginPage onLoginSuccess={() => handleNavigate('admin')} />
+            )}
+          </div>
+        )}
+
+        {/* VIEW 6: CLIENT LOGIN */}
+        {currentTab === 'login-client' && (
+          <div className="animate-fadeIn">
+            <ClientLoginPage 
+              onLoginSuccess={() => handleNavigate('home')}
+              onNavigateToSignUp={() => handleNavigate('signup-client')}
+            />
+          </div>
+        )}
+
+        {/* VIEW 7: ADMIN LOGIN */}
+        {currentTab === 'login-admin' && (
+          <div className="animate-fadeIn">
+            <AdminLoginPage 
+              onLoginSuccess={() => handleNavigate('admin')} 
+              onNavigateToSignUp={() => handleNavigate('signup-admin')}
+            />
+          </div>
+        )}
+
+        {/* VIEW 8: CLIENT SIGNUP */}
+        {currentTab === 'signup-client' && (
+          <div className="animate-fadeIn">
+            <ClientSignUpPage 
+              onSignUpSuccess={() => handleNavigate('home')} 
+              onNavigateToLogin={() => handleNavigate('login-client')} 
+            />
+          </div>
+        )}
+
+        {/* VIEW 9: ADMIN SIGNUP */}
+        {currentTab === 'signup-admin' && (
+          <div className="animate-fadeIn">
+            <AdminSignUpPage 
+              onSignUpSuccess={() => handleNavigate('admin')} 
+              onNavigateToLogin={() => handleNavigate('login-admin')} 
+            />
           </div>
         )}
 

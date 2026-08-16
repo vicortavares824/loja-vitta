@@ -40,7 +40,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </span>
             </div>
             <p className="text-gray-300 text-xs leading-relaxed max-w-sm">
-              {STORE_CONFIG.description} Moda contemporânea e essencial com integração TomatoPHP REST API e animações WebGL.
+              {STORE_CONFIG.description}
             </p>
             <div className="flex items-center gap-3 text-xs text-white font-medium pt-2">
               <Sparkles className="w-4 h-4 text-white" />
@@ -87,15 +87,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     Buscar Peças
                   </button>
                 </li>
-                <li>
-                  <button 
-                    onClick={() => onNavigate?.('admin')} 
-                    className="text-white font-semibold hover:underline transition-all flex items-center gap-1.5 pt-1"
-                  >
-                    <Server className="w-3.5 h-3.5" />
-                    Painel Tomato Admin
-                  </button>
-                </li>
               </ul>
             </div>
             <div>
@@ -103,7 +94,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 Atendimento
               </h4>
               <ul className="space-y-3">
-                <li><span className="hover:text-white transition-colors cursor-pointer">Atelier Privado</span></li>
                 <li><span className="hover:text-white transition-colors cursor-pointer">Guia de Medidas</span></li>
                 <li><span className="hover:text-white transition-colors cursor-pointer">Política de Devolução</span></li>
                 <li><span className="hover:text-white transition-colors cursor-pointer">Termos & Privacidade</span></li>
@@ -135,13 +125,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-          <p>© 2026 {STORE_CONFIG.name}. Todos os direitos reservados. Integrado com TomatoPHP REST API.</p>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-gray-300">
-              <ShieldCheck className="w-4 h-4 text-white" /> Checkout Criptografado & Seguro
-            </span>
-          </div>
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between border-t border-white/10 text-[10px] text-gray-500 tracking-wider">
+          <p>
+            &copy; {new Date().getFullYear()} {STORE_CONFIG.name}. Todos os direitos reservados.
+          </p>
+          <button 
+            onClick={() => onNavigate?.('admin')} 
+            className="mt-4 sm:mt-0 hover:text-white transition-colors uppercase tracking-[0.2em]"
+          >
+            Acesso Restrito (Admin)
+          </button>
         </div>
       </div>
     </footer>

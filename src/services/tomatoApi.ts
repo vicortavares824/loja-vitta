@@ -1,6 +1,5 @@
-import type { Product, Category, Coupon, Order, TomatoApiResponse } from '../types/ecommerce';
-
-const API_BASE_URL = import.meta.env.VITE_TOMATO_API_URL || '/api';
+import type { Product, Category, Coupon, Order, TomatoApiResponse, OrderItem } from '../types/ecommerce';
+import { supabase } from '../config/supabase';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -361,15 +360,29 @@ export const tomatoApi = {
   // --- PRODUTOS ---
   async getProducts(categorySlug?: string, search?: string, sort?: string): Promise<Product[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/products?category=${categorySlug || ''}&search=${search || ''}`);
-      if (response.ok) {
-        const json: TomatoApiResponse<Product[]> = await response.json();
-        return json.data;
+      let query = supabase.from('products').select('*');
+      
+      if (categorySlug && categorySlug !== 'all') {
+        query = query.eq('categorySlug', categorySlug);
       }
-    } catch {
-      // fallback local
+      
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      }
+      
+      if (sort === 'price-asc') query = query.order('price', { ascending: true });
+      else if (sort === 'price-desc') query = query.order('price', { ascending: false });
+      else if (sort === 'rating') query = query.order('rating', { ascending: false });
+      
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        return data as Product[];
+      }
+    } catch (e) {
+      console.warn('Supabase getProducts error, falling back to local storage', e);
     }
 
+    // Fallback local
     let products = getStored<Product[]>('tomato_products', INITIAL_PRODUCTS);
 
     if (categorySlug && categorySlug !== 'all') {
@@ -377,11 +390,11 @@ export const tomatoApi = {
     }
 
     if (search) {
-      const query = search.toLowerCase();
+      const q = search.toLowerCase();
       products = products.filter(
-        p => p.name.toLowerCase().includes(query) ||
-             p.description.toLowerCase().includes(query) ||
-             p.category.toLowerCase().includes(query)
+        p => p.name.toLowerCase().includes(q) ||
+             p.description.toLowerCase().includes(q) ||
+             p.category.toLowerCase().includes(q)
       );
     }
 
@@ -397,11 +410,40 @@ export const tomatoApi = {
   },
 
   async getProductById(id: string | number): Promise<Product | null> {
+    try {
+      const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+      if (!error && data) return data as Product;
+    } catch (e) {
+      // Fallback
+    }
     const products = getStored<Product[]>('tomato_products', INITIAL_PRODUCTS);
     return products.find(p => String(p.id) === String(id)) || null;
   },
 
   async saveProduct(product: Partial<Product>): Promise<Product> {
+    try {
+      let result;
+      if (product.id && !String(product.id).startsWith('prod-')) {
+        // Atualizar produto existente no supabase
+        const { data, error } = await supabase.from('products').update(product).eq('id', product.id).select().single();
+        if (!error && data) result = data;
+      } else {
+        // Criar novo produto no supabase
+        const { id, ...newProductData } = product as any;
+        const insertData = {
+          ...newProductData,
+          slug: product.name ? product.name.toLowerCase().replace(/\s+/g, '-') : `prod-${Date.now()}`
+        };
+        const { data, error } = await supabase.from('products').insert([insertData]).select().single();
+        if (!error && data) result = data;
+      }
+      
+      if (result) return result as Product;
+    } catch (e) {
+      console.warn('Supabase saveProduct error, falling back to local storage', e);
+    }
+
+    // Fallback local
     const products = getStored<Product[]>('tomato_products', INITIAL_PRODUCTS);
     let saved: Product;
 
@@ -440,6 +482,15 @@ export const tomatoApi = {
   },
 
   async deleteProduct(id: string | number): Promise<boolean> {
+    try {
+      if (!String(id).startsWith('prod-')) {
+        const { error } = await supabase.from('products').delete().eq('id', id);
+        if (!error) return true;
+      }
+    } catch (e) {
+      // fallback
+    }
+    
     let products = getStored<Product[]>('tomato_products', INITIAL_PRODUCTS);
     products = products.filter(p => String(p.id) !== String(id));
     setStored('tomato_products', products);
@@ -449,18 +500,34 @@ export const tomatoApi = {
   // --- CATEGORIAS ---
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`);
-      if (response.ok) {
-        const json: TomatoApiResponse<Category[]> = await response.json();
-        return json.data;
-      }
-    } catch {
-      // fallback local
+      const { data, error } = await supabase.from('categories').select('*');
+      if (!error && data && data.length > 0) return data as Category[];
+    } catch (e) {
+      // fallback
     }
     return getStored<Category[]>('tomato_categories', INITIAL_CATEGORIES);
   },
 
   async saveCategory(cat: Partial<Category>): Promise<Category> {
+    try {
+      let result;
+      if (cat.id && !String(cat.id).startsWith('cat-')) {
+        const { data, error } = await supabase.from('categories').update(cat).eq('id', cat.id).select().single();
+        if (!error && data) result = data;
+      } else {
+        const { id, ...newCatData } = cat as any;
+        const insertData = {
+          ...newCatData,
+          slug: cat.name ? cat.name.toLowerCase().replace(/\s+/g, '-') : `cat-${Date.now()}`
+        };
+        const { data, error } = await supabase.from('categories').insert([insertData]).select().single();
+        if (!error && data) result = data;
+      }
+      if (result) return result as Category;
+    } catch (e) {
+      // fallback
+    }
+
     const cats = getStored<Category[]>('tomato_categories', INITIAL_CATEGORIES);
     let saved: Category;
     if (cat.id) {
@@ -487,10 +554,43 @@ export const tomatoApi = {
 
   // --- PEDIDOS (ORDERS) ---
   async getOrders(): Promise<Order[]> {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session) {
+        // Fetch from supabase. Because RLS is active, it only returns orders the user is allowed to see.
+        const { data, error } = await supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
+        if (!error && data) {
+          return data.map((o: any) => ({
+            id: o.id,
+            customerName: o.customerName,
+            customerEmail: o.customerEmail,
+            items: o.order_items || [],
+            totalAmount: o.totalAmount,
+            status: o.status,
+            createdAt: o.created_at,
+            paymentMethod: o.paymentMethod,
+            shippingAddress: o.shippingAddress,
+            couponUsed: o.couponUsed
+          })) as Order[];
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase getOrders error', e);
+    }
+    
     return getStored<Order[]>('tomato_orders', INITIAL_ORDERS);
   },
 
   async updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {
+    try {
+      if (!orderId.startsWith('VB-')) {
+        const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
+        if (!error) return true;
+      }
+    } catch (e) {
+      // fallback
+    }
+
     const orders = getStored<Order[]>('tomato_orders', INITIAL_ORDERS);
     const index = orders.findIndex(o => o.id === orderId);
     if (index >= 0) {
@@ -503,17 +603,43 @@ export const tomatoApi = {
 
   async createOrder(orderPayload: Partial<Order>): Promise<{ success: boolean; orderId: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
-      });
-      if (response.ok) {
-        const json = await response.json();
-        return { success: true, orderId: json.orderId || `VB-${Math.floor(100000 + Math.random() * 900000)}` };
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session) {
+        const orderId = `VB-${Math.floor(100000 + Math.random() * 900000)}`; // Fallback ID pattern, but Supabase uses UUID
+        
+        // Insert Order
+        const { data: newOrder, error: orderError } = await supabase.from('orders').insert([{
+          user_id: sessionData.session.user.id,
+          customerName: orderPayload.customerName || 'Cliente Vitta',
+          customerEmail: orderPayload.customerEmail || 'cliente@vittabasics.com',
+          totalAmount: orderPayload.totalAmount || 0,
+          status: 'processing',
+          paymentMethod: orderPayload.paymentMethod || 'Cartão de Crédito',
+          shippingAddress: orderPayload.shippingAddress || 'Endereço Principal',
+          couponUsed: orderPayload.couponUsed
+        }]).select().single();
+
+        if (!orderError && newOrder) {
+          // Insert Items
+          if (orderPayload.items && orderPayload.items.length > 0) {
+            const itemsToInsert = orderPayload.items.map(item => ({
+              order_id: newOrder.id,
+              product_id: item.productId,
+              productName: item.productName,
+              price: item.price,
+              quantity: item.quantity,
+              selectedColor: item.selectedColor,
+              selectedSize: item.selectedSize,
+              image: item.image
+            }));
+            await supabase.from('order_items').insert(itemsToInsert);
+          }
+          
+          return { success: true, orderId: newOrder.id };
+        }
       }
-    } catch {
-      // fallback
+    } catch (e) {
+      console.warn('Supabase createOrder error, falling back', e);
     }
 
     const orderId = `VB-${Math.floor(100000 + Math.random() * 900000)}`;
