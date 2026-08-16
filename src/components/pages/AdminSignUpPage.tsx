@@ -3,6 +3,7 @@ import { ShieldAlert, ArrowRight, ArrowLeft } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { EmailConfirmationView } from '../auth/EmailConfirmationView';
 
 interface AdminSignUpPageProps {
   onSignUpSuccess: () => void;
@@ -16,9 +17,10 @@ export const AdminSignUpPage: React.FC<AdminSignUpPageProps> = ({ onSignUpSucces
   const [secretKey, setSecretKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   const { login } = useAuth();
-  const { addToast } = useCart();
+  const { showToast } = useCart();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +31,10 @@ export const AdminSignUpPage: React.FC<AdminSignUpPageProps> = ({ onSignUpSucces
       await authService.signUp({ name, email, password }, secretKey);
       const success = await login({ email, password });
       if (success) {
-        addToast('Conta Admin criada com sucesso!', 'success');
+        showToast('Conta Admin criada com sucesso!', 'success');
         onSignUpSuccess();
       } else {
-        setError('Conta Admin criada, mas falha ao fazer login automático.');
+        setShowConfirmation(true);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta Admin');
@@ -40,6 +42,16 @@ export const AdminSignUpPage: React.FC<AdminSignUpPageProps> = ({ onSignUpSucces
       setLoading(false);
     }
   };
+
+  if (showConfirmation) {
+    return (
+      <EmailConfirmationView
+        email={email}
+        isAdmin={true}
+        onNavigateToLogin={onNavigateToLogin}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">

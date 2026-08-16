@@ -25,7 +25,6 @@ import WarpText from './components/reactbits/WarpText';
 import ScrollVelocity from './components/reactbits/ScrollVelocity';
 import ScrollExpand from './components/reactbits/ScrollExpand';
 
-import LaserFlow from './components/reactbits/LaserFlow';
 import Cubes from './components/reactbits/Cubes';
 
 const ToastContainer = () => {
@@ -294,7 +293,10 @@ function AppContent() {
             {isAuthenticated && isAdmin ? (
               <TomatoAdminPanel />
             ) : (
-              <AdminLoginPage onLoginSuccess={() => handleNavigate('admin')} />
+              <AdminLoginPage 
+                onLoginSuccess={() => handleNavigate('admin')} 
+                onNavigateToSignUp={() => handleNavigate('signup-admin')}
+              />
             )}
           </div>
         )}

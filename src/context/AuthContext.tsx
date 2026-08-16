@@ -1,5 +1,6 @@
 // src/context/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { User, AuthState, LoginCredentials } from '../types/ecommerce';
 import { authService } from '../services/authService';
 import { observability } from '../services/observability';

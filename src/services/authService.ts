@@ -81,6 +81,20 @@ export const authService = {
   },
 
   /** 
+   * Resend signup confirmation email.
+   */
+  async resendConfirmation(email: string): Promise<void> {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (error) {
+      observability.captureException(error);
+      throw new Error(error.message || 'Erro ao reenviar e-mail de confirmação.');
+    }
+  },
+
+  /** 
    * Get the current authenticated user session (if any).
    * Usually called during initial load to restore session.
    */

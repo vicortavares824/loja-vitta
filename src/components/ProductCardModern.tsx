@@ -11,8 +11,10 @@ interface ProductCardModernProps {
 
 export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, className = '' }) => {
   const { addToCart, toggleWishlist, isInWishlist, formatPrice, setQuickViewProduct } = useCart();
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(product.colors[0] || { name: 'Padrão', hex: '#ffffff' });
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
+  const [selectedColor, setSelectedColor] = useState<ProductColor>(
+    product.colors?.[0] || { name: 'Padrão', hex: '#ffffff' }
+  );
+  const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || 'M');
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const inWishlist = isInWishlist(product.id);
@@ -45,7 +47,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
         className="relative w-full h-64 sm:h-72 rounded-[22px] overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer"
       >
         <LazyImage
-          src={product.images[activeImageIndex] || product.images[0]}
+          src={product.images?.[activeImageIndex] || product.images?.[0] || ''}
           alt={product.name}
           className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
           containerClassName="w-full h-full"
@@ -88,7 +90,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
         </div>
 
         {/* Image Pagination Dots (if multiple images) */}
-        {product.images.length > 1 && (
+        {product.images && product.images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full">
             {product.images.map((_, idx) => (
               <button

@@ -365,7 +365,7 @@ export const TomatoAdminPanel: React.FC = () => {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
                             <img
-                              src={prod.images[0]}
+                              src={prod.images?.[0] || ''}
                               alt={prod.name}
                               className="w-12 h-14 object-cover rounded-xl bg-black border border-white/10"
                             />

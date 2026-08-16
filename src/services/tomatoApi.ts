@@ -1,4 +1,4 @@
-import type { Product, Category, Coupon, Order, TomatoApiResponse, OrderItem } from '../types/ecommerce';
+import type { Product, Category, Coupon, Order } from '../types/ecommerce';
 import { supabase } from '../config/supabase';
 
 export const INITIAL_PRODUCTS: Product[] = [
@@ -376,7 +376,13 @@ export const tomatoApi = {
       
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
-        return data as Product[];
+        return data.map((row: any) => ({
+          ...row,
+          images: Array.isArray(row.images) ? row.images : [],
+          colors: Array.isArray(row.colors) ? row.colors : [],
+          sizes: Array.isArray(row.sizes) ? row.sizes : [],
+          details: Array.isArray(row.details) ? row.details : [],
+        })) as Product[];
       }
     } catch (e) {
       console.warn('Supabase getProducts error, falling back to local storage', e);
@@ -605,8 +611,6 @@ export const tomatoApi = {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData?.session) {
-        const orderId = `VB-${Math.floor(100000 + Math.random() * 900000)}`; // Fallback ID pattern, but Supabase uses UUID
-        
         // Insert Order
         const { data: newOrder, error: orderError } = await supabase.from('orders').insert([{
           user_id: sessionData.session.user.id,

@@ -3,6 +3,7 @@ import { ArrowRight, UserPlus, ArrowLeft } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { EmailConfirmationView } from '../auth/EmailConfirmationView';
 
 interface ClientSignUpPageProps {
   onSignUpSuccess: () => void;
@@ -15,9 +16,10 @@ export const ClientSignUpPage: React.FC<ClientSignUpPageProps> = ({ onSignUpSucc
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   const { login } = useAuth();
-  const { addToast } = useCart();
+  const { showToast } = useCart();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,10 +30,10 @@ export const ClientSignUpPage: React.FC<ClientSignUpPageProps> = ({ onSignUpSucc
       await authService.signUp({ name, email, password });
       const success = await login({ email, password });
       if (success) {
-        addToast('Conta criada com sucesso!', 'success');
+        showToast('Conta criada com sucesso!', 'success');
         onSignUpSuccess();
       } else {
-        setError('Conta criada, mas falha ao fazer login automático.');
+        setShowConfirmation(true);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta');
@@ -39,6 +41,16 @@ export const ClientSignUpPage: React.FC<ClientSignUpPageProps> = ({ onSignUpSucc
       setLoading(false);
     }
   };
+
+  if (showConfirmation) {
+    return (
+      <EmailConfirmationView
+        email={email}
+        isAdmin={false}
+        onNavigateToLogin={onNavigateToLogin}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050507] flex items-center justify-center p-4 relative overflow-hidden">

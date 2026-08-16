@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import { X, Star, ShoppingBag, Heart, ShieldCheck, Truck, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import type { ProductColor } from '../types/ecommerce';
+import type { Product, ProductColor } from '../types/ecommerce';
 import { Magnet } from './react-bits/Magnet';
 
-export const ProductQuickViewModal: React.FC = () => {
-  const { quickViewProduct, setQuickViewProduct, addToCart, toggleWishlist, isInWishlist, formatPrice } = useCart();
-  
-  if (!quickViewProduct) return null;
+interface ProductQuickViewModalContentProps {
+  product: Product;
+}
+
+const ProductQuickViewModalContent: React.FC<ProductQuickViewModalContentProps> = ({ product }) => {
+  const { setQuickViewProduct, addToCart, toggleWishlist, isInWishlist, formatPrice } = useCart();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(quickViewProduct.colors[0] || { name: 'Padrão', hex: '#ffffff' });
-  const [selectedSize, setSelectedSize] = useState<string>(quickViewProduct.sizes[0] || 'M');
+  const [selectedColor, setSelectedColor] = useState<ProductColor>(
+    product.colors?.[0] || { name: 'Padrão', hex: '#ffffff' }
+  );
+  const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || 'M');
   const [quantity, setQuantity] = useState<number>(1);
 
-  const inWish = isInWishlist(quickViewProduct.id);
+  const inWish = isInWishlist(product.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
@@ -33,21 +37,21 @@ export const ProductQuickViewModal: React.FC = () => {
           <div className="md:col-span-6 space-y-4">
             <div className="relative h-80 sm:h-96 rounded-2xl overflow-hidden bg-black border border-white/10">
               <img
-                src={quickViewProduct.images[activeImageIndex] || quickViewProduct.images[0]}
-                alt={quickViewProduct.name}
+                src={product.images?.[activeImageIndex] || product.images?.[0] || ''}
+                alt={product.name}
                 className="w-full h-full object-cover object-center"
               />
-              {quickViewProduct.tag && (
+              {product.tag && (
                 <span className="absolute top-4 left-4 bg-white text-black font-extrabold text-[10px] tracking-widest uppercase px-3 py-1 rounded-full shadow">
-                  {quickViewProduct.tag}
+                  {product.tag}
                 </span>
               )}
             </div>
 
             {/* Thumbnails */}
-            {quickViewProduct.images.length > 1 && (
+            {product.images && product.images.length > 1 && (
               <div className="flex gap-3">
-                {quickViewProduct.images.map((img, idx) => (
+                {product.images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
@@ -68,45 +72,45 @@ export const ProductQuickViewModal: React.FC = () => {
               {/* Category & Rating */}
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span className="uppercase tracking-widest text-white font-bold">
-                  {quickViewProduct.category}
+                  {product.category}
                 </span>
                 <div className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 fill-white text-white" />
-                  <span className="font-bold text-white">{quickViewProduct.rating}</span>
-                  <span className="text-[11px] text-gray-400">({quickViewProduct.reviewsCount})</span>
+                  <span className="font-bold text-white">{product.rating}</span>
+                  <span className="text-[11px] text-gray-400">({product.reviewsCount})</span>
                 </div>
               </div>
 
               {/* Product Name */}
               <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white mt-2">
-                {quickViewProduct.name}
+                {product.name}
               </h2>
 
               {/* Price */}
               <div className="flex items-baseline gap-3 mt-3">
                 <span className="font-display font-extrabold text-2xl sm:text-3xl text-white">
-                  {formatPrice(quickViewProduct.price)}
+                  {formatPrice(product.price)}
                 </span>
-                {quickViewProduct.originalPrice && (
+                {product.originalPrice && (
                   <span className="text-sm text-gray-400 line-through">
-                    {formatPrice(quickViewProduct.originalPrice)}
+                    {formatPrice(product.originalPrice)}
                   </span>
                 )}
               </div>
 
               {/* Description */}
               <p className="text-gray-300 text-xs sm:text-sm mt-4 leading-relaxed font-light">
-                {quickViewProduct.description}
+                {product.description}
               </p>
 
               {/* Color Selector */}
-              {quickViewProduct.colors && quickViewProduct.colors.length > 0 && (
+              {product.colors && product.colors.length > 0 && (
                 <div className="mt-6 space-y-2">
                   <span className="text-xs text-gray-400 font-medium">
                     Cor selecionada: <strong className="text-white">{selectedColor.name}</strong>
                   </span>
                   <div className="flex items-center gap-2">
-                    {quickViewProduct.colors.map(color => (
+                    {product.colors.map(color => (
                       <button
                         key={color.name}
                         onClick={() => setSelectedColor(color)}
@@ -128,11 +132,11 @@ export const ProductQuickViewModal: React.FC = () => {
               )}
 
               {/* Size Selector */}
-              {quickViewProduct.sizes && quickViewProduct.sizes.length > 0 && (
+              {product.sizes && product.sizes.length > 0 && (
                 <div className="mt-6 space-y-2">
                   <span className="text-xs text-gray-400 font-medium">Tamanho:</span>
                   <div className="flex flex-wrap gap-2">
-                    {quickViewProduct.sizes.map(size => (
+                    {product.sizes.map(size => (
                       <button
                         key={size}
                         onClick={() => setSelectedSize(size)}
@@ -176,7 +180,7 @@ export const ProductQuickViewModal: React.FC = () => {
                 <Magnet strength={16} className="flex-1">
                   <button
                     onClick={() => {
-                      addToCart(quickViewProduct, selectedColor, selectedSize, quantity);
+                      addToCart(product, selectedColor, selectedSize, quantity);
                       setQuickViewProduct(null);
                     }}
                     className="w-full flex items-center justify-center gap-2 bg-white text-black font-extrabold text-xs uppercase tracking-widest py-3.5 px-6 rounded-full hover:bg-gray-200 transition-all shadow-xl"
@@ -186,7 +190,7 @@ export const ProductQuickViewModal: React.FC = () => {
                   </button>
                 </Magnet>
                 <button
-                  onClick={() => toggleWishlist(quickViewProduct)}
+                  onClick={() => toggleWishlist(product)}
                   className={`w-12 h-12 rounded-full border border-white/20 flex items-center justify-center transition-all ${
                     inWish ? 'bg-red-500/20 text-red-500 border-red-500/50' : 'text-white hover:bg-white/10'
                   }`}
@@ -213,4 +217,10 @@ export const ProductQuickViewModal: React.FC = () => {
       </div>
     </div>
   );
+};
+
+export const ProductQuickViewModal: React.FC = () => {
+  const { quickViewProduct } = useCart();
+  if (!quickViewProduct) return null;
+  return <ProductQuickViewModalContent product={quickViewProduct} />;
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, ShieldCheck, Sparkles, Server } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { STORE_CONFIG } from '../config/storeConfig';
 
