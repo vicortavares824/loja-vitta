@@ -1,0 +1,29 @@
+name: strix-security-scan
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:Y
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Strix CLI
+        run: pipx install strix-agent
+
+      - name: Run Strix Autonomous Audit
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: strix --non-interactive --scope-mode diff --target ./

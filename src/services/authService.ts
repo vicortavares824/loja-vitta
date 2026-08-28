@@ -63,8 +63,16 @@ export const authService = {
     });
 
     if (error || !authData.user) {
-      observability.captureException(error || new Error('Signup failed'));
-      throw new Error(error?.message || 'Erro ao criar conta');
+      observability.captureException(error || new Error('Signup failed'), { context: 'authService.signUp', email: data.email });
+      // Translate known Supabase email errors to user-friendly Portuguese messages
+      const msg = error?.message || '';
+      if (msg.toLowerCase().includes('sending confirmation email') || msg.toLowerCase().includes('email')) {
+        throw new Error(
+          'Não foi possível enviar o e-mail de confirmação. ' +
+          'Verifique se o endereço está correto ou tente novamente em alguns minutos.'
+        );
+      }
+      throw new Error(msg || 'Erro ao criar conta');
     }
 
     const user = mapSupabaseUser(authData.user);
