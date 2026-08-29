@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart3, Package, ShoppingCart, Tag, Terminal, Plus, Edit2, Trash2, 
-  RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck, Check
+  RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck, Check,
+  Upload, Loader2
 } from 'lucide-react';
 import type { Product, Category, Order, Coupon } from '../../types/ecommerce';
 import { tomatoApi } from '../../services/tomatoApi';
+import { uploadImage } from '../../services/cloudinary';
 import { useCart } from '../../context/CartContext';
 
 export const TomatoAdminPanel: React.FC = () => {
@@ -34,6 +36,12 @@ export const TomatoAdminPanel: React.FC = () => {
   const [apiEndpoint, setApiEndpoint] = useState<string>('GET /api/products');
   const [apiResponse, setApiResponse] = useState<string>('');
   const [apiLoading, setApiLoading] = useState(false);
+
+  // Image Upload State
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -120,6 +128,47 @@ export const TomatoAdminPanel: React.FC = () => {
     await tomatoApi.deleteCoupon(code);
     showToast(`Cupom ${code} removido.`, 'info');
     loadAllData();
+  };
+
+  // Image Upload Handler
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingProduct) return;
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadProgress(0);
+
+    try {
+      const result = await uploadImage(file, (progress) => {
+        setUploadProgress(progress.percentage);
+      });
+
+      // Update the product images with the new Cloudinary URL
+      const currentImages = editingProduct.images || [];
+      setEditingProduct({
+        ...editingProduct,
+        images: [result.url, ...currentImages.filter(img => img !== result.url)],
+      });
+
+      showToast('Imagem enviada com sucesso!', 'success');
+    } catch (err: any) {
+      setUploadError(err.message || 'Erro ao enviar imagem');
+      showToast(err.message || 'Erro ao enviar imagem', 'error');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    if (!editingProduct) return;
+    const newImages = [...(editingProduct.images || [])];
+    newImages.splice(index, 1);
+    setEditingProduct({ ...editingProduct, images: newImages });
   };
 
   // Run API Simulation
@@ -682,14 +731,109 @@ export const TomatoAdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 font-bold mb-1">URL da Imagem Principal</label>
-                  <input
-                    type="url"
-                    required
-                    value={editingProduct.images?.[0] || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, images: [e.target.value] })}
-                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                  />
+                  <label className="block text-gray-300 font-bold mb-2">Imagens do Produto</label>
+                  
+                  {/* Image Upload Area */}
+                  <div className="space-y-4">
+                    {/* Current Images Preview */}
+                    {editingProduct.images && editingProduct.images.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {editingProduct.images.map((img, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={img}
+                              alt={`Imagem ${index + 1}`}
+                              className="w-full h-28 object-cover rounded-xl border border-white/20"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            {index === 0 && (
+                              <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/70 text-white text-[10px] font-bold rounded-full uppercase">
+                                Principal
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Upload Button */}
+                    <div
+                      onClick={() => !uploading && fileInputRef.current?.click()}
+                      className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all ${
+                        uploading
+                          ? 'border-white/10 bg-white/5 cursor-wait'
+                          : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 cursor-pointer'
+                      }`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                      
+                      {uploading ? (
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="w-8 h-8 text-white animate-spin" />
+                          <div className="w-full max-w-xs bg-white/10 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="h-full bg-white transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-400">Enviando... {uploadProgress}%</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="p-3 bg-white/10 rounded-2xl">
+                            <Upload className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-white font-semibold">
+                              Clique para enviar imagem
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              JPEG, PNG, WebP ou GIF (máx. 10MB)
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload Error */}
+                    {uploadError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                        {uploadError}
+                      </div>
+                    )}
+
+                    {/* Manual URL Input (fallback) */}
+                    <div>
+                      <label className="block text-gray-400 text-[11px] font-bold mb-1">
+                        Ou insira uma URL de imagem
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={editingProduct.images?.[0] || ''}
+                          onChange={(e) => setEditingProduct({ 
+                            ...editingProduct, 
+                            images: [e.target.value, ...(editingProduct.images || []).slice(1)].filter(Boolean)
+                          })}
+                          placeholder="https://exemplo.com/imagem.jpg"
+                          className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>

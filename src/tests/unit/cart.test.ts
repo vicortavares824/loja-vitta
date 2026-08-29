@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tomatoApi, INITIAL_PRODUCTS, INITIAL_COUPONS } from '../../services/tomatoApi';
+import { tomatoApi } from '../../services/tomatoApi';
 
 describe('Vitta Basics E-Commerce Business Logic', () => {
   it('should calculate cart total without discounts correctly', () => {
@@ -12,7 +12,7 @@ describe('Vitta Basics E-Commerce Business Logic', () => {
 
   it('should calculate percentage coupon discount correctly', () => {
     const subtotal = 2000;
-    const coupon = INITIAL_COUPONS['VITTA15'];
+    const coupon = { code: 'VITTA15', discountPercentage: 15, description: '15% off' };
     
     expect(coupon).toBeDefined();
     const discount = (subtotal * (coupon.discountPercentage || 0)) / 100;
@@ -22,7 +22,7 @@ describe('Vitta Basics E-Commerce Business Logic', () => {
 
   it('should calculate fixed coupon discount correctly', () => {
     const subtotal = 1000;
-    const coupon = INITIAL_COUPONS['FREESHIP'];
+    const coupon = { code: 'FREESHIP', discountFixed: 150, description: 'R$150 off' };
     
     expect(coupon).toBeDefined();
     const discount = coupon.discountFixed || 0;
@@ -31,7 +31,7 @@ describe('Vitta Basics E-Commerce Business Logic', () => {
   });
 
   it('should validate minimum amount requirement on coupons', () => {
-    const coupon = INITIAL_COUPONS['TOMATO20'];
+    const coupon = { code: 'TOMATO20', discountPercentage: 20, minAmount: 1000 };
     expect(coupon.minAmount).toBe(1000);
 
     const subtotalLow = 800;

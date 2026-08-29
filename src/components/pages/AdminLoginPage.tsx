@@ -19,11 +19,13 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, 
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const ok = await login({ email, password });
-    if (ok) {
-      onLoginSuccess();
-    } else {
-      setError('Credenciais de administrador inválidas.');
+    try {
+      const ok = await login({ email, password });
+      if (ok) {
+        onLoginSuccess();
+      }
+    } catch (err: any) {
+      setError(err.message || 'Credenciais de administrador inválidas.');
     }
     setLoading(false);
   };

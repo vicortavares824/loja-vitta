@@ -52,13 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
             onClick={() => handleNavClick('home')}
             className="flex items-center gap-3 group text-left focus:outline-none"
           >
-            <div className="w-9 h-9 rounded-full bg-white p-[1px] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-black rounded-full flex items-center justify-center">
-                <span className="font-display font-bold text-xs text-white tracking-widest">
-                  {STORE_CONFIG.shortName}
-                </span>
-              </div>
-            </div>
+            <img src="/logo.jpg" alt={STORE_CONFIG.name} className="w-18 h-18 rounded-full object-cover shadow-lg group-hover:scale-105 transition-transform" />
             <div className="flex flex-col">
               <span className="font-display font-extrabold text-lg sm:text-xl tracking-[0.18em] text-white transition-colors">
                 {STORE_CONFIG.name}

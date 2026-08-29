@@ -65,13 +65,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
-      // The state update will be handled by onAuthStateChange, but we can wait for the login to succeed.
       await authService.login(credentials);
       return true;
     } catch (e: any) {
-      // Errors are already captured by authService, but we capture the top level one just in case
       observability.captureException(e);
-      return false;
+      throw e;
     }
   };
 

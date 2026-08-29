@@ -29,11 +29,12 @@ export const AdminSignUpPage: React.FC<AdminSignUpPageProps> = ({ onSignUpSucces
 
     try {
       await authService.signUp({ name, email, password }, secretKey);
-      const success = await login({ email, password });
-      if (success) {
+      try {
+        await login({ email, password });
         showToast('Conta Admin criada com sucesso!', 'success');
         onSignUpSuccess();
-      } else {
+      } catch {
+        // Login failed — likely email confirmation required
         setShowConfirmation(true);
       }
     } catch (err: any) {

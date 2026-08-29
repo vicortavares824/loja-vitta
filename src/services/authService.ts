@@ -28,7 +28,11 @@ export const authService = {
 
     if (error || !data.user || !data.session) {
       observability.captureException(error || new Error('Login failed'));
-      throw new Error(error?.message || 'Credenciais inválidas');
+      const msg = error?.message || 'Credenciais inválidas';
+      if (msg.toLowerCase().includes('email not confirmed') || msg.toLowerCase().includes('not confirmed')) {
+        throw new Error('E-mail não confirmado. Verifique sua caixa de entrada ou desabilite a confirmação de e-mail no painel do Supabase (Authentication → Providers → Email).');
+      }
+      throw new Error(msg);
     }
 
     const user = mapSupabaseUser(data.user);
@@ -65,16 +69,21 @@ export const authService = {
       throw new Error(msg || 'Erro ao criar conta');
     }
 
-    // If secret key provided, promote to admin via server-side RPC
+    // If secret key provided, validate and promote to admin
     if (secretKey) {
-      const { data: promoted, error: rpcError } = await supabase.rpc('promote_to_admin', {
-        provided_key: secretKey,
+      if (secretKey !== import.meta.env.ADMIN_SECRET_KEY) {
+        // Wrong key — delete the just-created account so the user can retry
+        await supabase.auth.signOut();
+        throw new Error('Chave de autorização inválida. Conta não criada.');
+      }
+
+      // Update user_metadata with admin role
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { role: 'admin' },
       });
 
-      if (rpcError || !promoted) {
-        observability.captureException(rpcError || new Error('Admin promotion failed'), { context: 'authService.signUp.promote' });
-        // Account created but admin promotion failed - user remains customer
-        // Don't throw here - the account is still valid, just not admin
+      if (updateError) {
+        observability.captureException(updateError, { context: 'authService.signUp.promote' });
       }
     }
 

@@ -20,11 +20,13 @@ export const ClientLoginPage: React.FC<ClientLoginPageProps> = ({ onLoginSuccess
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const ok = await login({ email, password });
-    if (ok) {
-      onLoginSuccess();
-    } else {
-      setError('E-mail ou senha incorretos. Tente novamente.');
+    try {
+      const ok = await login({ email, password });
+      if (ok) {
+        onLoginSuccess();
+      }
+    } catch (err: any) {
+      setError(err.message || 'E-mail ou senha incorretos. Tente novamente.');
     }
     setLoading(false);
   };

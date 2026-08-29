@@ -28,11 +28,12 @@ export const ClientSignUpPage: React.FC<ClientSignUpPageProps> = ({ onSignUpSucc
 
     try {
       await authService.signUp({ name, email, password });
-      const success = await login({ email, password });
-      if (success) {
+      try {
+        await login({ email, password });
         showToast('Conta criada com sucesso!', 'success');
         onSignUpSuccess();
-      } else {
+      } catch {
+        // Login failed — likely email confirmation required
         setShowConfirmation(true);
       }
     } catch (err: any) {
