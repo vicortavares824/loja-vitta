@@ -39,32 +39,22 @@ export const authService = {
 
   /** 
    * Register a new user (customer or admin).
+   * Admin role is validated server-side via Supabase RPC.
    */
   async signUp(data: SignUpData, secretKey?: string): Promise<User> {
-    let role = 'customer';
-
-    if (secretKey) {
-      if (secretKey === import.meta.env.VITE_ADMIN_SECRET_KEY) {
-        role = 'admin';
-      } else {
-        throw new Error('Chave de autorização de Admin inválida.');
-      }
-    }
-
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           name: data.name,
-          role: role,
+          role: 'customer', // Always start as customer; admin promotion happens server-side
         },
       },
     });
 
     if (error || !authData.user) {
       observability.captureException(error || new Error('Signup failed'), { context: 'authService.signUp', email: data.email });
-      // Translate known Supabase email errors to user-friendly Portuguese messages
       const msg = error?.message || '';
       if (msg.toLowerCase().includes('sending confirmation email') || msg.toLowerCase().includes('email')) {
         throw new Error(
@@ -75,7 +65,23 @@ export const authService = {
       throw new Error(msg || 'Erro ao criar conta');
     }
 
-    const user = mapSupabaseUser(authData.user);
+    // If secret key provided, promote to admin via server-side RPC
+    if (secretKey) {
+      const { data: promoted, error: rpcError } = await supabase.rpc('promote_to_admin', {
+        provided_key: secretKey,
+      });
+
+      if (rpcError || !promoted) {
+        observability.captureException(rpcError || new Error('Admin promotion failed'), { context: 'authService.signUp.promote' });
+        // Account created but admin promotion failed - user remains customer
+        // Don't throw here - the account is still valid, just not admin
+      }
+    }
+
+    // Fetch updated user data to get the correct role
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = mapSupabaseUser(session?.user || authData.user);
+    
     observability.trackEvent({ name: 'signup_success', category: 'ecommerce', properties: { email: user.email, role: user.role } });
     return user;
   },

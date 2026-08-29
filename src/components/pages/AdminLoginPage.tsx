@@ -9,8 +9,8 @@ interface AdminLoginPageProps {
 }
 
 export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavigateToSignUp }) => {
-  const [email, setEmail]       = useState('admin@vittabasics.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError]       = useState<string | null>(null);
   const [loading, setLoading]   = useState(false);
   const { login } = useAuth();
@@ -91,10 +91,11 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, 
             </div>
           </form>
 
-          {/* Hint for demo */}
-          <p className="text-center text-[10px] text-gray-600 mt-6 tracking-wider">
-            Demo: admin@vittabasics.com / admin123
-          </p>
+          {import.meta.env.DEV && (
+            <p className="text-center text-[10px] text-gray-600 mt-6 tracking-wider">
+              Demo: admin@vittabasics.com / admin123
+            </p>
+          )}
         </div>
       </div>
     </section>

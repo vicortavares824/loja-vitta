@@ -367,7 +367,15 @@ export const tomatoApi = {
       }
       
       if (search) {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+        // Sanitize search input to prevent PostgREST filter manipulation
+        const sanitizedSearch = search
+          .replace(/[%(),.]/g, '') // Remove special chars that could manipulate filters
+          .trim()
+          .slice(0, 100); // Limit length
+        
+        if (sanitizedSearch) {
+          query = query.or(`name.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`);
+        }
       }
       
       if (sort === 'price-asc') query = query.order('price', { ascending: true });

@@ -10,8 +10,8 @@ interface ClientLoginPageProps {
 }
 
 export const ClientLoginPage: React.FC<ClientLoginPageProps> = ({ onLoginSuccess, onNavigateToSignUp }) => {
-  const [email, setEmail]       = useState('cliente@vittabasics.com');
-  const [password, setPassword] = useState('cliente123');
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError]       = useState<string | null>(null);
   const [loading, setLoading]   = useState(false);
   const { login } = useAuth();
