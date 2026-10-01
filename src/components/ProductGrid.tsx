@@ -47,7 +47,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   return (
     <section id="colecao" className="py-20 relative z-10 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-[0.25em] mb-4">
             <Sparkles className="w-3.5 h-3.5" />
@@ -61,9 +61,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           </p>
         </div>
 
-        {/* Filter & Sort Bar */}
+
         <div className="flex flex-col md:flex-row items-center justify-between gap-5 mb-12 pb-6 border-b border-white/10">
-          {/* Category Pills */}
+
           <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
             {categoriesFilter.map(cat => (
               <button
@@ -83,7 +83,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             ))}
           </div>
 
-          {/* Sort Selector */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-end">
             <SlidersHorizontal className="w-4 h-4 text-white" />
             <select
@@ -99,7 +98,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           </div>
         </div>
 
-        {/* Product Grid with Skeletons */}
+       
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map(n => (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Tag, Check, Sparkles } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { tomatoApi } from '../services/tomatoApi';
 import { Magnet } from './react-bits/Magnet';
@@ -14,17 +14,11 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     clearCart,
     subtotal,
-    discountAmount,
     total,
-    coupon,
-    applyCouponCode,
-    removeCoupon,
     formatPrice,
     showToast
   } = useCart();
 
-  const [couponInput, setCouponInput] = useState('');
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [orderId, setOrderId] = useState('');
@@ -34,15 +28,6 @@ export const CartDrawer: React.FC = () => {
   const FREE_SHIPPING_THRESHOLD = 1500;
   const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-
-  const handleApplyCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponInput.trim()) return;
-    setIsApplyingCoupon(true);
-    await applyCouponCode(couponInput);
-    setIsApplyingCoupon(false);
-    setCouponInput('');
-  };
 
   const handleCheckout = async () => {
     setIsCheckingOut(true);
@@ -59,7 +44,6 @@ export const CartDrawer: React.FC = () => {
         image: item.product.images[0]
       })),
       totalAmount: total,
-      couponUsed: coupon?.code,
       paymentMethod: 'PIX / Cartão Seguro',
       shippingAddress: 'Endereço Principal - Entrega Expressa'
     };
@@ -251,54 +235,12 @@ export const CartDrawer: React.FC = () => {
               {/* Footer Calculations */}
               {cart.length > 0 && (
                 <div className="p-6 border-t border-white/10 space-y-4 bg-black/60">
-                  {/* Coupon Form */}
-                  {coupon ? (
-                    <div className="bg-white/10 p-3 rounded-2xl flex items-center justify-between border border-white/20 text-xs">
-                      <div className="flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-white" />
-                        <div>
-                          <strong className="text-white font-mono">{coupon.code}</strong>
-                          <span className="text-gray-300 block text-[10px]">{coupon.description}</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={removeCoupon}
-                        className="text-red-400 hover:underline text-[11px]"
-                      >
-                        Remover
-                      </button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Cupom (ex: VITTA15)"
-                        value={couponInput}
-                        onChange={e => setCouponInput(e.target.value)}
-                        className="flex-1 bg-white/10 border border-white/20 text-xs py-2.5 px-3.5 rounded-full text-white uppercase placeholder:text-gray-500 focus:outline-none focus:border-white"
-                      />
-                      <button
-                        type="submit"
-                        disabled={isApplyingCoupon}
-                        className="px-5 py-2.5 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-gray-200 transition-colors"
-                      >
-                        Aplicar
-                      </button>
-                    </form>
-                  )}
-
                   {/* Summary Rows */}
                   <div className="space-y-1.5 text-xs text-gray-300">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
                       <span className="text-white font-semibold">{formatPrice(subtotal)}</span>
                     </div>
-                    {discountAmount > 0 && (
-                      <div className="flex justify-between text-green-400 font-semibold">
-                        <span>Desconto Cupom</span>
-                        <span>-{formatPrice(discountAmount)}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between">
                       <span>Frete Expresso</span>
                       <span className="text-white font-semibold">

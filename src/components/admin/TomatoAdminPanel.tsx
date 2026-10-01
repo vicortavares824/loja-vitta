@@ -1,36 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  BarChart3, Package, ShoppingCart, Tag, Terminal, Plus, Edit2, Trash2, 
-  RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck, Check,
-  Upload, Loader2
+  BarChart3, Package, ShoppingCart, Terminal, Plus, Edit2, Trash2, 
+  RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck,
+  Upload, Loader2, Warehouse, FolderTree
 } from 'lucide-react';
-import type { Product, Category, Order, Coupon } from '../../types/ecommerce';
+import type { Product, Category, Order } from '../../types/ecommerce';
 import { tomatoApi } from '../../services/tomatoApi';
 import { uploadImage } from '../../services/cloudinary';
 import { useCart } from '../../context/CartContext';
+import { InventoryPanel } from './InventoryPanel';
+import { CategoryAdminPanel } from './CategoryAdminPanel';
 
 export const TomatoAdminPanel: React.FC = () => {
   const { formatPrice, showToast } = useCart();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'coupons' | 'api'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'inventory' | 'orders' | 'api'>('dashboard');
   
   // Data States
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [coupons, setCoupons] = useState<Record<string, Coupon>>({});
   const [loading, setLoading] = useState(true);
 
   // Modal State for Product CRUD
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
-
-  // Modal State for Coupon CRUD
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
-  const [newCoupon, setNewCoupon] = useState<Coupon>({
-    code: '',
-    discountPercentage: 10,
-    description: ''
-  });
 
   // API Tester State
   const [apiEndpoint, setApiEndpoint] = useState<string>('GET /api/products');
@@ -45,16 +38,14 @@ export const TomatoAdminPanel: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [prods, cats, ords, coups] = await Promise.all([
+    const [prods, cats, ords] = await Promise.all([
       tomatoApi.getProducts(),
       tomatoApi.getCategories(),
-      tomatoApi.getOrders(),
-      tomatoApi.getCoupons()
+      tomatoApi.getOrders()
     ]);
     setProducts(prods);
     setCategories(cats);
     setOrders(ords);
-    setCoupons(coups);
     setLoading(false);
   };
 
@@ -72,7 +63,7 @@ export const TomatoAdminPanel: React.FC = () => {
       description: '',
       stockCount: 15,
       tag: 'NOVO',
-      images: ['https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&w=800&q=80'],
+      images: [],
       sizes: ['S', 'M', 'L', 'XL'],
       colors: [
         { name: 'Preto', hex: '#000000' },
@@ -110,23 +101,6 @@ export const TomatoAdminPanel: React.FC = () => {
   const handleUpdateOrderStatus = async (orderId: string, status: Order['status']) => {
     await tomatoApi.updateOrderStatus(orderId, status);
     showToast(`Status do pedido #${orderId} alterado para ${status.toUpperCase()}!`, 'success');
-    loadAllData();
-  };
-
-  // Coupon CRUD
-  const handleSaveCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCoupon.code) return;
-    await tomatoApi.saveCoupon(newCoupon);
-    showToast(`Cupom ${newCoupon.code} cadastrado com sucesso!`, 'success');
-    setIsCouponModalOpen(false);
-    setNewCoupon({ code: '', discountPercentage: 10, description: '' });
-    loadAllData();
-  };
-
-  const handleDeleteCoupon = async (code: string) => {
-    await tomatoApi.deleteCoupon(code);
-    showToast(`Cupom ${code} removido.`, 'info');
     loadAllData();
   };
 
@@ -183,8 +157,8 @@ export const TomatoAdminPanel: React.FC = () => {
       resData = await tomatoApi.getCategories();
     } else if (apiEndpoint.includes('/orders')) {
       resData = await tomatoApi.getOrders();
-    } else if (apiEndpoint.includes('/coupons')) {
-      resData = await tomatoApi.getCoupons();
+    } else if (apiEndpoint.includes('/inventory')) {
+      resData = await import('../../services/inventoryService').then(m => m.inventoryService.getInventoryItems());
     }
 
     const elapsed = Math.round(performance.now() - start);
@@ -241,8 +215,9 @@ export const TomatoAdminPanel: React.FC = () => {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'products', label: `Produtos (${products.length})`, icon: Package },
+            { id: 'categories', label: `Categorias (${categories.length})`, icon: FolderTree },
+            { id: 'inventory', label: 'Inventário', icon: Warehouse },
             { id: 'orders', label: `Pedidos (${orders.length})`, icon: ShoppingCart },
-            { id: 'coupons', label: 'Cupons & Descontos', icon: Tag },
             { id: 'api', label: 'Console REST API', icon: Terminal },
           ].map(tab => {
             const Icon = tab.icon;
@@ -465,7 +440,12 @@ export const TomatoAdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 3: ORDERS MANAGEMENT */}
+        {/* TAB 3: CATEGORIAS (CATEGORIES CRUD) */}
+        {activeTab === 'categories' && (
+          <CategoryAdminPanel />
+        )}
+
+        {/* TAB 4: ORDERS MANAGEMENT */}
         {activeTab === 'orders' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold uppercase tracking-wider text-white">
@@ -531,9 +511,6 @@ export const TomatoAdminPanel: React.FC = () => {
                         <div className="text-white font-medium">{order.shippingAddress}</div>
                         <div className="text-gray-400 pt-2">Método de Pagamento:</div>
                         <div className="text-white font-medium">{order.paymentMethod}</div>
-                        {order.couponUsed && (
-                          <div className="text-green-400 pt-1 font-semibold">Cupom Aplicado: {order.couponUsed}</div>
-                        )}
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-white/10 font-bold text-sm">
@@ -548,53 +525,12 @@ export const TomatoAdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 4: COUPONS */}
-        {activeTab === 'coupons' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold uppercase tracking-wider text-white">
-                Cupons de Desconto TomatoPHP
-              </h2>
-              <button
-                onClick={() => setIsCouponModalOpen(true)}
-                className="flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors shadow-lg"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Novo Cupom</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Object.values(coupons).map(coup => (
-                <div key={coup.code} className="bg-white/5 rounded-3xl p-6 border border-white/10 flex flex-col justify-between space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-base font-extrabold bg-white text-black px-3 py-1 rounded-xl">
-                        {coup.code}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteCoupon(coup.code)}
-                        className="text-gray-400 hover:text-red-400 transition-colors p-1"
-                        title="Deletar cupom"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="text-2xl font-black text-white pt-2">
-                      {coup.discountPercentage ? `${coup.discountPercentage}% OFF` : `R$ ${coup.discountFixed} OFF`}
-                    </div>
-                    <p className="text-xs text-gray-300 font-normal">{coup.description}</p>
-                    {coup.minAmount && (
-                      <div className="text-[11px] text-gray-400">Válido em compras acima de R$ {coup.minAmount}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* TAB 5: INVENTÁRIO (TOMATO INVENTORY) */}
+        {activeTab === 'inventory' && (
+          <InventoryPanel formatPrice={formatPrice} />
         )}
 
-        {/* TAB 5: REST API LIVE CONSOLE */}
+        {/* TAB 6: REST API LIVE CONSOLE */}
         {activeTab === 'api' && (
           <div className="space-y-6">
             <div className="bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
@@ -619,8 +555,8 @@ export const TomatoAdminPanel: React.FC = () => {
                 >
                   <option value="GET /api/products">GET /api/products (Listar Catálogo)</option>
                   <option value="GET /api/categories">GET /api/categories (Listar Categorias)</option>
+                  <option value="GET /api/inventory">GET /api/inventory (Listar Estoque & Inventário)</option>
                   <option value="GET /api/orders">GET /api/orders (Listar Pedidos)</option>
-                  <option value="GET /api/coupons">GET /api/coupons (Listar Cupons)</option>
                 </select>
                 <button
                   onClick={handleRunApiTest}
@@ -861,78 +797,6 @@ export const TomatoAdminPanel: React.FC = () => {
                   >
                     <Save className="w-4 h-4" />
                     <span>Salvar Produto</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* MODAL: ADD COUPON */}
-        {isCouponModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-[#121216] border border-white/20 w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="text-lg font-bold uppercase tracking-wider text-white">
-                  Cadastrar Novo Cupom
-                </h3>
-                <button onClick={() => setIsCouponModalOpen(false)} className="text-gray-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveCoupon} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-gray-300 font-bold mb-1">Código do Cupom</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: BLACK10, PROMO20"
-                    value={newCoupon.code}
-                    onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
-                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-300 font-bold mb-1">Desconto (%)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="90"
-                    required
-                    value={newCoupon.discountPercentage || 10}
-                    onChange={(e) => setNewCoupon({ ...newCoupon, discountPercentage: Number(e.target.value) })}
-                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-300 font-bold mb-1">Descrição</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: 10% de desconto especial"
-                    value={newCoupon.description}
-                    onChange={(e) => setNewCoupon({ ...newCoupon, description: e.target.value })}
-                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setIsCouponModalOpen(false)}
-                    className="px-5 py-2.5 rounded-full bg-white/10 text-white font-bold hover:bg-white/20 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 rounded-full bg-white text-black font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Criar Cupom</span>
                   </button>
                 </div>
               </form>

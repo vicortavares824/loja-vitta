@@ -43,14 +43,6 @@ export interface CartItem {
   selectedSize: string;
 }
 
-export interface Coupon {
-  code: string;
-  discountPercentage?: number;
-  discountFixed?: number;
-  minAmount?: number;
-  description: string;
-}
-
 export interface OrderItem {
   productId: string | number;
   productName: string;
@@ -71,7 +63,6 @@ export interface Order {
   createdAt: string;
   paymentMethod: string;
   shippingAddress: string;
-  couponUsed?: string;
 }
 
 export interface TomatoApiResponse<T> {

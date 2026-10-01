@@ -23,7 +23,7 @@ const ProductQuickViewModalContent: React.FC<ProductQuickViewModalContentProps> 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
       <div className="relative w-full max-w-4xl bg-[#121216] rounded-3xl overflow-hidden border border-white/20 shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
+     
         <button
           onClick={() => setQuickViewProduct(null)}
           className="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white hover:text-black flex items-center justify-center transition-all"
@@ -33,7 +33,7 @@ const ProductQuickViewModalContent: React.FC<ProductQuickViewModalContentProps> 
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 p-6 sm:p-10">
-          {/* Left Column: Image Gallery */}
+
           <div className="md:col-span-6 space-y-4">
             <div className="relative h-80 sm:h-96 rounded-2xl overflow-hidden bg-black border border-white/10">
               <img

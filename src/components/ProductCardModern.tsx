@@ -41,7 +41,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
         boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.05)'
       }}
     >
-      {/* Top Image Area with LazyImage */}
+
       <div 
         onClick={() => setQuickViewProduct(product)}
         className="relative w-full h-64 sm:h-72 rounded-[22px] overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer"
@@ -53,7 +53,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
           containerClassName="w-full h-full"
         />
 
-        {/* Tag Badge */}
+    
         {product.tag && (
           <div className="absolute top-3 left-3 z-10">
             <span className="bg-black text-white text-[10px] font-extrabold tracking-widest uppercase px-3 py-1 rounded-full shadow-md">
@@ -62,7 +62,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
           </div>
         )}
 
-        {/* Top Right Action Buttons (Wishlist & Quick View) */}
+
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
           <button
             onClick={(e) => {
@@ -89,7 +89,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
           </button>
         </div>
 
-        {/* Image Pagination Dots (if multiple images) */}
+
         {product.images && product.images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full">
             {product.images.map((_, idx) => (
@@ -109,9 +109,9 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
         )}
       </div>
 
-      {/* Card Content */}
+
       <div className="pt-4 flex-1 flex flex-col justify-between space-y-4">
-        {/* Title & Price */}
+
         <div>
           <div className="flex items-start justify-between gap-2">
             <h3 
@@ -138,9 +138,9 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
           </p>
         </div>
 
-        {/* Interactive Selectors (Colors, Sizes, Quantity) */}
+      
         <div className="space-y-3 pt-1 border-t border-gray-100">
-          {/* Colors */}
+
           {product.colors && product.colors.length > 0 && (
             <div>
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
@@ -175,7 +175,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
             </div>
           )}
 
-          {/* Sizes */}
+        
           {product.sizes && product.sizes.length > 0 && (
             <div>
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
@@ -205,9 +205,9 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
             </div>
           )}
 
-          {/* Quantity & Add to Cart Footer */}
+      
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            {/* Quantity Stepper */}
+        
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden sm:inline">
                 Qtd
@@ -235,7 +235,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
               </div>
             </div>
 
-            {/* Cart Button Pill (Ref visual da imagem) */}
+       
             <button
               onClick={handleAddToCart}
               className="bg-black hover:bg-gray-800 text-white p-3 sm:px-4 sm:py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all transform hover:scale-105 active:scale-95 group/btn"

@@ -1,10 +1,9 @@
-import type { Product, Category, Coupon, Order } from '../types/ecommerce';
+import type { Product, Category, Order } from '../types/ecommerce';
 import { supabase } from '../config/supabase';
 
 // Empty defaults - all data comes from Supabase
 export const INITIAL_PRODUCTS: Product[] = [];
 export const INITIAL_CATEGORIES: Category[] = [];
-export const INITIAL_COUPONS: Record<string, Coupon> = {};
 export const INITIAL_ORDERS: Order[] = [];
 
 export const tomatoApi = {
@@ -96,6 +95,12 @@ export const tomatoApi = {
     }
   },
 
+  async deleteCategory(id: string | number): Promise<boolean> {
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  },
+
   // --- PEDIDOS (ORDERS) ---
   async getOrders(): Promise<Order[]> {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -113,8 +118,7 @@ export const tomatoApi = {
       status: o.status,
       createdAt: o.created_at,
       paymentMethod: o.paymentMethod,
-      shippingAddress: o.shippingAddress,
-      couponUsed: o.couponUsed
+      shippingAddress: o.shippingAddress
     })) as Order[];
   },
 
@@ -135,8 +139,7 @@ export const tomatoApi = {
       totalAmount: orderPayload.totalAmount || 0,
       status: 'processing',
       paymentMethod: orderPayload.paymentMethod || 'Cartão de Crédito',
-      shippingAddress: orderPayload.shippingAddress || 'Endereço Principal',
-      couponUsed: orderPayload.couponUsed
+      shippingAddress: orderPayload.shippingAddress || 'Endereço Principal'
     }]).select().single();
 
     if (orderError) throw orderError;
@@ -157,43 +160,5 @@ export const tomatoApi = {
     }
     
     return { success: true, orderId: newOrder.id };
-  },
-
-  // --- CUPONS ---
-  async getCoupons(): Promise<Record<string, Coupon>> {
-    const { data, error } = await supabase.from('coupons').select('*');
-    if (error) throw error;
-    
-    const coupons: Record<string, Coupon> = {};
-    (data || []).forEach((c: any) => {
-      coupons[c.code.toUpperCase()] = c as Coupon;
-    });
-    return coupons;
-  },
-
-  async applyCoupon(code: string): Promise<Coupon | null> {
-    const cleanCode = code.trim().toUpperCase();
-    const { data, error } = await supabase.from('coupons').select('*').eq('code', cleanCode).single();
-    if (error || !data) return null;
-    return data as Coupon;
-  },
-
-  async saveCoupon(coupon: Coupon): Promise<Coupon> {
-    const { data, error } = await supabase.from('coupons').upsert({
-      code: coupon.code.toUpperCase(),
-      discountPercentage: coupon.discountPercentage,
-      discountFixed: coupon.discountFixed,
-      minAmount: coupon.minAmount,
-      description: coupon.description
-    }).select().single();
-    
-    if (error) throw error;
-    return data as Coupon;
-  },
-
-  async deleteCoupon(code: string): Promise<boolean> {
-    const { error } = await supabase.from('coupons').delete().eq('code', code.toUpperCase());
-    if (error) throw error;
-    return true;
   }
 };

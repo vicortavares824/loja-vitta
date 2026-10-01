@@ -127,31 +127,6 @@ describe('TomatoAPI - Supabase Integration', () => {
     });
   });
 
-  describe('getCoupons', () => {
-    it('should fetch coupons from Supabase', async () => {
-      const { tomatoApi } = await import('../../services/tomatoApi');
-      await tomatoApi.getCoupons();
-      expect(mockSupabase.from).toHaveBeenCalledWith('coupons');
-      expect(mockQuery.select).toHaveBeenCalledWith('*');
-    });
-  });
-
-  describe('applyCoupon', () => {
-    it('should look up coupon by code', async () => {
-      const { tomatoApi } = await import('../../services/tomatoApi');
-      await tomatoApi.applyCoupon('VITTA15');
-      expect(mockSupabase.from).toHaveBeenCalledWith('coupons');
-      expect(mockQuery.eq).toHaveBeenCalledWith('code', 'VITTA15');
-      expect(mockQuery.single).toHaveBeenCalled();
-    });
-
-    it('should uppercase coupon code', async () => {
-      const { tomatoApi } = await import('../../services/tomatoApi');
-      await tomatoApi.applyCoupon('vitta15');
-      expect(mockQuery.eq).toHaveBeenCalledWith('code', 'VITTA15');
-    });
-  });
-
   describe('getOrders', () => {
     it('should require authentication', async () => {
       mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: null }, error: null });

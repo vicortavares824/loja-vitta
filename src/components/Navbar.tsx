@@ -100,9 +100,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
             </button>
           </nav>
 
-          {/* Right Actions */}
+      
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Currency Selector */}
+  
             <div className="relative group hidden md:flex items-center gap-1 bg-white/10 px-3 py-1.5 text-xs text-gray-300 border border-white/15 rounded-full">
               <Globe className="w-3.5 h-3.5 text-white" />
               <select
@@ -118,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
               </select>
             </div>
 
-            {/* Quick Search Button */}
+         
             <Magnet strength={10}>
               <button
                 onClick={() => handleNavClick('search')}
@@ -129,7 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
               </button>
             </Magnet>
 
-            {/* Wishlist Trigger */}
+      
             <Magnet strength={10}>
               <button
                 onClick={() => handleNavClick('products')}
@@ -146,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
               </button>
             </Magnet>
 
-            {/* Shopping Cart Drawer Trigger */}
+  
             <Magnet strength={14}>
               <button
                 onClick={() => setIsCartOpen(true)}
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
               </button>
             </Magnet>
 
-            {/* Login / User area */}
+      
             {isAuthenticated && user ? (
               <div className="flex items-center gap-2">
                 <span className="hidden sm:inline text-xs font-semibold text-gray-300 tracking-wide max-w-[100px] truncate">
@@ -204,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
               </Magnet>
             )}
 
-            {/* Mobile Menu Hamburger Toggle */}
+        
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
@@ -216,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
         </div>
       </header>
 
-      {/* Mobile Drawer Navigation */}
+      
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-30 bg-black/95 backdrop-blur-xl pt-28 px-6 pb-10 flex flex-col justify-between lg:hidden animate-fadeIn">
           <div className="space-y-4">

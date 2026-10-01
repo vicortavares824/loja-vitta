@@ -17,7 +17,7 @@ USING (auth.uid() = id);
 
 CREATE POLICY "Admins can view all profiles" ON public.profiles FOR SELECT
 USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
 );
 
 -- Only system can insert profiles (via trigger)
@@ -27,7 +27,7 @@ WITH CHECK (true);
 -- Only admins can update roles
 CREATE POLICY "Admins can update profiles" ON public.profiles FOR UPDATE
 USING (
-    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
 );
 
 -- 2. Auto-create profile on user signup

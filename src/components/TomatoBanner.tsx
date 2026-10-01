@@ -23,7 +23,7 @@ export const TomatoBanner: React.FC = () => {
               </h2>
 
               <p className="text-gray-300 text-sm leading-relaxed font-normal">
-                Esta aplicação frontend consome nativamente os endpoints da suíte <strong className="text-white">TomatoPHP (Filament Ecommerce)</strong> para listagem de produtos, filtros por categoria, sincronização de sacola e validação de cupons promocionais.
+                Esta aplicação frontend consome nativamente os endpoints da suíte <strong className="text-white">TomatoPHP (Filament Ecommerce & Tomato Inventory)</strong> para listagem de produtos, filtros por categoria, sincronização de sacola e controle de estoque em tempo real.
               </p>
 
               {/* Endpoints Badges */}
@@ -38,7 +38,7 @@ export const TomatoBanner: React.FC = () => {
                 </div>
                 <div className="glass-panel p-3 rounded-xl flex items-center gap-2 text-xs text-gray-200">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>POST /api/coupons</span>
+                  <span>GET /api/inventory</span>
                 </div>
               </div>
             </div>
@@ -67,8 +67,8 @@ export const TomatoBanner: React.FC = () => {
                     <span className="text-white">JSON / REST</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Active Coupons:</span>
-                    <span className="text-white">AWWARDS15, TOMATO20</span>
+                    <span className="text-gray-500">Inventory Plugin:</span>
+                    <span className="text-emerald-400">Active / Synchronized</span>
                   </div>
                 </div>
 

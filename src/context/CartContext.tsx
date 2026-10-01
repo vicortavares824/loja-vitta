@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { Product, ProductColor, CartItem, Coupon, Currency } from '../types/ecommerce';
-import { tomatoApi } from '../services/tomatoApi';
-import confetti from 'canvas-confetti';
+import type { Product, ProductColor, CartItem, Currency } from '../types/ecommerce';
 
 interface Toast {
   id: string;
@@ -13,7 +11,6 @@ interface CartContextType {
   cart: CartItem[];
   wishlist: (number | string)[];
   currency: Currency;
-  coupon: Coupon | null;
   isCartOpen: boolean;
   isSearchOpen: boolean;
   quickViewProduct: Product | null;
@@ -27,8 +24,6 @@ interface CartContextType {
   toggleWishlist: (product: Product) => void;
   isInWishlist: (productId: number | string) => boolean;
   setCurrency: (c: Currency) => void;
-  applyCouponCode: (code: string) => Promise<boolean>;
-  removeCoupon: () => void;
   setIsCartOpen: (open: boolean) => void;
   setIsSearchOpen: (open: boolean) => void;
   setQuickViewProduct: (product: Product | null) => void;
@@ -37,7 +32,6 @@ interface CartContextType {
   
   // Computed
   subtotal: number;
-  discountAmount: number;
   total: number;
   itemsCount: number;
 }
@@ -62,7 +56,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [currency, setCurrency] = useState<Currency>('BRL');
-  const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
@@ -164,29 +157,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isInWishlist = (productId: number | string) => wishlist.includes(productId);
 
-  const applyCouponCode = async (code: string): Promise<boolean> => {
-    const res = await tomatoApi.applyCoupon(code);
-    if (res) {
-      setCoupon(res);
-      showToast(`Cupom "${res.code}" aplicado com sucesso!`, 'success');
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ['#d4af37', '#ffffff', '#8b5cf6']
-      });
-      return true;
-    } else {
-      showToast('Cupom inválido ou expirado.', 'error');
-      return false;
-    }
-  };
-
-  const removeCoupon = () => {
-    setCoupon(null);
-    showToast('Cupom removido.', 'info');
-  };
-
   const formatPrice = (amountInBRL: number) => {
     const { rate, prefix } = CURRENCY_RATES[currency];
     const converted = amountInBRL * rate;
@@ -198,17 +168,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-
-  let discountAmount = 0;
-  if (coupon) {
-    if (coupon.discountPercentage) {
-      discountAmount = (subtotal * coupon.discountPercentage) / 100;
-    } else if (coupon.discountFixed) {
-      discountAmount = coupon.discountFixed;
-    }
-  }
-
-  const total = Math.max(0, subtotal - discountAmount);
+  const total = subtotal;
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -217,7 +177,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cart,
         wishlist,
         currency,
-        coupon,
         isCartOpen,
         isSearchOpen,
         quickViewProduct,
@@ -229,15 +188,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleWishlist,
         isInWishlist,
         setCurrency,
-        applyCouponCode,
-        removeCoupon,
         setIsCartOpen,
         setIsSearchOpen,
         setQuickViewProduct,
         showToast,
         formatPrice,
         subtotal,
-        discountAmount,
         total,
         itemsCount
       }}

@@ -26,3 +26,15 @@ Object.defineProperty(window, 'localStorage', {
 vi.mock('canvas-confetti', () => ({
   default: vi.fn()
 }));
+
+// Mock URL.createObjectURL & URL.revokeObjectURL for JSDOM
+if (typeof window !== 'undefined') {
+  if (!window.URL.createObjectURL) {
+    window.URL.createObjectURL = vi.fn(() => 'blob:mock-preview-url');
+  }
+  if (!window.URL.revokeObjectURL) {
+    window.URL.revokeObjectURL = vi.fn();
+  }
+}
+
+import '@testing-library/jest-dom/vitest';

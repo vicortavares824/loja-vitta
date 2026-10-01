@@ -85,9 +85,9 @@ export const LookbookSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Editorial Card Container */}
+
         <div className="glass-panel rounded-3xl overflow-hidden border border-white/10 grid grid-cols-1 lg:grid-cols-12 min-h-[500px]">
-          {/* Left Column: Image */}
+
           <div className="lg:col-span-7 relative h-[400px] lg:h-full overflow-hidden bg-black">
             <img
               src={current.image}
@@ -97,7 +97,7 @@ export const LookbookSection: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-transparent to-transparent lg:hidden" />
           </div>
 
-          {/* Right Column: Editorial Text */}
+     
           <div className="lg:col-span-5 p-8 sm:p-12 flex flex-col justify-between space-y-6">
             <div>
               <span className="text-[11px] font-bold tracking-[0.25em] text-[#d4af37] uppercase">
@@ -114,7 +114,7 @@ export const LookbookSection: React.FC = () => {
               </p>
             </div>
 
-            {/* Featured Item Box inside Lookbook */}
+           
             <div className="glass-panel p-5 rounded-2xl border border-white/10 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">

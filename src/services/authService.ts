@@ -104,6 +104,7 @@ export const authService = {
     if (secretKey) {
       const { data: promoted, error: rpcError } = await supabase.rpc('promote_to_admin', {
         provided_key: secretKey,
+        target_user_id: authData.user.id
       });
 
       if (rpcError || !promoted) {
