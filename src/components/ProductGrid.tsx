@@ -21,9 +21,24 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   const [activeCategory, setActiveCategory] = useState(selectedCategorySlug);
   const [sortOption, setSortOption] = useState<string>('default');
 
+  const [categories, setCategories] = useState<{ name: string; slug: string }[]>([
+    { name: 'Todas as Peças', slug: 'all' }
+  ]);
+
   useEffect(() => {
     setActiveCategory(selectedCategorySlug);
   }, [selectedCategorySlug]);
+
+  useEffect(() => {
+    tomatoApi.getCategories().then((cats) => {
+      if (cats && cats.length > 0) {
+        setCategories([
+          { name: 'Todas as Peças', slug: 'all' },
+          ...cats.map((c) => ({ name: c.name, slug: c.slug }))
+        ]);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -32,15 +47,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       setLoading(false);
     });
   }, [activeCategory, sortOption]);
-
-  const categoriesFilter = [
-    { name: 'Todas as Peças', slug: 'all' },
-    { name: 'Alfaiataria', slug: 'tailoring' },
-    { name: 'Vestidos', slug: 'dresses' },
-    { name: 'Jaquetas', slug: 'jackets' },
-    { name: 'Streetwear', slug: 'streetwear' },
-    { name: 'Acessórios', slug: 'accessories' }
-  ];
 
   const displayedProducts = maxItems ? products.slice(0, maxItems) : products;
 
@@ -65,7 +71,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         <div className="flex flex-col md:flex-row items-center justify-between gap-5 mb-12 pb-6 border-b border-white/10">
 
           <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
-            {categoriesFilter.map(cat => (
+            {categories.map(cat => (
               <button
                 key={cat.slug}
                 onClick={() => {

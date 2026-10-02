@@ -17,7 +17,26 @@ export interface InventoryItem {
   imageUrl?: string;
   status: InventoryStatus;
   lastUpdated: string;
+  sizes?: string[];
+  color?: string;
+  colorHex?: string;
+  colors?: { name: string; hex: string }[];
 }
+
+export const DEFAULT_AVAILABLE_SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único'];
+
+export const DEFAULT_AVAILABLE_COLORS: { name: string; hex: string }[] = [
+  { name: 'Preto', hex: '#000000' },
+  { name: 'Branco', hex: '#FFFFFF' },
+  { name: 'Off-White', hex: '#F5F5F0' },
+  { name: 'Bege', hex: '#D2B48C' },
+  { name: 'Azul Marinho', hex: '#0B1B3D' },
+  { name: 'Verde Oliva', hex: '#4A5D4E' },
+  { name: 'Marrom', hex: '#5C4033' },
+  { name: 'Cinza Mescla', hex: '#808080' },
+  { name: 'Bordô', hex: '#6B1D2F' },
+  { name: 'Terracota', hex: '#C86D51' },
+];
 
 export type InventoryStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
 

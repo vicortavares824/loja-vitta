@@ -34,6 +34,7 @@ const mockItems = [
     imageUrl: 'https://example.com/blazer.jpg',
     status: 'in_stock' as const,
     lastUpdated: '2026-09-27T00:00:00Z',
+    sizes: ['P', 'M', 'G'],
   },
   {
     id: 'prod-2',
@@ -49,6 +50,7 @@ const mockItems = [
     imageUrl: '',
     status: 'low_stock' as const,
     lastUpdated: '2026-09-27T00:00:00Z',
+    sizes: ['M', 'GG'],
   },
 ];
 
@@ -220,6 +222,89 @@ describe('InventoryPanel (Tomato Inventory Admin Component)', () => {
       expect(mockShowToast).toHaveBeenCalledWith(
         expect.stringContaining('Upload verificado'),
         'success'
+      );
+    });
+  });
+
+  it('should support selecting item sizes (P, M, G, GG) and adding custom sizes in create modal', async () => {
+    render(<InventoryPanel />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('create-inventory-item-btn')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('create-inventory-item-btn'));
+
+    // Verify sizes section is present
+    expect(screen.getByTestId('item-modal-sizes-section')).toBeInTheDocument();
+    expect(screen.getByText('Tamanhos Disponíveis do Item *')).toBeInTheDocument();
+
+    // Default sizes (P, M, G, GG) should be selected initially
+    expect(screen.getByTestId('active-size-tag-P')).toBeInTheDocument();
+    expect(screen.getByTestId('active-size-tag-M')).toBeInTheDocument();
+    expect(screen.getByTestId('active-size-tag-G')).toBeInTheDocument();
+    expect(screen.getByTestId('active-size-tag-GG')).toBeInTheDocument();
+
+    // Toggle off 'GG'
+    fireEvent.click(screen.getByTestId('size-toggle-GG'));
+    expect(screen.queryByTestId('active-size-tag-GG')).not.toBeInTheDocument();
+
+    // Toggle on 'PP'
+    fireEvent.click(screen.getByTestId('size-toggle-PP'));
+    expect(screen.getByTestId('active-size-tag-PP')).toBeInTheDocument();
+
+    // Add custom size (e.g. '38')
+    const customInput = screen.getByTestId('item-modal-custom-size-input');
+    fireEvent.change(customInput, { target: { value: '38' } });
+    fireEvent.click(screen.getByTestId('item-modal-add-custom-size-btn'));
+
+    expect(screen.getByTestId('active-size-tag-38')).toBeInTheDocument();
+
+    // Fill name and save
+    fireEvent.change(screen.getByTestId('item-modal-name-input'), {
+      target: { value: 'Calça Alfaiataria Slim' },
+    });
+    fireEvent.click(screen.getByTestId('item-modal-save-btn'));
+
+    await waitFor(() => {
+      expect(inventoryService.saveInventoryItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productName: 'Calça Alfaiataria Slim',
+          sizes: expect.arrayContaining(['P', 'M', 'G', 'PP', '38']),
+        })
+      );
+    });
+  });
+
+  it('should support selecting item color and saving with color in create modal', async () => {
+    render(<InventoryPanel />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('create-inventory-item-btn')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('create-inventory-item-btn'));
+
+    // Check color section
+    expect(screen.getByTestId('item-modal-color-section')).toBeInTheDocument();
+    expect(screen.getByText('Cor da Peça *')).toBeInTheDocument();
+
+    // Select color 'Azul Marinho'
+    const colorBtn = screen.getByTestId('color-select-Azul Marinho');
+    fireEvent.click(colorBtn);
+
+    // Fill name and save
+    fireEvent.change(screen.getByTestId('item-modal-name-input'), {
+      target: { value: 'Camisa Linho Marinho' },
+    });
+    fireEvent.click(screen.getByTestId('item-modal-save-btn'));
+
+    await waitFor(() => {
+      expect(inventoryService.saveInventoryItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productName: 'Camisa Linho Marinho',
+          color: 'Azul Marinho',
+        })
       );
     });
   });

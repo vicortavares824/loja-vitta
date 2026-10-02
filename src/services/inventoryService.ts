@@ -28,6 +28,10 @@ export const inventoryService = {
       if (!error && data && data.length > 0) {
         return data.map((row: any) => ({
           ...row,
+          sizes: Array.isArray(row.sizes) ? row.sizes : (typeof row.sizes === 'string' ? JSON.parse(row.sizes) : ['P', 'M', 'G', 'GG']),
+          color: row.color || (row.colors?.[0]?.name) || 'Preto',
+          colorHex: row.colorHex || (row.colors?.[0]?.hex) || '#000000',
+          colors: Array.isArray(row.colors) ? row.colors : [{ name: row.color || 'Preto', hex: row.colorHex || '#000000' }],
           status: getInventoryStatus(Number(row.currentStock) || 0, Number(row.minStock) || 5)
         })) as InventoryItem[];
       }
@@ -48,6 +52,10 @@ export const inventoryService = {
       return (prodData || []).map((p: any) => {
         const stock = typeof p.stockCount === 'number' ? p.stockCount : 10;
         const images = Array.isArray(p.images) ? p.images : [];
+        const prodSizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes) : ['P', 'M', 'G', 'GG']);
+        const prodColors = Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : [{ name: 'Preto', hex: '#000000' }];
+        const primaryColor = p.color || prodColors[0]?.name || 'Preto';
+        const primaryHex = p.colorHex || prodColors[0]?.hex || '#000000';
         return {
           id: p.id,
           productId: p.id,
@@ -60,6 +68,10 @@ export const inventoryService = {
           maxStock: 100,
           unit: 'un',
           imageUrl: images[0] || '',
+          sizes: prodSizes,
+          color: primaryColor,
+          colorHex: primaryHex,
+          colors: prodColors,
           status: getInventoryStatus(stock, 5),
           lastUpdated: p.created_at || new Date().toISOString()
         } as InventoryItem;
@@ -81,6 +93,10 @@ export const inventoryService = {
       if (!error && data) {
         return {
           ...data,
+          sizes: Array.isArray(data.sizes) ? data.sizes : (typeof data.sizes === 'string' ? JSON.parse(data.sizes) : ['P', 'M', 'G', 'GG']),
+          color: data.color || data.colors?.[0]?.name || 'Preto',
+          colorHex: data.colorHex || data.colors?.[0]?.hex || '#000000',
+          colors: Array.isArray(data.colors) ? data.colors : [{ name: data.color || 'Preto', hex: data.colorHex || '#000000' }],
           status: getInventoryStatus(Number(data.currentStock) || 0, Number(data.minStock) || 5)
         } as InventoryItem;
       }
@@ -99,6 +115,10 @@ export const inventoryService = {
 
       const stock = typeof p.stockCount === 'number' ? p.stockCount : 0;
       const images = Array.isArray(p.images) ? p.images : [];
+      const prodSizes = Array.isArray(p.sizes) ? p.sizes : (typeof p.sizes === 'string' ? JSON.parse(p.sizes) : ['P', 'M', 'G', 'GG']);
+      const prodColors = Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : [{ name: 'Preto', hex: '#000000' }];
+      const primaryColor = p.color || prodColors[0]?.name || 'Preto';
+      const primaryHex = p.colorHex || prodColors[0]?.hex || '#000000';
       return {
         id: p.id,
         productId: p.id,
@@ -111,6 +131,10 @@ export const inventoryService = {
         maxStock: 100,
         unit: 'un',
         imageUrl: images[0] || '',
+        sizes: prodSizes,
+        color: primaryColor,
+        colorHex: primaryHex,
+        colors: prodColors,
         status: getInventoryStatus(stock, 5),
         lastUpdated: p.created_at || new Date().toISOString()
       };
@@ -226,6 +250,12 @@ export const inventoryService = {
     const min = Number(item.minStock) || 5;
     const max = Number(item.maxStock) || 100;
     const status = getInventoryStatus(stock, min);
+    const itemSizes = Array.isArray(item.sizes) && item.sizes.length > 0 ? item.sizes : ['P', 'M', 'G', 'GG'];
+    const itemColor = item.color || item.colors?.[0]?.name || 'Preto';
+    const itemColorHex = item.colorHex || item.colors?.[0]?.hex || '#000000';
+    const itemColors = Array.isArray(item.colors) && item.colors.length > 0
+      ? item.colors
+      : [{ name: itemColor, hex: itemColorHex }];
 
     if (item.id) {
       try {
@@ -241,6 +271,10 @@ export const inventoryService = {
             maxStock: max,
             unit: item.unit || 'un',
             imageUrl: item.imageUrl || '',
+            sizes: itemSizes,
+            color: itemColor,
+            colorHex: itemColorHex,
+            colors: itemColors,
             status,
             lastUpdated: new Date().toISOString()
           })
@@ -257,12 +291,18 @@ export const inventoryService = {
           categorySlug: item.categoryId,
           stockCount: stock,
           inStock: stock > 0,
-          images: item.imageUrl ? [item.imageUrl] : undefined
+          images: item.imageUrl ? [item.imageUrl] : undefined,
+          sizes: itemSizes,
+          colors: itemColors
         })
         .eq('id', item.id);
 
       return {
         ...item,
+        sizes: itemSizes,
+        color: itemColor,
+        colorHex: itemColorHex,
+        colors: itemColors,
         currentStock: stock,
         minStock: min,
         maxStock: max,
@@ -282,7 +322,9 @@ export const inventoryService = {
           description: `Peça de vestuário e item de inventário ${item.productName}`,
           stockCount: stock,
           inStock: stock > 0,
-          images: item.imageUrl ? [item.imageUrl] : []
+          images: item.imageUrl ? [item.imageUrl] : [],
+          sizes: itemSizes,
+          colors: itemColors
         }])
         .select()
         .single();
@@ -301,6 +343,10 @@ export const inventoryService = {
         maxStock: max,
         unit: item.unit || 'un',
         imageUrl: newProd.images?.[0] || '',
+        sizes: itemSizes,
+        color: itemColor,
+        colorHex: itemColorHex,
+        colors: itemColors,
         status,
         lastUpdated: newProd.created_at || new Date().toISOString()
       };

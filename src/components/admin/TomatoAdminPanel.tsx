@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart3, Package, ShoppingCart, Terminal, Plus, Edit2, Trash2, 
   RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck,
-  Upload, Loader2, Warehouse, FolderTree
+  Upload, Loader2, Warehouse, FolderTree, Check
 } from 'lucide-react';
 import type { Product, Category, Order } from '../../types/ecommerce';
+import type { InventoryItem } from '../../types/inventory';
+import { DEFAULT_AVAILABLE_SIZES } from '../../types/inventory';
 import { tomatoApi } from '../../services/tomatoApi';
+import { inventoryService } from '../../services/inventoryService';
 import { uploadImage } from '../../services/cloudinary';
 import { useCart } from '../../context/CartContext';
 import { InventoryPanel } from './InventoryPanel';
@@ -19,11 +22,14 @@ export const TomatoAdminPanel: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [selectedInventoryItemId, setSelectedInventoryItemId] = useState<string | number | ''>('');
   const [loading, setLoading] = useState(true);
 
   // Modal State for Product CRUD
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [customProductSize, setCustomProductSize] = useState('');
 
   // API Tester State
   const [apiEndpoint, setApiEndpoint] = useState<string>('GET /api/products');
@@ -38,14 +44,16 @@ export const TomatoAdminPanel: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [prods, cats, ords] = await Promise.all([
+    const [prods, cats, ords, inv] = await Promise.all([
       tomatoApi.getProducts(),
       tomatoApi.getCategories(),
-      tomatoApi.getOrders()
+      tomatoApi.getOrders(),
+      inventoryService.getInventoryItems().catch(() => [])
     ]);
     setProducts(prods);
     setCategories(cats);
     setOrders(ords);
+    setInventoryItems(inv || []);
     setLoading(false);
   };
 
@@ -53,39 +61,127 @@ export const TomatoAdminPanel: React.FC = () => {
     loadAllData();
   }, []);
 
-  // Product CRUD
-  const handleOpenNewProduct = () => {
+  // Product CRUD — Só cria produto puxando do inventário
+  const handleOpenNewProduct = (preselectedItemId?: string | number) => {
+    if (inventoryItems.length === 0) {
+      showToast('Nenhum item encontrado no inventário! Cadastre um item no inventário primeiro.', 'info');
+      setActiveTab('inventory');
+      return;
+    }
+
+    const targetItem = preselectedItemId
+      ? inventoryItems.find(i => String(i.id) === String(preselectedItemId)) || inventoryItems[0]
+      : inventoryItems[0];
+
+    setSelectedInventoryItemId(targetItem ? targetItem.id : '');
+
+    const targetSizes = targetItem?.sizes && targetItem.sizes.length > 0
+      ? [...targetItem.sizes]
+      : ['P', 'M', 'G', 'GG'];
+
+    const primaryColor = targetItem?.color || targetItem?.colors?.[0]?.name || 'Preto';
+    const primaryHex = targetItem?.colorHex || targetItem?.colors?.[0]?.hex || '#000000';
+    const targetColors = targetItem?.colors && targetItem.colors.length > 0
+      ? targetItem.colors
+      : [{ name: primaryColor, hex: primaryHex }];
+
     setEditingProduct({
-      name: '',
-      category: categories[0]?.name || 'Alfaiataria',
-      categorySlug: categories[0]?.slug || 'tailoring',
-      price: 990,
-      description: '',
-      stockCount: 15,
+      name: targetItem?.productName || '',
+      category: targetItem?.categoryName || categories[0]?.name || 'Alfaiataria',
+      categorySlug: String(targetItem?.categoryId || categories[0]?.slug || 'tailoring'),
+      price: 490,
+      description: `Peça de vestuário ${targetItem?.productName || ''} de alto padrão de acabamento.`,
+      stockCount: targetItem?.currentStock ?? 10,
       tag: 'NOVO',
-      images: [],
-      sizes: ['S', 'M', 'L', 'XL'],
-      colors: [
-        { name: 'Preto', hex: '#000000' },
-        { name: 'Branco', hex: '#ffffff' }
-      ]
+      images: targetItem?.imageUrl ? [targetItem.imageUrl] : [],
+      sizes: targetSizes,
+      colors: targetColors
     });
+    setCustomProductSize('');
     setIsProductModalOpen(true);
   };
 
+  // Puxar tudo do item de inventário selecionado (nome, categoria, saldo, tamanhos e cor)
+  const handleSelectInventoryItem = (itemId: string | number) => {
+    setSelectedInventoryItemId(itemId);
+    const foundItem = inventoryItems.find(i => String(i.id) === String(itemId));
+    if (!foundItem) return;
+
+    const itemSizes = foundItem.sizes && foundItem.sizes.length > 0 ? [...foundItem.sizes] : ['P', 'M', 'G', 'GG'];
+    const itemColor = foundItem.color || foundItem.colors?.[0]?.name || 'Preto';
+    const itemColorHex = foundItem.colorHex || foundItem.colors?.[0]?.hex || '#000000';
+    const itemColors = foundItem.colors && foundItem.colors.length > 0
+      ? foundItem.colors
+      : [{ name: itemColor, hex: itemColorHex }];
+
+    setEditingProduct(prev => ({
+      ...(prev || {}),
+      name: foundItem.productName,
+      category: foundItem.categoryName || categories[0]?.name || 'Alfaiataria',
+      categorySlug: String(foundItem.categoryId || categories[0]?.slug || 'tailoring'),
+      stockCount: foundItem.currentStock,
+      sizes: itemSizes,
+      colors: itemColors,
+      images: foundItem.imageUrl ? [foundItem.imageUrl] : (prev?.images || []),
+      description: prev?.description || `Peça ${foundItem.productName} em alfaiataria de corte exclusivo.`
+    }));
+    showToast(`Puxado do inventário: ${foundItem.productName} (Estoque: ${foundItem.currentStock} un., Cor: ${itemColor}, Tamanhos: ${itemSizes.join(', ')})`, 'info');
+  };
+
   const handleOpenEditProduct = (prod: Product) => {
-    setEditingProduct({ ...prod });
+    const matchingInv = inventoryItems.find(i => String(i.id) === String(prod.id) || i.productName.toLowerCase() === prod.name.toLowerCase());
+    setSelectedInventoryItemId(matchingInv ? matchingInv.id : '');
+    setEditingProduct({
+      ...prod,
+      sizes: prod.sizes && prod.sizes.length > 0 ? [...prod.sizes] : ['P', 'M', 'G', 'GG']
+    });
+    setCustomProductSize('');
     setIsProductModalOpen(true);
+  };
+
+  const handleToggleProductSize = (size: string) => {
+    if (!editingProduct) return;
+    const currentSizes = editingProduct.sizes || [];
+    const updated = currentSizes.includes(size)
+      ? currentSizes.filter(s => s !== size)
+      : [...currentSizes, size];
+    setEditingProduct({ ...editingProduct, sizes: updated });
+  };
+
+  const handleAddCustomProductSize = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = customProductSize.trim().toUpperCase();
+    if (!trimmed || !editingProduct) return;
+    const currentSizes = editingProduct.sizes || [];
+    if (!currentSizes.includes(trimmed)) {
+      setEditingProduct({ ...editingProduct, sizes: [...currentSizes, trimmed] });
+    }
+    setCustomProductSize('');
+  };
+
+  const handleRemoveProductSize = (size: string) => {
+    if (!editingProduct) return;
+    const currentSizes = editingProduct.sizes || [];
+    setEditingProduct({
+      ...editingProduct,
+      sizes: currentSizes.filter(s => s !== size)
+    });
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct || !editingProduct.name) return;
 
+    if (!selectedInventoryItemId && !editingProduct.id && inventoryItems.length > 0) {
+      showToast('Selecione uma peça do inventário para criar o anúncio do produto.', 'error');
+      return;
+    }
+
     await tomatoApi.saveProduct(editingProduct);
-    showToast('Produto salvo com sucesso no banco TomatoPHP!', 'success');
+    showToast('Anúncio de produto criado com sucesso a partir do inventário!', 'success');
     setIsProductModalOpen(false);
     setEditingProduct(null);
+    setSelectedInventoryItemId('');
     loadAllData();
   };
 
@@ -362,7 +458,7 @@ export const TomatoAdminPanel: React.FC = () => {
                 Catálogo de Produtos ({products.length})
               </h2>
               <button
-                onClick={handleOpenNewProduct}
+                onClick={() => handleOpenNewProduct()}
                 className="flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors shadow-lg"
               >
                 <Plus className="w-4 h-4" />
@@ -396,15 +492,32 @@ export const TomatoAdminPanel: React.FC = () => {
                             <div>
                               <div className="font-bold text-white text-sm">{prod.name}</div>
                               <div className="text-gray-400 text-[11px] line-clamp-1 max-w-xs">{prod.description}</div>
+                              {prod.sizes && prod.sizes.length > 0 && (
+                                <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                  {prod.sizes.map((s) => (
+                                    <span
+                                      key={s}
+                                      className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-white/10 text-gray-300 border border-white/10"
+                                    >
+                                      {s}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-4 font-semibold text-gray-300">{prod.category}</td>
                         <td className="py-4 px-4 font-bold text-white text-sm">{formatPrice(prod.price)}</td>
                         <td className="py-4 px-4">
-                          <span className={`font-semibold ${prod.stockCount <= 5 ? 'text-red-400' : 'text-gray-300'}`}>
-                            {prod.stockCount} un.
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white">
+                              {prod.stockCount} un.
+                            </span>
+                            <span className={`text-[10px] font-semibold ${prod.stockCount <= 0 ? 'text-red-400' : prod.stockCount <= 5 ? 'text-yellow-400' : 'text-emerald-400'}`}>
+                              {prod.stockCount <= 0 ? 'Esgotado' : prod.stockCount <= 5 ? 'Estoque Baixo' : 'Em Estoque'}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-4 px-4">
                           {prod.tag && (
@@ -527,7 +640,13 @@ export const TomatoAdminPanel: React.FC = () => {
 
         {/* TAB 5: INVENTÁRIO (TOMATO INVENTORY) */}
         {activeTab === 'inventory' && (
-          <InventoryPanel formatPrice={formatPrice} />
+          <InventoryPanel
+            formatPrice={formatPrice}
+            onCreateProductFromItem={(item) => {
+              setActiveTab('products');
+              handleOpenNewProduct(item.id);
+            }}
+          />
         )}
 
         {/* TAB 6: REST API LIVE CONSOLE */}
@@ -598,8 +717,106 @@ export const TomatoAdminPanel: React.FC = () => {
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+                {/* VÍNCULO OBRIGATÓRIO: ITEM DO INVENTÁRIO (PUXA TUDO DO INVENTÁRIO) */}
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-3" data-testid="inventory-source-selector-box">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Warehouse className="w-4 h-4 text-emerald-400" />
+                      <label className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                        Item do Inventário de Origem * (Puxar Dados)
+                      </label>
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400">
+                      {inventoryItems.length} peça(s) no inventário
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-gray-300">
+                    O anúncio do produto só pode existir vinculado a uma peça do inventário. Selecione abaixo para puxar nome, categoria, saldo em estoque, imagem e tamanhos (P, M, G, GG):
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <select
+                      value={selectedInventoryItemId}
+                      onChange={(e) => handleSelectInventoryItem(e.target.value)}
+                      className="w-full bg-black text-white text-xs font-bold rounded-xl px-4 py-2.5 border border-white/20 focus:outline-none focus:border-emerald-400 cursor-pointer"
+                      data-testid="inventory-item-select"
+                      required
+                    >
+                      <option value="">-- Selecione a peça do inventário --</option>
+                      {inventoryItems.map((inv) => (
+                        <option key={inv.id} value={inv.id}>
+                          {inv.productName} | SKU: {inv.sku} | Estoque: {inv.currentStock} un. | Tam: {(inv.sizes || []).join(', ') || 'P, M, G, GG'}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProductModalOpen(false);
+                        setActiveTab('inventory');
+                      }}
+                      className="shrink-0 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors whitespace-nowrap"
+                      title="Ir para o inventário cadastrar nova peça"
+                    >
+                      + Novo no Inventário
+                    </button>
+                  </div>
+
+                  {/* Card de prévia do item do inventário puxado */}
+                  {selectedInventoryItemId && (
+                    <div className="bg-black/50 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-3">
+                        {editingProduct.images?.[0] ? (
+                          <img
+                            src={editingProduct.images[0]}
+                            alt={editingProduct.name}
+                            className="w-12 h-12 rounded-lg object-cover bg-black border border-white/10 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 shrink-0">
+                            <Package className="w-5 h-5" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-bold text-white text-sm">{editingProduct.name}</div>
+                          <div className="text-[11px] text-gray-400">
+                            Categoria: <strong className="text-gray-200">{editingProduct.category}</strong> • Saldo: <strong className="text-emerald-400">{editingProduct.stockCount} un.</strong>
+                          </div>
+                          {editingProduct.colors && editingProduct.colors.length > 0 && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] text-gray-400">Cor puxada:</span>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white border border-white/20">
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full border border-white/40 shadow-sm"
+                                  style={{ backgroundColor: editingProduct.colors[0].hex }}
+                                />
+                                <span>{editingProduct.colors[0].name}</span>
+                              </span>
+                            </div>
+                          )}
+                          {editingProduct.sizes && editingProduct.sizes.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              <span className="text-[10px] text-gray-400">Tamanhos puxados:</span>
+                              {editingProduct.sizes.map((s) => (
+                                <span key={s} className="px-1.5 py-0.2 rounded text-[10px] font-black bg-white/20 text-white">
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/30 shrink-0">
+                        <Check className="w-3 h-3 stroke-[3]" /> Dados Sincronizados
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 <div>
-                  <label className="block text-gray-300 font-bold mb-1">Nome do Produto</label>
+                  <label className="block text-gray-300 font-bold mb-1">Nome do Produto (Anúncio)</label>
                   <input
                     type="text"
                     required
@@ -644,17 +861,6 @@ export const TomatoAdminPanel: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-300 font-bold mb-1">Estoque Disponível</label>
-                    <input
-                      type="number"
-                      required
-                      value={editingProduct.stockCount || 10}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, stockCount: Number(e.target.value) })}
-                      className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
                     <label className="block text-gray-300 font-bold mb-1">Tag / Selo</label>
                     <input
                       type="text"
@@ -663,6 +869,147 @@ export const TomatoAdminPanel: React.FC = () => {
                       placeholder="Ex: NOVO, BESTSELLER, LIMITED"
                       className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-300 font-bold mb-1">Status do Inventário</label>
+                    <div className="py-2.5 px-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
+                      <span className="text-gray-300">
+                        {(editingProduct.stockCount || 0) <= 0
+                          ? 'Esgotado'
+                          : (editingProduct.stockCount || 0) <= 5
+                          ? 'Estoque Baixo'
+                          : 'Em Estoque'}
+                      </span>
+                      <span className={`w-2.5 h-2.5 rounded-full ${
+                        (editingProduct.stockCount || 0) <= 0
+                          ? 'bg-red-400'
+                          : (editingProduct.stockCount || 0) <= 5
+                          ? 'bg-yellow-400'
+                          : 'bg-emerald-400'
+                      }`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção Integrada: Inventário & Tamanhos (Tomato Inventory) */}
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-4" data-testid="product-inventory-section">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div className="flex items-center gap-2">
+                      <Warehouse className="w-4 h-4 text-emerald-400" />
+                      <span className="font-bold text-white uppercase tracking-wider text-xs">
+                        Inventário & Tamanhos da Peça
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      Sincronização com Tomato Inventory
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-300 font-bold mb-1">
+                        Saldo de Estoque (Unidades) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        value={editingProduct.stockCount ?? 10}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, stockCount: Math.max(0, parseInt(e.target.value) || 0) })}
+                        className="w-full bg-black border border-white/20 rounded-xl px-4 py-2 text-white focus:outline-none"
+                        data-testid="product-stock-input"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-end text-[11px] text-gray-400">
+                      <span>Este produto criará e atualizará automaticamente uma ficha no inventário geral com controle de saldo e movimentações.</span>
+                    </div>
+                  </div>
+
+                  {/* Seleção de Tamanhos (P, M, G, GG, etc.) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-gray-300 font-bold">
+                        Tamanhos Disponíveis da Peça (ex: P, M, G, GG) *
+                      </label>
+                      <span className="text-gray-400 text-[11px]">
+                        {(editingProduct.sizes || []).length} selecionado(s)
+                      </span>
+                    </div>
+
+                    {/* Pills de tamanhos */}
+                    <div className="flex flex-wrap gap-2 pt-1" data-testid="product-sizes-pills">
+                      {DEFAULT_AVAILABLE_SIZES.map((size) => {
+                        const isSelected = (editingProduct.sizes || []).includes(size);
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => handleToggleProductSize(size)}
+                            data-testid={`product-size-toggle-${size}`}
+                            className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-white text-black shadow-md shadow-white/10'
+                                : 'bg-black/60 hover:bg-white/10 text-gray-300 border border-white/20'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                            <span>{size}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Input para tamanho customizado */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        placeholder="Outro tamanho (ex: 36, 38, 40, XGG...)"
+                        value={customProductSize}
+                        onChange={(e) => setCustomProductSize(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCustomProductSize();
+                          }
+                        }}
+                        className="flex-1 bg-black border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none"
+                        data-testid="product-custom-size-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddCustomProductSize()}
+                        className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+                        data-testid="product-add-custom-size-btn"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Adicionar</span>
+                      </button>
+                    </div>
+
+                    {/* Tamanhos ativos */}
+                    {(editingProduct.sizes || []).length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mr-1">Tamanhos da peça:</span>
+                        {(editingProduct.sizes || []).map((s) => (
+                          <span
+                            key={s}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-white/20 text-white border border-white/20"
+                            data-testid={`product-active-size-${s}`}
+                          >
+                            {s}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProductSize(s)}
+                              className="hover:text-red-400 p-0.5 rounded-full transition-colors ml-0.5"
+                              title={`Remover tamanho ${s}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

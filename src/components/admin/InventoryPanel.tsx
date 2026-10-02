@@ -2,16 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Package, RefreshCw, Plus, Minus, Upload, Loader2, AlertTriangle,
   CheckCircle2, XCircle, Image as ImageIcon, Filter, Edit2, Trash2,
-  Check, X, ShieldCheck, Tag
+  Check, X, ShieldCheck, Tag, ShoppingBag, Palette
 } from 'lucide-react';
 import type { InventoryItem, InventoryCategory } from '../../types/inventory';
-import { validateImageFile } from '../../types/inventory';
+import { validateImageFile, DEFAULT_AVAILABLE_SIZES, DEFAULT_AVAILABLE_COLORS } from '../../types/inventory';
 import { inventoryService } from '../../services/inventoryService';
 import { uploadImage } from '../../services/cloudinary';
 import { useCart } from '../../context/CartContext';
 
 interface InventoryPanelProps {
   formatPrice?: (price: number) => string;
+  onCreateProductFromItem?: (item: InventoryItem) => void;
 }
 
 interface ImagePendingVerification {
@@ -23,7 +24,7 @@ interface ImagePendingVerification {
   dimensions?: { width: number; height: number };
 }
 
-export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _formatPrice }) => {
+export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _formatPrice, onCreateProductFromItem }) => {
   const { showToast } = useCart();
 
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -35,6 +36,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
   // Create / Edit Inventory Item Modal State
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<InventoryItem> | null>(null);
+  const [customSizeInput, setCustomSizeInput] = useState('');
   const [savingItem, setSavingItem] = useState(false);
 
   // Image Upload & Verification State
@@ -64,6 +66,38 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
   useEffect(() => {
     loadData();
   }, [selectedCategory]);
+
+  // Toggle size in editingItem
+  const handleToggleSize = (size: string) => {
+    if (!editingItem) return;
+    const currentSizes = editingItem.sizes || [];
+    const updated = currentSizes.includes(size)
+      ? currentSizes.filter((s) => s !== size)
+      : [...currentSizes, size];
+    setEditingItem({ ...editingItem, sizes: updated });
+  };
+
+  // Add custom size (e.g. 38, 40, GG, Único)
+  const handleAddCustomSize = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const trimmed = customSizeInput.trim().toUpperCase();
+    if (!trimmed || !editingItem) return;
+    const currentSizes = editingItem.sizes || [];
+    if (!currentSizes.includes(trimmed)) {
+      setEditingItem({ ...editingItem, sizes: [...currentSizes, trimmed] });
+    }
+    setCustomSizeInput('');
+  };
+
+  // Remove a specific size
+  const handleRemoveSize = (size: string) => {
+    if (!editingItem) return;
+    const currentSizes = editingItem.sizes || [];
+    setEditingItem({
+      ...editingItem,
+      sizes: currentSizes.filter((s) => s !== size)
+    });
+  };
 
   // Handle stock addition/reduction
   const handleStockUpdate = async (
@@ -102,14 +136,28 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
       minStock: 5,
       maxStock: 50,
       unit: 'un',
-      imageUrl: ''
+      imageUrl: '',
+      sizes: ['P', 'M', 'G', 'GG'],
+      color: 'Preto',
+      colorHex: '#000000',
+      colors: [{ name: 'Preto', hex: '#000000' }]
     });
+    setCustomSizeInput('');
     setIsItemModalOpen(true);
   };
 
   // Open modal to edit an existing inventory item
   const handleOpenEditItem = (item: InventoryItem) => {
-    setEditingItem({ ...item });
+    const primaryColor = item.color || item.colors?.[0]?.name || 'Preto';
+    const primaryHex = item.colorHex || item.colors?.[0]?.hex || '#000000';
+    setEditingItem({
+      ...item,
+      sizes: item.sizes && item.sizes.length > 0 ? [...item.sizes] : ['P', 'M', 'G', 'GG'],
+      color: primaryColor,
+      colorHex: primaryHex,
+      colors: item.colors && item.colors.length > 0 ? [...item.colors] : [{ name: primaryColor, hex: primaryHex }]
+    });
+    setCustomSizeInput('');
     setIsItemModalOpen(true);
   };
 
@@ -472,7 +520,30 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                   {/* Product Details */}
                   <td className="py-3 px-5">
                     <p className="text-sm font-bold text-white line-clamp-1">{item.productName}</p>
-                    <p className="text-[11px] text-gray-400">ID: {String(item.id).slice(0, 8)}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[11px] text-gray-400">ID: {String(item.id).slice(0, 8)}</span>
+                      {item.color && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white border border-white/15" title={`Cor: ${item.color}`} data-testid={`item-color-${item.id}`}>
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-white/40 shadow-sm shrink-0"
+                            style={{ backgroundColor: item.colorHex || '#000000' }}
+                          />
+                          <span>{item.color}</span>
+                        </span>
+                      )}
+                      {item.sizes && item.sizes.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap" data-testid={`item-sizes-${item.id}`}>
+                          {item.sizes.map((s) => (
+                            <span
+                              key={s}
+                              className="px-1.5 py-0.2 rounded text-[10px] font-black uppercase bg-white/10 text-gray-200 border border-white/10 tracking-tight"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </td>
 
                   {/* SKU */}
@@ -541,9 +612,20 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     </div>
                   </td>
 
-                  {/* Edit / Delete Item */}
+                  {/* Edit / Delete / Create Product Item */}
                   <td className="py-3 px-5 text-right">
                     <div className="inline-flex items-center gap-2">
+                      {onCreateProductFromItem && (
+                        <button
+                          onClick={() => onCreateProductFromItem(item)}
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors flex items-center gap-1.5 text-[11px] font-bold"
+                          title="Criar anúncio de produto na loja a partir desta peça do inventário"
+                          data-testid={`create-product-from-inventory-${item.id}`}
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Criar Anúncio</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleOpenEditItem(item)}
                         className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
@@ -679,6 +761,199 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     onChange={(e) => setEditingItem({ ...editingItem, maxStock: parseInt(e.target.value) || 0 })}
                     className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white"
                   />
+                </div>
+              </div>
+
+              {/* Tamanhos do Item (P, M, G, GG, etc.) */}
+              <div className="space-y-2.5 bg-white/[0.03] p-3.5 rounded-2xl border border-white/10" data-testid="item-modal-sizes-section">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-white">
+                      Tamanhos Disponíveis do Item *
+                    </label>
+                    <p className="text-[11px] text-gray-400">
+                      Selecione os tamanhos da peça (ex: P, M, G, GG) ou adicione tamanhos específicos
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-bold text-gray-300 bg-white/10 px-2 py-0.5 rounded-full">
+                    {(editingItem.sizes || []).length} selecionado(s)
+                  </span>
+                </div>
+
+                {/* Seletores rápidos de tamanho (Pills) */}
+                <div className="flex flex-wrap gap-2 pt-1" data-testid="sizes-toggle-container">
+                  {DEFAULT_AVAILABLE_SIZES.map((size) => {
+                    const isSelected = (editingItem.sizes || []).includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleToggleSize(size)}
+                        data-testid={`size-toggle-${size}`}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-white text-black shadow-md shadow-white/10 scale-105'
+                            : 'bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white border border-white/10'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        <span>{size}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Adicionar tamanho customizado (ex: 38, 40, etc.) */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="text"
+                    placeholder="Outro tamanho (ex: 36, 38, 40, XGG...)"
+                    value={customSizeInput}
+                    onChange={(e) => setCustomSizeInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomSize();
+                      }
+                    }}
+                    className="flex-1 bg-black/40 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-white"
+                    data-testid="item-modal-custom-size-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddCustomSize()}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+                    data-testid="item-modal-add-custom-size-btn"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Adicionar</span>
+                  </button>
+                </div>
+
+                {/* Lista de tamanhos ativos com botão de remoção */}
+                {(editingItem.sizes || []).length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-white/5">
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mr-1">Tamanhos da peça:</span>
+                    {(editingItem.sizes || []).map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-white/20 text-white border border-white/20 shadow-sm"
+                        data-testid={`active-size-tag-${s}`}
+                      >
+                        {s}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSize(s)}
+                          className="hover:text-red-400 p-0.5 rounded-full transition-colors ml-0.5"
+                          title={`Remover tamanho ${s}`}
+                          data-testid={`remove-size-${s}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Cor da Peça no Inventário */}
+              <div className="space-y-2.5 bg-white/[0.03] p-3.5 rounded-2xl border border-white/10" data-testid="item-modal-color-section">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-emerald-400" />
+                    <label className="block text-xs font-bold uppercase tracking-wider text-white">
+                      Cor da Peça *
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2 bg-black/60 px-2.5 py-1 rounded-full border border-white/15">
+                    <span
+                      className="w-3 h-3 rounded-full border border-white/40 shadow-sm"
+                      style={{ backgroundColor: editingItem.colorHex || '#000000' }}
+                    />
+                    <span className="text-[11px] font-bold text-white">
+                      {editingItem.color || 'Preto'}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-gray-400">
+                  Selecione a cor da peça para o controle de estoque ou personalize o tom:
+                </p>
+
+                {/* Paleta rápida de cores */}
+                <div className="flex flex-wrap gap-2 pt-1" data-testid="color-palette-container">
+                  {DEFAULT_AVAILABLE_COLORS.map((c) => {
+                    const isSelected = editingItem.color?.toLowerCase() === c.name.toLowerCase();
+                    return (
+                      <button
+                        key={c.name}
+                        type="button"
+                        onClick={() => setEditingItem({
+                          ...editingItem,
+                          color: c.name,
+                          colorHex: c.hex,
+                          colors: [{ name: c.name, hex: c.hex }]
+                        })}
+                        data-testid={`color-select-${c.name}`}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-white text-black shadow-md shadow-white/10 scale-105'
+                            : 'bg-white/5 hover:bg-white/15 text-gray-300 border border-white/10'
+                        }`}
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full border border-white/30 shrink-0 shadow-sm"
+                          style={{ backgroundColor: c.hex }}
+                        />
+                        <span>{c.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Personalizar Nome da Cor & Seletor Hex */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Nome da Cor</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Preto Noir, Off-White, Verde Musgo"
+                      value={editingItem.color || ''}
+                      onChange={(e) => setEditingItem({
+                        ...editingItem,
+                        color: e.target.value,
+                        colors: [{ name: e.target.value, hex: editingItem.colorHex || '#000000' }]
+                      })}
+                      className="w-full bg-black/40 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-white"
+                      data-testid="item-modal-color-name-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Amostra / Tom Hex</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={editingItem.colorHex || '#000000'}
+                        onChange={(e) => setEditingItem({
+                          ...editingItem,
+                          colorHex: e.target.value,
+                          colors: [{ name: editingItem.color || 'Custom', hex: e.target.value }]
+                        })}
+                        className="w-9 h-8 rounded-lg bg-transparent border border-white/20 cursor-pointer p-0.5"
+                        data-testid="item-modal-color-picker"
+                      />
+                      <input
+                        type="text"
+                        value={editingItem.colorHex || '#000000'}
+                        onChange={(e) => setEditingItem({
+                          ...editingItem,
+                          colorHex: e.target.value,
+                          colors: [{ name: editingItem.color || 'Custom', hex: e.target.value }]
+                        })}
+                        className="flex-1 bg-black/40 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs font-mono text-gray-300 focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

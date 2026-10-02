@@ -49,10 +49,11 @@ export const tomatoApi = {
   },
 
   async saveProduct(product: Partial<Product>): Promise<Product> {
+    let savedProduct: Product;
     if (product.id) {
       const { data, error } = await supabase.from('products').update(product).eq('id', product.id).select().single();
       if (error) throw error;
-      return data as Product;
+      savedProduct = data as Product;
     } else {
       const { id, ...newProductData } = product as any;
       const insertData = {
@@ -61,11 +62,42 @@ export const tomatoApi = {
       };
       const { data, error } = await supabase.from('products').insert([insertData]).select().single();
       if (error) throw error;
-      return data as Product;
+      savedProduct = data as Product;
     }
+
+    // Sincronizar automaticamente com o inventário TomatoPHP (inventory_items)
+    try {
+      const stock = typeof savedProduct.stockCount === 'number' ? savedProduct.stockCount : 10;
+      const status = stock <= 0 ? 'out_of_stock' : stock <= 5 ? 'low_stock' : 'in_stock';
+      await supabase.from('inventory_items').upsert({
+        id: savedProduct.id,
+        productId: savedProduct.id,
+        productName: savedProduct.name,
+        sku: (savedProduct.slug || `SKU-${savedProduct.id}`).toUpperCase(),
+        categoryId: savedProduct.categorySlug || 'geral',
+        categoryName: savedProduct.category || 'Geral',
+        currentStock: stock,
+        minStock: 5,
+        maxStock: Math.max(100, stock * 2),
+        unit: 'un',
+        imageUrl: savedProduct.images?.[0] || '',
+        sizes: savedProduct.sizes || ['P', 'M', 'G', 'GG'],
+        status,
+        lastUpdated: new Date().toISOString()
+      }, { onConflict: 'id' });
+    } catch {
+      // Safe fallback if inventory_items table doesn't exist
+    }
+
+    return savedProduct;
   },
 
   async deleteProduct(id: string | number): Promise<boolean> {
+    try {
+      await supabase.from('inventory_items').delete().eq('id', id);
+    } catch {
+      // safe fallback
+    }
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) throw error;
     return true;
