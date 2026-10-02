@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart3, Package, ShoppingCart, Terminal, Plus, Edit2, Trash2, 
   RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck,
-  Upload, Loader2, Warehouse, FolderTree, Check, Code2, FileCode, CheckCircle2, AlertCircle
+  Upload, Loader2, Warehouse, FolderTree, Check, Code2, FileCode
 } from 'lucide-react';
 import type { Product, Category, Order } from '../../types/ecommerce';
 import type { InventoryItem } from '../../types/inventory';
