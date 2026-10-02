@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart3, Package, ShoppingCart, Terminal, Plus, Edit2, Trash2, 
   RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck,
-  Upload, Loader2, Warehouse, FolderTree, Check
+  Upload, Loader2, Warehouse, FolderTree, Check, Code2, FileCode, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import type { Product, Category, Order } from '../../types/ecommerce';
 import type { InventoryItem } from '../../types/inventory';
@@ -13,6 +13,85 @@ import { uploadImage } from '../../services/cloudinary';
 import { useCart } from '../../context/CartContext';
 import { InventoryPanel } from './InventoryPanel';
 import { CategoryAdminPanel } from './CategoryAdminPanel';
+
+export const DEFAULT_IMPORT_JSON = JSON.stringify([
+  {
+    name: "Camiseta Pima Classic",
+    sku: "CAM-PIMA-001",
+    category: "Camisetas",
+    price: 139.90,
+    originalPrice: 169.90,
+    stock: 45,
+    minStock: 10,
+    maxStock: 120,
+    unit: "un",
+    imageUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80",
+    sizes: ["PP", "P", "M", "G", "GG"],
+    colors: [
+      { name: "Preto", hex: "#000000" },
+      { name: "Off-White", hex: "#F5F5F0" },
+      { name: "Azul Marinho", hex: "#0B1B3D" }
+    ],
+    description: "Camiseta confeccionada em 100% algodão Pima peruano. Toque macio com alta durabilidade.",
+    details: [
+      "100% Algodão Pima Peruano",
+      "Costura reforçada ombro a ombro",
+      "Modelagem regular fit minimalista"
+    ],
+    isNew: true,
+    isFeatured: true
+  },
+  {
+    name: "Calça Alfaiataria Florença",
+    sku: "CAL-ALF-002",
+    category: "Calças",
+    price: 329.90,
+    originalPrice: 389.90,
+    stock: 22,
+    minStock: 5,
+    maxStock: 60,
+    unit: "un",
+    imageUrl: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&auto=format&fit=crop&q=80",
+    sizes: ["38", "40", "42", "44", "46"],
+    colors: [
+      { name: "Cinza Mescla", hex: "#808080" },
+      { name: "Preto", hex: "#000000" }
+    ],
+    description: "Calça de alfaiataria contemporânea com corte reto e caimento estruturado.",
+    details: [
+      "Tecido crepe encorpado",
+      "Cós com passantes e fechamento embutido",
+      "Bolsos faca laterais funcionais"
+    ],
+    isNew: true,
+    isFeatured: false
+  },
+  {
+    name: "Blazer Estruturado Milão",
+    sku: "BLZ-MIL-003",
+    category: "Alfaiataria",
+    price: 499.90,
+    originalPrice: 599.90,
+    stock: 14,
+    minStock: 4,
+    maxStock: 40,
+    unit: "un",
+    imageUrl: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop&q=80",
+    sizes: ["P", "M", "G"],
+    colors: [
+      { name: "Preto", hex: "#000000" },
+      { name: "Terracota", hex: "#C86D51" }
+    ],
+    description: "Blazer alfaiataria com ombreiras sutis e forro acetinado.",
+    details: [
+      "Acabamento alfaiataria premium",
+      "Forro interno total",
+      "Botões frontais duplos resinados"
+    ],
+    isNew: false,
+    isFeatured: true
+  }
+], null, 2);
 
 export const TomatoAdminPanel: React.FC = () => {
   const { formatPrice, showToast } = useCart();
@@ -32,8 +111,10 @@ export const TomatoAdminPanel: React.FC = () => {
   const [customProductSize, setCustomProductSize] = useState('');
 
   // API Tester State
-  const [apiEndpoint, setApiEndpoint] = useState<string>('GET /api/products');
+  const [apiEndpoint, setApiEndpoint] = useState<string>('POST /api/inventory/import');
+  const [apiRequestBody, setApiRequestBody] = useState<string>(DEFAULT_IMPORT_JSON);
   const [apiResponse, setApiResponse] = useState<string>('');
+  const [apiStatusCode, setApiStatusCode] = useState<number>(200);
   const [apiLoading, setApiLoading] = useState(false);
 
   // Image Upload State
@@ -241,28 +322,71 @@ export const TomatoAdminPanel: React.FC = () => {
     setEditingProduct({ ...editingProduct, images: newImages });
   };
 
-  // Run API Simulation
+  // Run API Simulation & Commands
   const handleRunApiTest = async () => {
     setApiLoading(true);
     const start = performance.now();
     let resData: any;
+    let statusCode = 200;
+    let statusText = 'OK';
 
-    if (apiEndpoint.includes('/products')) {
-      resData = await tomatoApi.getProducts();
-    } else if (apiEndpoint.includes('/categories')) {
-      resData = await tomatoApi.getCategories();
-    } else if (apiEndpoint.includes('/orders')) {
-      resData = await tomatoApi.getOrders();
-    } else if (apiEndpoint.includes('/inventory')) {
-      resData = await import('../../services/inventoryService').then(m => m.inventoryService.getInventoryItems());
+    try {
+      if (apiEndpoint.includes('/inventory/import')) {
+        if (!apiRequestBody.trim()) {
+          throw new Error('O corpo da requisição (Request Body) está vazio. Insira uma lista de itens em JSON.');
+        }
+
+        let parsedItems: any[];
+        try {
+          parsedItems = JSON.parse(apiRequestBody);
+        } catch {
+          throw new Error('JSON inválido no Request Body. Verifique a sintaxe (chaves, aspas e vírgulas).');
+        }
+
+        const importResult = await inventoryService.importInventoryItems(parsedItems);
+        resData = {
+          action: 'bulk_inventory_import',
+          message: `${importResult.successCount} item(ns) importado(s) com sucesso em sequência!`,
+          summary: {
+            total: importResult.total,
+            successCount: importResult.successCount,
+            failedCount: importResult.failedCount
+          },
+          items: importResult.items
+        };
+        statusCode = 201;
+        statusText = 'Created';
+
+        showToast(`${importResult.successCount} de ${importResult.total} itens importados com sucesso!`, 'success');
+        await loadAllData();
+      } else if (apiEndpoint.includes('/products')) {
+        resData = await tomatoApi.getProducts();
+      } else if (apiEndpoint.includes('/categories')) {
+        resData = await tomatoApi.getCategories();
+      } else if (apiEndpoint.includes('/orders')) {
+        resData = await tomatoApi.getOrders();
+      } else if (apiEndpoint.includes('/inventory')) {
+        resData = await inventoryService.getInventoryItems();
+      }
+    } catch (err: any) {
+      statusCode = 400;
+      statusText = 'Bad Request';
+      resData = {
+        error: true,
+        message: err?.message || 'Falha ao processar requisição na REST API.',
+        timestamp: new Date().toISOString()
+      };
+      showToast(err?.message || 'Erro na requisição da REST API', 'error');
     }
 
     const elapsed = Math.round(performance.now() - start);
+    setApiStatusCode(statusCode);
     setApiResponse(JSON.stringify({
-      status: 200,
-      statusText: 'OK',
+      status: statusCode,
+      statusText,
       responseTime: `${elapsed}ms`,
       engine: 'TomatoPHP Filament v3.x REST API',
+      endpoint: apiEndpoint,
       data: resData
     }, null, 2));
     setApiLoading(false);
@@ -653,48 +777,186 @@ export const TomatoAdminPanel: React.FC = () => {
         {activeTab === 'api' && (
           <div className="space-y-6">
             <div className="bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
-              <div className="flex items-center gap-3">
-                <Terminal className="w-5 h-5 text-white" />
-                <div>
-                  <h3 className="text-lg font-bold uppercase tracking-wider text-white">
-                    Simulador & Tester da API TomatoPHP
-                  </h3>
-                  <p className="text-xs text-gray-400">
-                    Teste as requisições REST da engine e verifique os payloads JSON retornados.
-                  </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                    <Terminal className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                      <span>Console REST API TomatoPHP</span>
+                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-mono">
+                        POST & GET Engine
+                      </span>
+                    </h3>
+                    <p className="text-xs text-gray-400">
+                      Execute requisições REST, faça importações sequenciais de inventário em lote e inspecione os payloads JSON retornados.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-center">
+                  <span className="text-[11px] font-mono text-gray-400 bg-black/60 px-3 py-1.5 rounded-xl border border-white/10">
+                    Endpoint Ativo: <strong className="text-white">{apiEndpoint.split(' ')[0]}</strong>
+                  </span>
                 </div>
               </div>
 
               {/* Endpoint Selector & Run Button */}
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <select
-                  value={apiEndpoint}
-                  onChange={(e) => setApiEndpoint(e.target.value)}
-                  className="w-full sm:flex-1 bg-black text-white text-xs font-mono rounded-2xl px-4 py-3 border border-white/20 focus:outline-none"
-                >
-                  <option value="GET /api/products">GET /api/products (Listar Catálogo)</option>
-                  <option value="GET /api/categories">GET /api/categories (Listar Categorias)</option>
-                  <option value="GET /api/inventory">GET /api/inventory (Listar Estoque & Inventário)</option>
-                  <option value="GET /api/orders">GET /api/orders (Listar Pedidos)</option>
-                </select>
-                <button
-                  onClick={handleRunApiTest}
-                  disabled={apiLoading}
-                  className="w-full sm:w-auto px-6 py-3 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-2xl hover:bg-gray-200 transition-colors shrink-0 flex items-center justify-center gap-2"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${apiLoading ? 'animate-spin' : ''}`} />
-                  <span>Enviar Requisição</span>
-                </button>
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
+                  <Code2 className="w-3.5 h-3.5 text-gray-400" />
+                  <span>Selecione a Rota da REST API:</span>
+                </label>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <select
+                    value={apiEndpoint}
+                    onChange={(e) => setApiEndpoint(e.target.value)}
+                    className="w-full sm:flex-1 bg-black text-white text-xs font-mono font-bold rounded-2xl px-4 py-3.5 border border-white/20 focus:outline-none focus:border-indigo-400 transition-colors"
+                  >
+                    <option value="POST /api/inventory/import">
+                      POST /api/inventory/import (Importação em Lote / Criar Vários Itens em Sequência)
+                    </option>
+                    <option value="GET /api/inventory">
+                      GET /api/inventory (Listar Estoque & Inventário TomatoPHP)
+                    </option>
+                    <option value="GET /api/products">
+                      GET /api/products (Listar Catálogo de Produtos)
+                    </option>
+                    <option value="GET /api/categories">
+                      GET /api/categories (Listar Categorias)
+                    </option>
+                    <option value="GET /api/orders">
+                      GET /api/orders (Listar Pedidos)
+                    </option>
+                  </select>
+
+                  <button
+                    onClick={handleRunApiTest}
+                    disabled={apiLoading}
+                    className={`w-full sm:w-auto px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shrink-0 flex items-center justify-center gap-2 ${
+                      apiEndpoint.startsWith('POST')
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20'
+                        : 'bg-white hover:bg-gray-200 text-black'
+                    }`}
+                  >
+                    {apiLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : apiEndpoint.startsWith('POST') ? (
+                      <Upload className="w-4 h-4" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    <span>
+                      {apiLoading
+                        ? 'Processando...'
+                        : apiEndpoint.startsWith('POST')
+                        ? 'Executar Importação REST'
+                        : 'Enviar Requisição'}
+                    </span>
+                  </button>
+                </div>
               </div>
+
+              {/* POST Request Body Editor (Only when POST is selected) */}
+              {apiEndpoint.startsWith('POST') && (
+                <div className="space-y-3 bg-black/50 p-5 rounded-2xl border border-white/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-[10px] font-mono">
+                        POST
+                      </span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-white">
+                        Request Body (JSON Payload):
+                      </span>
+                      {(() => {
+                        try {
+                          const parsed = JSON.parse(apiRequestBody);
+                          const count = Array.isArray(parsed) ? parsed.length : 1;
+                          return (
+                            <span className="text-[11px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-emerald-400">
+                              {count} {count === 1 ? 'item detectado' : 'itens detectados'}
+                            </span>
+                          );
+                        } catch {
+                          return (
+                            <span className="text-[11px] font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
+                              JSON com erro de sintaxe
+                            </span>
+                          );
+                        }
+                      })()}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setApiRequestBody(DEFAULT_IMPORT_JSON)}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5"
+                      >
+                        <FileCode className="w-3 h-3 text-indigo-400" />
+                        <span>Carregar Exemplo JSON</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            const formatted = JSON.stringify(JSON.parse(apiRequestBody), null, 2);
+                            setApiRequestBody(formatted);
+                          } catch {
+                            showToast('Corrija o JSON antes de formatar', 'error');
+                          }
+                        }}
+                        className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl text-[11px] font-semibold transition-colors"
+                      >
+                        Formatar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setApiRequestBody('[]')}
+                        className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[11px] font-semibold transition-colors"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-gray-400">
+                    Insira abaixo um array JSON com os itens do inventário. Cada item receberá SKU, estoque, categoria automática, imagens, grade de tamanhos e sincronização com o TomatoPHP:
+                  </p>
+
+                  <textarea
+                    rows={12}
+                    value={apiRequestBody}
+                    onChange={(e) => setApiRequestBody(e.target.value)}
+                    placeholder='[\n  {\n    "name": "Nome da Peça",\n    "sku": "SKU-001",\n    "category": "Camisetas",\n    "price": 129.90,\n    "stock": 30\n  }\n]'
+                    className="w-full bg-black font-mono text-xs text-gray-100 p-4 rounded-xl border border-white/20 focus:outline-none focus:border-emerald-400 leading-relaxed resize-y scrollbar-thin"
+                    spellCheck={false}
+                  />
+                </div>
+              )}
 
               {/* Response Code Block */}
               {apiResponse && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-gray-400 font-mono">
-                    <span>Response Payload (JSON):</span>
-                    <span className="text-green-400 font-bold">200 OK</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-300">Response Payload (JSON):</span>
+                      <span className="text-[11px] text-gray-500">Tomato Engine Result</span>
+                    </div>
+                    <span
+                      className={`font-bold px-2 py-0.5 rounded-full text-[11px] border ${
+                        apiStatusCode === 201
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          : apiStatusCode === 200
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                          : 'bg-red-500/20 text-red-400 border-red-500/30'
+                      }`}
+                    >
+                      {apiStatusCode} {apiStatusCode === 201 ? 'Created' : apiStatusCode === 200 ? 'OK' : 'Bad Request'}
+                    </span>
                   </div>
-                  <pre className="bg-black/90 p-5 rounded-2xl border border-white/10 text-xs font-mono text-gray-200 overflow-x-auto max-h-96">
+                  <pre className="bg-black/95 p-5 rounded-2xl border border-white/10 text-xs font-mono text-gray-200 overflow-x-auto max-h-96 leading-relaxed">
                     {apiResponse}
                   </pre>
                 </div>

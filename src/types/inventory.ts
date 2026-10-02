@@ -59,6 +59,50 @@ export interface InventoryCategory {
   itemCount: number;
 }
 
+export interface InventoryImportItem {
+  name?: string;
+  productName?: string;
+  sku?: string;
+  category?: string;
+  categoryName?: string;
+  categorySlug?: string;
+  categoryId?: string | number;
+  price?: number;
+  originalPrice?: number;
+  stock?: number;
+  currentStock?: number;
+  stockCount?: number;
+  minStock?: number;
+  maxStock?: number;
+  unit?: string;
+  imageUrl?: string;
+  images?: string[];
+  sizes?: string[];
+  colors?: { name: string; hex: string }[];
+  color?: string;
+  colorHex?: string;
+  description?: string;
+  details?: string[];
+  isNew?: boolean;
+  isFeatured?: boolean;
+  tag?: string;
+}
+
+export interface InventoryImportResult {
+  total: number;
+  successCount: number;
+  failedCount: number;
+  items: {
+    name: string;
+    sku: string;
+    category: string;
+    stock: number;
+    price: number;
+    status: 'success' | 'error';
+    error?: string;
+  }[];
+}
+
 export interface StockUpdatePayload {
   inventoryItemId: string | number;
   quantity: number;

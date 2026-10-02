@@ -10,6 +10,7 @@ function createMockQuery(returnData: any[] = [], returnError: any = null) {
     eq: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue({ data: returnData[0] || null, error: returnError }),
+    maybeSingle: vi.fn().mockResolvedValue({ data: returnData[0] || null, error: returnError }),
     or: vi.fn().mockReturnThis(),
     upsert: vi.fn().mockReturnThis(),
     then: (resolve: Function) => resolve({ data: returnData, error: returnError }),
@@ -50,6 +51,7 @@ describe('InventoryService - Tomato Inventory Supabase Integration', () => {
     mockQuery.or.mockReturnValue(mockQuery);
     mockQuery.upsert.mockReturnValue(mockQuery);
     mockQuery.single.mockResolvedValue({ data: null, error: null });
+    mockQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
     mockQuery.then = (resolve: Function) => resolve({ data: [], error: null });
   });
 
@@ -240,6 +242,57 @@ describe('InventoryService - Tomato Inventory Supabase Integration', () => {
           images: ['https://example.com/new.jpg', 'https://example.com/old.jpg']
         })
       );
+    });
+  });
+
+  describe('importInventoryItems', () => {
+    it('should import items sequentially and handle JSON string or array', async () => {
+      // Mock category lookup (not found) and product insert
+      mockQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
+      mockQuery.single.mockResolvedValue({ data: { id: 'new-prod-123' }, error: null });
+
+      const { inventoryService } = await import('../../services/inventoryService');
+      const payload = [
+        {
+          name: 'Camiseta Algodão Pima',
+          sku: 'CAM-PIMA-001',
+          category: 'Camisetas',
+          price: 149.90,
+          stock: 30,
+          sizes: ['P', 'M', 'G'],
+          colors: [{ name: 'Preto', hex: '#000000' }],
+        }
+      ];
+
+      const result = await inventoryService.importInventoryItems(payload);
+
+      expect(result.total).toBe(1);
+      expect(result.successCount).toBe(1);
+      expect(result.failedCount).toBe(0);
+      expect(result.items[0].sku).toBe('CAM-PIMA-001');
+      expect(result.items[0].status).toBe('success');
+    });
+
+    it('should accept JSON string format', async () => {
+      mockQuery.maybeSingle.mockResolvedValue({ data: null, error: null });
+      mockQuery.single.mockResolvedValue({ data: { id: 'new-prod-456' }, error: null });
+
+      const { inventoryService } = await import('../../services/inventoryService');
+      const jsonString = JSON.stringify([
+        {
+          name: 'Calça Alfaiataria Slim',
+          sku: 'CAL-ALF-002',
+          category: 'Calças',
+          price: 299.90,
+          stock: 15
+        }
+      ]);
+
+      const result = await inventoryService.importInventoryItems(jsonString);
+
+      expect(result.total).toBe(1);
+      expect(result.successCount).toBe(1);
+      expect(result.items[0].sku).toBe('CAL-ALF-002');
     });
   });
 });

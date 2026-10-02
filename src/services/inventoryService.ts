@@ -8,7 +8,9 @@ import type {
   InventoryItem,
   InventoryCategory,
   StockMovement,
-  StockUpdatePayload
+  StockUpdatePayload,
+  InventoryImportItem,
+  InventoryImportResult
 } from '../types/inventory';
 import { getInventoryStatus } from '../types/inventory';
 import { supabase } from '../config/supabase';
@@ -521,5 +523,247 @@ export const inventoryService = {
     });
 
     return true;
+  },
+
+  // --- BULK INVENTORY IMPORT ---
+  async importInventoryItems(
+    itemsInput: InventoryImportItem[] | string
+  ): Promise<InventoryImportResult> {
+    let items: InventoryImportItem[] = [];
+
+    if (typeof itemsInput === 'string') {
+      try {
+        const parsed = JSON.parse(itemsInput);
+        items = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (err) {
+        console.error('❌ Erro: Formato JSON inválido passado para importInventory.', err);
+        throw new Error('Formato JSON inválido. Certifique-se de passar um array de itens válido.');
+      }
+    } else if (Array.isArray(itemsInput)) {
+      items = itemsInput;
+    } else if (typeof itemsInput === 'object' && itemsInput !== null) {
+      items = [itemsInput];
+    } else {
+      throw new Error('Parâmetro inválido. Passe um array de itens ou uma string JSON.');
+    }
+
+    console.log(
+      `%c🚀 [Vitta Inventory] Iniciando importação sequencial de ${items.length} itens...`,
+      'color: #3b82f6; font-weight: bold; font-size: 13px;'
+    );
+
+    const result: InventoryImportResult = {
+      total: items.length,
+      successCount: 0,
+      failedCount: 0,
+      items: []
+    };
+
+    for (let i = 0; i < items.length; i++) {
+      const raw = items[i];
+      const itemName = (raw.name || raw.productName || `Item ${i + 1}`).trim();
+      const rawSlug = (raw.sku || itemName).toLowerCase().trim().replace(/[\s_]+/g, '-').replace(/[^\w-]/g, '');
+      const slug = rawSlug || `item-${Date.now()}-${i + 1}`;
+      const itemSku = (raw.sku || slug).toUpperCase().trim();
+
+      const catName = (raw.category || raw.categoryName || 'Geral').trim();
+      const catSlug = (raw.categorySlug || raw.categoryId || catName).toString().toLowerCase().trim().replace(/[\s_]+/g, '-').replace(/[^\w-]/g, '') || 'geral';
+
+      const stock = Number(raw.currentStock ?? raw.stock ?? raw.stockCount ?? 10);
+      const minStock = Number(raw.minStock ?? 5);
+      const maxStock = Number(raw.maxStock ?? Math.max(100, stock * 2));
+      const price = Number(raw.price ?? 99);
+      const originalPrice = raw.originalPrice ? Number(raw.originalPrice) : undefined;
+      const unit = raw.unit || 'un';
+
+      const rawImages = Array.isArray(raw.images) && raw.images.length > 0 ? raw.images : (raw.imageUrl ? [raw.imageUrl] : []);
+      const images = rawImages.length > 0 ? rawImages : [];
+      const primaryImage = images[0] || '';
+
+      const sizes = Array.isArray(raw.sizes) && raw.sizes.length > 0 ? raw.sizes : ['PP', 'P', 'M', 'G', 'GG'];
+      
+      let colors: { name: string; hex: string }[] = [];
+      if (Array.isArray(raw.colors) && raw.colors.length > 0) {
+        colors = raw.colors;
+      } else if (raw.color) {
+        colors = [{ name: raw.color, hex: raw.colorHex || '#000000' }];
+      } else {
+        colors = [{ name: 'Preto', hex: '#000000' }];
+      }
+
+      const description = raw.description || `Peça ${itemName} da coleção Vitta. Qualidade e acabamento refinado.`;
+      const details = Array.isArray(raw.details) ? raw.details : [];
+      const isNew = typeof raw.isNew === 'boolean' ? raw.isNew : true;
+      const isFeatured = typeof raw.isFeatured === 'boolean' ? raw.isFeatured : false;
+      const tag = raw.tag || (isNew ? 'Novo' : undefined);
+      const status = getInventoryStatus(stock, minStock);
+
+      try {
+        // 1. Garantir categoria na tabela categories
+        try {
+          const { data: catExists } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('slug', catSlug)
+            .maybeSingle();
+
+          if (!catExists) {
+            await supabase.from('categories').insert([{
+              name: catName,
+              slug: catSlug,
+              description: `Coleção de ${catName}`,
+              image: primaryImage,
+              itemCount: 1
+            }]);
+          }
+        } catch {
+          // ignore category insert error
+        }
+
+        // 2. Inserir ou atualizar na tabela products
+        let productId: string | number;
+        const { data: existingProd } = await supabase
+          .from('products')
+          .select('id')
+          .or(`slug.eq.${slug},name.eq.${itemName}`)
+          .maybeSingle();
+
+        if (existingProd) {
+          productId = existingProd.id;
+          const { error: updErr } = await supabase
+            .from('products')
+            .update({
+              name: itemName,
+              price,
+              originalPrice,
+              category: catName,
+              categorySlug: catSlug,
+              images,
+              description,
+              details,
+              colors,
+              sizes,
+              stockCount: stock,
+              inStock: stock > 0,
+              isNew,
+              isFeatured,
+              tag
+            })
+            .eq('id', productId);
+
+          if (updErr) throw updErr;
+        } else {
+          const { data: newProd, error: insErr } = await supabase
+            .from('products')
+            .insert([{
+              name: itemName,
+              slug,
+              price,
+              originalPrice,
+              category: catName,
+              categorySlug: catSlug,
+              images,
+              description,
+              details,
+              colors,
+              sizes,
+              stockCount: stock,
+              inStock: stock > 0,
+              isNew,
+              isFeatured,
+              tag
+            }])
+            .select('id')
+            .single();
+
+          if (insErr) throw insErr;
+          productId = newProd.id;
+        }
+
+        // 3. Sincronizar na tabela inventory_items (Tomato Inventory)
+        try {
+          await supabase.from('inventory_items').upsert({
+            id: productId,
+            productId,
+            productName: itemName,
+            sku: itemSku,
+            categoryId: catSlug,
+            categoryName: catName,
+            currentStock: stock,
+            minStock,
+            maxStock,
+            unit,
+            imageUrl: primaryImage,
+            status,
+            lastUpdated: new Date().toISOString()
+          }, { onConflict: 'id' });
+        } catch {
+          // fallback
+        }
+
+        // 4. Registrar movimentação de estoque
+        try {
+          await supabase.from('stock_movements').insert([{
+            inventoryItemId: productId,
+            type: 'in',
+            quantity: stock,
+            reason: 'Importação inicial de lote',
+            createdAt: new Date().toISOString()
+          }]);
+        } catch {
+          // safe fallback
+        }
+
+        result.successCount++;
+        result.items.push({
+          name: itemName,
+          sku: itemSku,
+          category: catName,
+          stock,
+          price,
+          status: 'success'
+        });
+
+        console.log(
+          `%c[${i + 1}/${items.length}] ✅ "${itemName}" | SKU: ${itemSku} | Estoque: ${stock} | Preço: R$ ${price.toFixed(2)}`,
+          'color: #10b981; font-weight: bold;'
+        );
+      } catch (err: any) {
+        result.failedCount++;
+        const errMsg = err?.message || 'Erro ao processar item';
+        result.items.push({
+          name: itemName,
+          sku: itemSku,
+          category: catName,
+          stock,
+          price,
+          status: 'error',
+          error: errMsg
+        });
+
+        console.error(
+          `%c[${i + 1}/${items.length}] ❌ Erro ao importar "${itemName}": ${errMsg}`,
+          'color: #ef4444; font-weight: bold;'
+        );
+      }
+    }
+
+    console.log(
+      `%c🎉 [Vitta Inventory] Importação Concluída! Total: ${result.total} | Sucessos: ${result.successCount} | Falhas: ${result.failedCount}`,
+      'color: #6366f1; font-weight: bold; font-size: 13px;'
+    );
+    console.table(result.items);
+
+    observability.trackEvent({
+      name: 'inventory_bulk_import_completed',
+      category: 'admin',
+      properties: {
+        total: result.total,
+        successCount: result.successCount,
+        failedCount: result.failedCount
+      }
+    });
+
+    return result;
   }
 };
