@@ -308,4 +308,53 @@ describe('InventoryPanel (Tomato Inventory Admin Component)', () => {
       );
     });
   });
+
+  it('should upload image directly to Cloudinary and set imageUrl in item create/edit modal', async () => {
+    render(<InventoryPanel />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('create-inventory-item-btn')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('create-inventory-item-btn'));
+
+    // Check image section
+    expect(screen.getByTestId('item-modal-image-section')).toBeInTheDocument();
+    expect(screen.getByTestId('item-modal-upload-btn')).toBeInTheDocument();
+
+    const fileInput = screen.getByTestId('item-modal-image-file-input');
+    const validFile = new File(['image-bytes'], 'tshirt-photo.png', { type: 'image/png' });
+    Object.defineProperty(validFile, 'size', { value: 1024 * 500 });
+
+    fireEvent.change(fileInput, { target: { files: [validFile] } });
+
+    await waitFor(() => {
+      expect(uploadImage).toHaveBeenCalledWith(validFile, expect.any(Function));
+      expect(mockShowToast).toHaveBeenCalledWith(
+        expect.stringContaining('Cloudinary'),
+        'success'
+      );
+    });
+
+    // Check that imageUrl is populated and preview is displayed
+    const urlInput = screen.getByTestId('item-modal-image-url-input') as HTMLInputElement;
+    expect(urlInput.value).toBe('https://cloudinary.com/uploaded.jpg');
+    expect(screen.getByTestId('item-modal-image-preview')).toBeInTheDocument();
+
+    // Fill product name and save
+    fireEvent.change(screen.getByTestId('item-modal-name-input'), {
+      target: { value: 'Camiseta Básica Cloud' },
+    });
+    fireEvent.click(screen.getByTestId('item-modal-save-btn'));
+
+    await waitFor(() => {
+      expect(inventoryService.saveInventoryItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productName: 'Camiseta Básica Cloud',
+          imageUrl: 'https://cloudinary.com/uploaded.jpg',
+        })
+      );
+    });
+  });
 });
+

@@ -10,7 +10,11 @@ import type {
   StockMovement,
   StockUpdatePayload,
   InventoryImportItem,
-  InventoryImportResult
+  InventoryImportResult,
+  BulkStockMovementItem,
+  BulkUpdateResult,
+  InventoryAbcItem,
+  StockoutPredictionItem
 } from '../types/inventory';
 import { getInventoryStatus } from '../types/inventory';
 import { supabase } from '../config/supabase';
@@ -477,6 +481,197 @@ export const inventoryService = {
       // safe fallback
     }
     return [];
+  },
+
+  // --- ATOMIC BULK STOCK MOVEMENTS (RPC) ---
+  async processBulkUpdate(movements: BulkStockMovementItem[]): Promise<BulkUpdateResult> {
+    if (!Array.isArray(movements) || movements.length === 0) {
+      return { success: true, processed_count: 0, message: 'Nenhuma movimentação para processar.' };
+    }
+
+    try {
+      // Obter ID do admin autenticado para auditoria
+      const { data: sessionData } = await supabase.auth.getSession();
+      const currentAdminId = sessionData?.session?.user?.id;
+
+      const sanitizedPayload = movements.map((m) => ({
+        inventoryItemId: String(m.inventoryItemId),
+        quantity: Math.max(1, Math.floor(Number(m.quantity) || 1)),
+        type: m.type,
+        reason: m.reason?.trim() || 'Entrada em massa via painel administrativo',
+        adminId: m.adminId || currentAdminId || null
+      }));
+
+      const { data, error } = await supabase.rpc('process_bulk_stock_movements', {
+        payload: sanitizedPayload
+      });
+
+      if (error) {
+        observability.captureException(error, {
+          action: 'processBulkUpdate',
+          count: movements.length
+        });
+        throw error;
+      }
+
+      observability.trackEvent({
+        name: 'bulk_inventory_updated',
+        category: 'admin',
+        properties: {
+          count: movements.length,
+          processedCount: data?.processed_count ?? movements.length
+        }
+      });
+
+      return (data as BulkUpdateResult) || {
+        success: true,
+        processed_count: movements.length,
+        timestamp: new Date().toISOString()
+      };
+    } catch (err: any) {
+      observability.captureException(err, {
+        action: 'processBulkUpdate',
+        count: movements.length
+      });
+      throw err;
+    }
+  },
+
+  // --- INVENTORY ANALYTICS & INTELLIGENCE (RPCs) ---
+  async getAbcCurve(): Promise<InventoryAbcItem[]> {
+    try {
+      const { data, error } = await supabase.rpc('get_inventory_abc_curve');
+      if (!error && Array.isArray(data)) {
+        return data as InventoryAbcItem[];
+      }
+    } catch {
+      // safe fallback if RPC not yet deployed
+    }
+
+    try {
+      const [items, movements] = await Promise.all([
+        this.getInventoryItems('all'),
+        supabase
+          .from('stock_movements')
+          .select('*')
+          .eq('type', 'out')
+      ]);
+
+      const movementsData = movements.data || [];
+      const salesMap = new Map<string, number>();
+      let totalOut = 0;
+
+      movementsData.forEach((m: any) => {
+        const qty = Number(m.quantity) || 0;
+        const current = salesMap.get(String(m.inventoryItemId)) || 0;
+        salesMap.set(String(m.inventoryItemId), current + qty);
+        totalOut += qty;
+      });
+
+      const ranked = items.map((item) => {
+        const outQty = salesMap.get(String(item.id)) || 0;
+        return {
+          inventory_item_id: String(item.id),
+          product_name: item.productName,
+          sku: item.sku,
+          current_stock: item.currentStock,
+          min_stock: item.minStock,
+          status: item.status,
+          total_out_qty: outQty,
+          percentage: totalOut > 0 ? Number(((outQty / totalOut) * 100).toFixed(2)) : 0,
+          cum_percentage: 0,
+          classification: 'C' as const,
+          image_url: item.imageUrl,
+          category_name: item.categoryName
+        };
+      }).sort((a, b) => b.total_out_qty - a.total_out_qty || b.current_stock - a.current_stock);
+
+      let cum = 0;
+      return ranked.map((r) => {
+        cum += r.percentage;
+        const cumPct = Number(cum.toFixed(2));
+        let classification: 'A' | 'B' | 'C' = 'C';
+        if (cumPct <= 80 || cumPct === r.percentage) {
+          classification = 'A';
+        } else if (cumPct <= 95) {
+          classification = 'B';
+        }
+        return {
+          ...r,
+          cum_percentage: cumPct,
+          classification
+        };
+      });
+    } catch (err) {
+      observability.captureException(err, { action: 'getAbcCurve' });
+      return [];
+    }
+  },
+
+  async getStockoutPredictions(): Promise<StockoutPredictionItem[]> {
+    try {
+      const { data, error } = await supabase.rpc('get_stockout_predictions');
+      if (!error && Array.isArray(data)) {
+        return data as StockoutPredictionItem[];
+      }
+    } catch {
+      // safe fallback if RPC not yet deployed
+    }
+
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const [items, movements] = await Promise.all([
+        this.getInventoryItems('all'),
+        supabase
+          .from('stock_movements')
+          .select('*')
+          .eq('type', 'out')
+          .gte('createdAt', thirtyDaysAgo)
+      ]);
+
+      const movementsData = movements.data || [];
+      const salesMap = new Map<string, number>();
+
+      movementsData.forEach((m: any) => {
+        const qty = Number(m.quantity) || 0;
+        const current = salesMap.get(String(m.inventoryItemId)) || 0;
+        salesMap.set(String(m.inventoryItemId), current + qty);
+      });
+
+      const predictions: StockoutPredictionItem[] = [];
+
+      items.forEach((item) => {
+        const outLast30d = salesMap.get(String(item.id)) || 0;
+        const avgDaily = Number((outLast30d / 30.0).toFixed(2));
+        let daysLeft = 999;
+
+        if (item.currentStock <= 0) {
+          daysLeft = 0;
+        } else if (avgDaily > 0) {
+          daysLeft = Number((item.currentStock / avgDaily).toFixed(1));
+        }
+
+        if (item.currentStock <= 0 || (avgDaily > 0 && daysLeft <= 15.0)) {
+          predictions.push({
+            inventory_item_id: String(item.id),
+            product_name: item.productName,
+            sku: item.sku,
+            current_stock: item.currentStock,
+            min_stock: item.minStock,
+            avg_daily_sales: avgDaily,
+            days_until_stockout: daysLeft,
+            status: item.status,
+            image_url: item.imageUrl,
+            category_name: item.categoryName
+          });
+        }
+      });
+
+      return predictions.sort((a, b) => a.days_until_stockout - b.days_until_stockout || b.avg_daily_sales - a.avg_daily_sales);
+    } catch (err) {
+      observability.captureException(err, { action: 'getStockoutPredictions' });
+      return [];
+    }
   },
 
   // --- IMAGE UPLOAD & VERIFICATION ---

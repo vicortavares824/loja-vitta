@@ -38,6 +38,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
   const [editingItem, setEditingItem] = useState<Partial<InventoryItem> | null>(null);
   const [customSizeInput, setCustomSizeInput] = useState('');
   const [savingItem, setSavingItem] = useState(false);
+  const [itemModalUploading, setItemModalUploading] = useState(false);
+  const [itemModalUploadProgress, setItemModalUploadProgress] = useState(0);
+  const itemModalFileInputRef = useRef<HTMLInputElement>(null);
 
   // Image Upload & Verification State
   const [pendingImage, setPendingImage] = useState<ImagePendingVerification | null>(null);
@@ -203,6 +206,38 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
       await loadData();
     } catch {
       showToast('Erro ao excluir item do inventário.', 'error');
+    }
+  };
+
+  // Direct Cloudinary Upload for Item Modal (Create or Edit)
+  const handleItemModalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingItem) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      showToast(validation.error || 'Arquivo de imagem inválido.', 'error');
+      return;
+    }
+
+    setItemModalUploading(true);
+    setItemModalUploadProgress(0);
+
+    try {
+      const result = await uploadImage(file, (progress) => {
+        setItemModalUploadProgress(progress.percentage);
+      });
+
+      setEditingItem((prev) => (prev ? { ...prev, imageUrl: result.url } : null));
+      showToast('Imagem enviada para o Cloudinary com sucesso!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Falha ao enviar imagem para o Cloudinary.', 'error');
+    } finally {
+      setItemModalUploading(false);
+      setItemModalUploadProgress(0);
+      if (itemModalFileInputRef.current) {
+        itemModalFileInputRef.current.value = '';
+      }
     }
   };
 
@@ -957,17 +992,95 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
-                  URL da Imagem
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={editingItem.imageUrl || ''}
-                  onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
-                />
+              {/* Product Image & Cloudinary Upload */}
+              <div className="space-y-3" data-testid="item-modal-image-section">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                    Imagem do Produto (Cloudinary)
+                  </label>
+                  {editingItem.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingItem({ ...editingItem, imageUrl: '' })}
+                      className="text-[11px] text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 font-semibold"
+                      data-testid="item-modal-remove-image-btn"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Remover foto
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3.5 bg-white/5 border border-white/10 rounded-2xl">
+                  {/* Thumbnail Preview */}
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-black/60 border border-white/20 flex-shrink-0 flex items-center justify-center">
+                    {editingItem.imageUrl ? (
+                      <>
+                        <img
+                          src={editingItem.imageUrl}
+                          alt="Prévia do Produto"
+                          className="w-full h-full object-cover"
+                          data-testid="item-modal-image-preview"
+                        />
+                        {editingItem.imageUrl.includes('cloudinary.com') && (
+                          <div className="absolute bottom-1 right-1 bg-emerald-500/90 text-black text-[8px] font-black uppercase px-1 py-0.5 rounded shadow">
+                            Cloudinary
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-gray-500 gap-1">
+                        <ImageIcon className="w-6 h-6" />
+                        <span className="text-[9px]">Sem imagem</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions & URL Input */}
+                  <div className="flex-1 w-full space-y-2">
+                    <input
+                      ref={itemModalFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleItemModalImageUpload}
+                      data-testid="item-modal-image-file-input"
+                    />
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => itemModalFileInputRef.current?.click()}
+                        disabled={itemModalUploading}
+                        className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-50"
+                        data-testid="item-modal-upload-btn"
+                      >
+                        {itemModalUploading ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                            <span>Enviando para Cloudinary ({itemModalUploadProgress}%)...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5 text-white" />
+                            <span>{editingItem.imageUrl ? 'Trocar Imagem (Cloudinary)' : 'Enviar Imagem (Cloudinary)'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="https://res.cloudinary.com/... ou URL externa"
+                        value={editingItem.imageUrl || ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                        className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-white font-mono"
+                        data-testid="item-modal-image-url-input"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">

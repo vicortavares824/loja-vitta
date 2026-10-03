@@ -162,3 +162,70 @@ export function getInventoryStatus(currentStock: number, minStock: number): Inve
   if (currentStock <= minStock) return 'low_stock';
   return 'in_stock';
 }
+
+/**
+ * Bulk Stock Movement Payloads (Atomic RPC)
+ */
+export interface BulkStockMovementItem {
+  inventoryItemId: string | number;
+  quantity: number;
+  type: 'in' | 'out' | 'adjustment';
+  reason: string;
+  adminId?: string;
+}
+
+export interface BulkUpdateRow {
+  id: string;
+  inventoryItemId: string;
+  productName: string;
+  sku: string;
+  size: string;
+  color: string;
+  currentStock: number;
+  quantity: number;
+  type: 'in' | 'out' | 'adjustment';
+  reason: string;
+}
+
+export interface BulkUpdateResult {
+  success: boolean;
+  processed_count: number;
+  message?: string;
+  timestamp?: string;
+}
+
+/**
+ * ABC Curve Analysis Item
+ */
+export interface InventoryAbcItem {
+  inventory_item_id: string;
+  product_name: string;
+  sku: string;
+  current_stock: number;
+  min_stock: number;
+  status: InventoryStatus;
+  total_out_qty: number;
+  percentage: number;
+  cum_percentage: number;
+  classification: 'A' | 'B' | 'C';
+  image_url?: string;
+  category_name?: string;
+}
+
+/**
+ * Stockout Prediction Item (Previsão de Ruptura)
+ */
+export interface StockoutPredictionItem {
+  inventory_item_id: string;
+  product_name: string;
+  sku: string;
+  current_stock: number;
+  min_stock: number;
+  avg_daily_sales: number;
+  days_until_stockout: number;
+  status: InventoryStatus;
+  image_url?: string;
+  category_name?: string;
+}
+
+

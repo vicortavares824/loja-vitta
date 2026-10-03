@@ -34,7 +34,7 @@
     },
     {
       "name": "admin",
-      "path": "src/components/admin/**",
+      "path": "src/{components/admin,admin}/**",
       "allowedDependencies": ["types", "services", "context", "ui"]
     },
     {

@@ -22,8 +22,9 @@ const mockQuery = createMockQuery();
 
 const mockSupabase = {
   from: vi.fn(() => mockQuery),
+  rpc: vi.fn().mockResolvedValue({ data: { success: true, processed_count: 2 }, error: null }),
   auth: {
-    getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: 'admin-123' } } }, error: null }),
   },
 };
 
@@ -295,4 +296,95 @@ describe('InventoryService - Tomato Inventory Supabase Integration', () => {
       expect(result.items[0].sku).toBe('CAL-ALF-002');
     });
   });
+
+  describe('processBulkUpdate', () => {
+    it('should invoke process_bulk_stock_movements RPC with sanitized payload and track event', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({
+        data: { success: true, processed_count: 2 },
+        error: null,
+      });
+
+      const { inventoryService } = await import('../../services/inventoryService');
+      const { observability } = await import('../../services/observability');
+
+      const movements = [
+        {
+          inventoryItemId: 'item-uuid-1',
+          quantity: 10,
+          type: 'in' as const,
+          reason: 'Entrada fornecedor',
+        },
+        {
+          inventoryItemId: 'item-uuid-2',
+          quantity: 3,
+          type: 'out' as const,
+          reason: 'Venda externa',
+        },
+      ];
+
+      const result = await inventoryService.processBulkUpdate(movements);
+
+      expect(result.success).toBe(true);
+      expect(result.processed_count).toBe(2);
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('process_bulk_stock_movements', {
+        payload: expect.arrayContaining([
+          expect.objectContaining({
+            inventoryItemId: 'item-uuid-1',
+            quantity: 10,
+            type: 'in',
+            adminId: 'admin-123',
+          }),
+          expect.objectContaining({
+            inventoryItemId: 'item-uuid-2',
+            quantity: 3,
+            type: 'out',
+            adminId: 'admin-123',
+          }),
+        ]),
+      });
+
+      expect(observability.trackEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'bulk_inventory_updated',
+          properties: expect.objectContaining({ count: 2, processedCount: 2 }),
+        })
+      );
+    });
+
+    it('should throw and capture exception if RPC fails', async () => {
+      const mockError = new Error('Estoque insuficiente para o item');
+      mockSupabase.rpc.mockResolvedValueOnce({
+        data: null,
+        error: mockError,
+      });
+
+      const { inventoryService } = await import('../../services/inventoryService');
+      const { observability } = await import('../../services/observability');
+
+      await expect(
+        inventoryService.processBulkUpdate([
+          {
+            inventoryItemId: 'item-uuid-1',
+            quantity: 9999,
+            type: 'out',
+            reason: 'Saída excessiva',
+          },
+        ])
+      ).rejects.toThrow();
+
+      expect(observability.captureException).toHaveBeenCalledWith(
+        mockError,
+        expect.objectContaining({ action: 'processBulkUpdate', count: 1 })
+      );
+    });
+
+    it('should return immediately with zero count if empty payload is passed', async () => {
+      const { inventoryService } = await import('../../services/inventoryService');
+      const result = await inventoryService.processBulkUpdate([]);
+      expect(result.success).toBe(true);
+      expect(result.processed_count).toBe(0);
+      expect(mockSupabase.rpc).not.toHaveBeenCalled();
+    });
+  });
 });
+
