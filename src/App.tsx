@@ -344,7 +344,7 @@ function AppContent() {
         {/* Global Modals & Drawers */}
         <Footer onNavigate={handleNavigate} />
         <ToastContainer />
-        <CartDrawer />
+        <CartDrawer onNavigate={handleNavigate} />
         <SearchModal />
         <ProductQuickViewModal />
       </div>

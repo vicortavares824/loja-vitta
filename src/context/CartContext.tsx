@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Product, ProductColor, CartItem, Currency } from '../types/ecommerce';
+import { useOptionalAuth } from './AuthContext';
 
 interface Toast {
   id: string;
@@ -25,6 +26,7 @@ interface CartContextType {
   isInWishlist: (productId: number | string) => boolean;
   setCurrency: (c: Currency) => void;
   setIsCartOpen: (open: boolean) => void;
+  toggleCartDrawer: (open?: boolean) => void;
   setIsSearchOpen: (open: boolean) => void;
   setQuickViewProduct: (product: Product | null) => void;
   showToast: (message: string, type?: 'success' | 'info' | 'error') => void;
@@ -36,6 +38,7 @@ interface CartContextType {
   itemsCount: number;
 }
 
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CURRENCY_RATES: Record<Currency, { rate: number; symbol: string; prefix: string }> = {
@@ -45,6 +48,9 @@ const CURRENCY_RATES: Record<Currency, { rate: number; symbol: string; prefix: s
 };
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const auth = useOptionalAuth();
+  const user = auth?.user ?? null;
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('noir_cart');
     return saved ? JSON.parse(saved) : [];
@@ -69,13 +75,42 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('noir_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+  // Se o usuário deslogar enquanto o carrinho estiver aberto, fecha o drawer
+  useEffect(() => {
+    if (!user && isCartOpen) {
+      setIsCartOpen(false);
+    }
+  }, [user, isCartOpen]);
+
+  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 3500);
-  };
+  }, []);
+
+  const redirectToLogin = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/login');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
+  /**
+   * Interceptador de autenticação para proteção do carrinho:
+   * Bloqueia acesso a usuários não logados, dispara Toast e redireciona para /login.
+   */
+  const checkAuthInterceptor = useCallback((): boolean => {
+    if (!user) {
+      setIsCartOpen(false);
+      showToast('Faça login ou cadastre-se para ver seu carrinho', 'info');
+      redirectToLogin();
+      return false;
+    }
+    return true;
+  }, [user, showToast, redirectToLogin]);
 
   const addToCart = (
     product: Product,
@@ -83,6 +118,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     selectedSize?: string,
     quantity: number = 1
   ) => {
+    if (!checkAuthInterceptor()) {
+      return;
+    }
+
     const color = selectedColor || product.colors[0];
     const size = selectedSize || product.sizes[0];
 
@@ -106,6 +145,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     showToast(`"${product.name}" adicionado ao carrinho!`, 'success');
     setIsCartOpen(true);
   };
+
+  const toggleCartDrawer = (open?: boolean) => {
+    const shouldOpen = open !== undefined ? open : !isCartOpen;
+    if (shouldOpen) {
+      if (!checkAuthInterceptor()) {
+        return;
+      }
+      setIsCartOpen(true);
+    } else {
+      setIsCartOpen(false);
+    }
+  };
+
+  const safeSetIsCartOpen = (open: boolean) => {
+    if (open && !user) {
+      checkAuthInterceptor();
+      return;
+    }
+    setIsCartOpen(open);
+  };
+
 
   const removeFromCart = (productId: number | string, colorName: string, size: string) => {
     setCart(prev =>
@@ -187,8 +247,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearCart,
         toggleWishlist,
         isInWishlist,
-        setCurrency,
-        setIsCartOpen,
+        setIsCartOpen: safeSetIsCartOpen,
+        toggleCartDrawer,
         setIsSearchOpen,
         setQuickViewProduct,
         showToast,

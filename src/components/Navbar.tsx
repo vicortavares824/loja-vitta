@@ -12,7 +12,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate }) => {
-  const { itemsCount, wishlist, currency, setCurrency, setIsCartOpen } = useCart();
+  const { itemsCount, wishlist, currency, setCurrency, toggleCartDrawer } = useCart();
   const { isAuthenticated, user, isAdmin, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -149,12 +149,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
   
             <Magnet strength={14}>
               <button
-                onClick={() => setIsCartOpen(true)}
+                onClick={() => toggleCartDrawer(true)}
                 className="flex items-center gap-2 bg-white text-black text-xs font-bold uppercase tracking-wider py-2.5 px-4 sm:px-5 rounded-full hover:bg-gray-200 transition-all duration-300 shadow-lg shadow-white/10"
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span className="hidden sm:inline">Carrinho</span>
-                {itemsCount > 0 && (
+                {isAuthenticated && itemsCount > 0 && (
                   <span className="w-5 h-5 rounded-full bg-black text-white text-[11px] font-extrabold flex items-center justify-center ml-0.5">
                     {itemsCount}
                   </span>

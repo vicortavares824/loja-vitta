@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Check, Sparkles, Lock, ShieldAlert, UserPlus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useOptionalAuth } from '../context/AuthContext';
 import { tomatoApi } from '../services/tomatoApi';
 import { Magnet } from './react-bits/Magnet';
 import confetti from 'canvas-confetti';
 
-export const CartDrawer: React.FC = () => {
+export interface CartDrawerProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const {
     cart,
     isCartOpen,
@@ -19,11 +24,27 @@ export const CartDrawer: React.FC = () => {
     showToast
   } = useCart();
 
+  const auth = useOptionalAuth();
+  const user = auth?.user ?? null;
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [orderId, setOrderId] = useState('');
 
   if (!isCartOpen) return null;
+
+  const handleNavigateTo = (tab: 'login-client' | 'signup-client') => {
+    setIsCartOpen(false);
+    if (onNavigate) {
+      onNavigate(tab);
+    } else {
+      const path = tab === 'login-client' ? '/login' : '/signup';
+      window.history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const FREE_SHIPPING_THRESHOLD = 1500;
   const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
@@ -32,8 +53,8 @@ export const CartDrawer: React.FC = () => {
   const handleCheckout = async () => {
     setIsCheckingOut(true);
     const orderPayload = {
-      customerName: 'Cliente Vitta VIP',
-      customerEmail: 'cliente.vip@vittabasics.com',
+      customerName: user?.name || 'Cliente Vitta VIP',
+      customerEmail: user?.email || 'cliente.vip@vittabasics.com',
       items: cart.map(item => ({
         productId: item.product.id,
         productName: item.product.name,
@@ -97,8 +118,73 @@ export const CartDrawer: React.FC = () => {
             </button>
           </div>
 
-          {/* Checkout Success Screen */}
-          {checkoutSuccess ? (
+          {/* PROTEÇÃO: Estado Vazio Bloqueado (Unauthenticated Empty State) */}
+          {!isAuthenticated || !user ? (
+            <div className="flex-1 flex flex-col justify-between p-6 sm:p-8 overflow-y-auto">
+              <div className="my-auto text-center space-y-6">
+                {/* Ícone com Aura de Proteção Luxury */}
+                <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-white/5 border border-white/10 animate-pulse" />
+                  <div className="w-18 h-18 rounded-full bg-gradient-to-b from-white/15 to-white/5 border border-white/20 flex items-center justify-center shadow-2xl">
+                    <Lock className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+
+                {/* Badge de Exclusividade */}
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] uppercase font-bold tracking-[0.2em] text-gray-300">
+                  <ShieldAlert className="w-3.5 h-3.5 text-white" />
+                  <span>Acesso Exclusivo</span>
+                </div>
+
+                {/* Título & Mensagem */}
+                <div className="space-y-2.5 max-w-xs mx-auto">
+                  <h3 className="font-display font-extrabold text-2xl text-white tracking-tight uppercase">
+                    Sacola Bloqueada
+                  </h3>
+                  <p className="text-gray-400 text-xs sm:text-sm leading-relaxed font-light">
+                    Para visualizar suas peças selecionadas, simular frete exclusivo e finalizar seu pedido, conecte-se ou crie sua conta na Vitta Basics.
+                  </p>
+                </div>
+
+                {/* Benefícios Luxury Dark */}
+                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-left space-y-2.5 text-xs">
+                  <div className="flex items-center gap-2.5 text-gray-300">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Reserva e histórico de itens em tempo real</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-gray-300">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Frete Expresso Grátis acima de R$ 1.500</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-gray-300">
+                    <Check className="w-4 h-4 text-white shrink-0" />
+                    <span>Checkout rápido e rastreamento de envio</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botões CTA com visual Luxury Dark */}
+              <div className="space-y-3 pt-6 border-t border-white/10">
+                <Magnet strength={10}>
+                  <button
+                    onClick={() => handleNavigateTo('signup-client')}
+                    className="w-full flex items-center justify-center gap-2.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest py-4 px-6 rounded-full hover:bg-gray-200 transition-all duration-300 transform hover:scale-[1.02] shadow-2xl"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Criar minha conta para comprar</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </Magnet>
+
+                <button
+                  onClick={() => handleNavigateTo('login-client')}
+                  className="w-full py-3.5 px-6 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest transition-all text-center"
+                >
+                  Já possuo uma conta • Entrar
+                </button>
+              </div>
+            </div>
+          ) : checkoutSuccess ? (
             <div className="p-8 text-center my-auto space-y-6">
               <div className="w-20 h-20 rounded-full bg-white/10 border border-white text-white flex items-center justify-center mx-auto animate-bounce">
                 <Sparkles className="w-10 h-10" />
