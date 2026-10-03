@@ -247,6 +247,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearCart,
         toggleWishlist,
         isInWishlist,
+        setCurrency,
         setIsCartOpen: safeSetIsCartOpen,
         toggleCartDrawer,
         setIsSearchOpen,
