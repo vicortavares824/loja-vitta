@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /login-admin
+Disallow: /login-client
+Disallow: /signup
+Disallow: /signup-admin
+Disallow: /signup-client
+
+Sitemap: https://loja-vitta-chi.vercel.app/sitemap.xml
