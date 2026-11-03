@@ -246,6 +246,22 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
                 Comprar
               </span>
             </button>
+
+            {product.shopeeUrl && (
+              <a
+                href={product.shopeeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#ee4d2d] hover:bg-[#d73211] text-white p-3 sm:px-4 sm:py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all transform hover:scale-105 active:scale-95"
+                title="Comprar na Shopee"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">
+                  Shopee
+                </span>
+              </a>
+            )}
           </div>
         </div>
       </div>

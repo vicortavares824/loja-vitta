@@ -25,6 +25,7 @@ export interface Product {
   inStock: boolean;
   stockCount: number;
   tag?: string;
+  shopeeUrl?: string;
 }
 
 export interface Category {

@@ -20,6 +20,7 @@ export interface StoreConfig {
     atelier: string;
   };
   contactEmail: string;
+  shopeeStoreUrl: string;
 }
 
 export const STORE_CONFIG: StoreConfig = {
@@ -37,5 +38,6 @@ export const STORE_CONFIG: StoreConfig = {
     twitter: '@vittabasics',
     atelier: 'São Paulo'
   },
-  contactEmail: 'contact@vittabasics.com'
+  contactEmail: 'contact@vittabasics.com',
+  shopeeStoreUrl: 'https://shopee.com.br/product/1932259064/58270233666/'
 };
