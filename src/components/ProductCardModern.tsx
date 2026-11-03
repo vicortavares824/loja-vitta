@@ -206,8 +206,8 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
           )}
 
       
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-        
+          <div className="pt-3 border-t border-gray-100 space-y-3">
+
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden sm:inline">
                 Qtd
@@ -235,33 +235,35 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
               </div>
             </div>
 
-       
-            <button
-              onClick={handleAddToCart}
-              className="bg-black hover:bg-gray-800 text-white p-3 sm:px-4 sm:py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all transform hover:scale-105 active:scale-95 group/btn"
-              title="Adicionar ao Carrinho"
-            >
-              <ShoppingBag className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
-              <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">
-                Comprar
-              </span>
-            </button>
-
-            {product.shopeeUrl && (
-              <a
-                href={product.shopeeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="bg-[#ee4d2d] hover:bg-[#d73211] text-white p-3 sm:px-4 sm:py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all transform hover:scale-105 active:scale-95"
-                title="Comprar na Shopee"
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-black hover:bg-gray-800 text-white px-3 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all transform hover:scale-[1.02] active:scale-95 group/btn"
+                title="Adicionar ao Carrinho"
               >
-                <ShoppingBag className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">
-                  Shopee
+                <ShoppingBag className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Comprar
                 </span>
-              </a>
-            )}
+              </button>
+
+              {product.shopeeUrl && (
+                <a
+                  href={product.shopeeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex-1 text-white px-3 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all transform hover:scale-[1.02] active:scale-95"
+                  style={{ backgroundColor: '#ee4d2d' }}
+                  title="Comprar na Shopee"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Shopee
+                  </span>
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
