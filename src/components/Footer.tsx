@@ -28,7 +28,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Brand Col */}
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.jpg" alt={STORE_CONFIG.name} className="w-50 h-50 rounded-full object-cover" />
+              <img src="/logo.jpg" alt={STORE_CONFIG.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover" />
               <span className="font-display font-extrabold text-xl tracking-[0.2em] text-white">
                 {STORE_CONFIG.name}
               </span>

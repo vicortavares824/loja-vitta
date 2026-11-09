@@ -26,6 +26,8 @@ import ScrollVelocity from './components/reactbits/ScrollVelocity';
 import ScrollExpand from './components/reactbits/ScrollExpand';
 
 import Cubes from './components/reactbits/Cubes';
+import { AnimationGate } from './components/reactbits/AnimationGate';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const ToastContainer = () => {
   const { toasts } = useCart();
@@ -127,14 +129,33 @@ function AppContent() {
             {/* HERO SECTION - MAGIC RINGS */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
               <div className="absolute inset-0 z-0 opacity-70">
-                <MagicRings 
-                  color="#ffffff" 
-                  colorTwo="#999999"
-                  ringCount={8} 
-                  speed={1.4}
-                  followMouse={true}
-                  blur={1}
-                />
+                <ErrorBoundary fallback={<div className="w-full h-full" />}>
+                  <AnimationGate
+                    renderFull={() => (
+                      <MagicRings
+                        color="#ffffff"
+                        colorTwo="#999999"
+                        ringCount={8}
+                        speed={1.4}
+                        followMouse={true}
+                        blur={1}
+                      />
+                    )}
+                    renderReduced={() => (
+                      <MagicRings
+                        color="#ffffff"
+                        colorTwo="#999999"
+                        ringCount={3}
+                        speed={0.8}
+                        followMouse={false}
+                        blur={0}
+                      />
+                    )}
+                    renderStatic={() => (
+                      <div className="w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.12),transparent_60%)]" />
+                    )}
+                  />
+                </ErrorBoundary>
               </div>
               
               <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto space-y-6">
@@ -143,15 +164,15 @@ function AppContent() {
                   <p>Nova Coleção 2026</p>
                 </div>
 
-                <h1 className="text-6xl sm:text-8xl md:text-[10rem] font-extrabold tracking-tighter uppercase leading-none text-white">
+                <h1 className="text-4xl sm:text-7xl md:text-[10rem] font-extrabold tracking-tighter uppercase leading-none text-white break-words">
                   VITTA
                 </h1>
                 
-                <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-[0.3em] uppercase text-gray-300">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-[0.3em] uppercase text-gray-300 break-words">
                   Basics
                 </h2>
 
-                <p className="text-gray-400 text-xs sm:text-sm max-w-md mx-auto font-light tracking-widest uppercase pt-2">
+                <p className="text-gray-400 text-sm max-w-md mx-auto font-light tracking-widest uppercase pt-2 leading-relaxed break-words">
                   Simplicidade e minimalismo em cada peça, com qualidade e conforto incomparáveis. Descubra a essência da moda básica com Vitta Basics.
                 </p>
 
@@ -175,43 +196,92 @@ function AppContent() {
             </section>
 
             {/* MARQUEE TEXT */}
-            <section className="py-20 bg-black border-y border-white/10">
-              <ScrollVelocity
-                texts={['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION']}
-                className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white"
-                velocity={45}
-              />
+            <section className="py-20 bg-black border-y border-white/10 overflow-hidden">
+              <ErrorBoundary fallback={<div className="w-full h-full" />}>
+                <AnimationGate
+                  renderFull={() => (
+                    <ScrollVelocity
+                      texts={['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION']}
+                      className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white"
+                      velocity={45}
+                    />
+                  )}
+                  renderReduced={() => (
+                    <ScrollVelocity
+                      texts={['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION']}
+                      className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white"
+                      velocity={15}
+                    />
+                  )}
+                  renderStatic={() => (
+                    <div className="flex flex-col items-center gap-2 text-center px-4">
+                      {['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION'].map(
+                        (t, i) => (
+                          <p
+                            key={i}
+                            className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white break-words"
+                          >
+                            {t}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  )}
+                />
+              </ErrorBoundary>
             </section>
 
             {/* SCROLL EXPAND - SHOWCASE */}
             <section className="py-28 bg-[#050507] relative flex flex-col items-center border-b border-white/10">
               <div className="container mx-auto px-4 mb-16 text-center">
                 <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight text-white mx-auto">
-                  <WarpText text="DESCUBRA SEU ESTILO" />
+                  <ErrorBoundary fallback={<span className="block">DESCUBRA SEU ESTILO</span>}>
+                    <AnimationGate
+                      renderFull={() => <WarpText text="DESCUBRA SEU ESTILO" />}
+                      renderReduced={() => <WarpText text="DESCUBRA SEU ESTILO" speed={0.2} ripple={false} />}
+                      renderStatic={() => <span className="block">DESCUBRA SEU ESTILO</span>}
+                    />
+                  </ErrorBoundary>
                 </h2>
-                <p className="text-gray-400 text-sm mt-3 font-normal max-w-md mx-auto">
+                <p className="text-gray-400 text-sm mt-3 font-normal max-w-md mx-auto leading-relaxed break-words">
                  Vista menos tendências. Vista mais você.
                 </p>
               </div>
               
               <div className="w-full max-w-6xl px-4">
-                <ScrollExpand scaleFrom={0.75} scaleTo={1} borderRadius="28px">
-                  <div className="relative w-full h-[65vh] group overflow-hidden border border-white/20 rounded-[28px] shadow-2xl">
-                    <img 
-                      src="https://imgs.search.brave.com/Bu0-d1osQDJB132vDOrFLtG7qXmTloZ2cRMrae7Stpg/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdDIu/ZGVwb3NpdHBob3Rv/cy5jb20vMTc2NjE4/Ni82OTExL2kvNDUw/L2RlcG9zaXRwaG90/b3NfNjkxMTExOTEt/c3RvY2stcGhvdG8t/ZmFzaGlvbi1zaG93/LmpwZw" 
-                      alt="New Collection Showcase" 
-                      className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-1000"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <button 
-                        onClick={() => handleNavigate('products')}
-                        className="px-8 py-4 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-colors shadow-2xl"
-                      >
-                        Explorar Todas as Peças
-                      </button>
+                {(() => {
+                  const showcaseInner = (
+                    <div className="relative w-full h-[65vh] group overflow-hidden border border-white/20 rounded-[28px] shadow-2xl">
+                      <img
+                        src="https://imgs.search.brave.com/Bu0-d1osQDJB132vDOrFLtG7qXmTloZ2cRMrae7Stpg/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdDIu/ZGVwb3NpdHBob3Rv/cy5jb20vMTc2NjE4/Ni82OTExL2kvNDUw/L2RlcG9zaXRwaG90/b3NfNjkxMTExOTEt/c3RvY2stcGhvdG8t/ZmFzaGlvbi1zaG93/LmpwZw"
+                        alt="New Collection Showcase"
+                        className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-1000"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <button
+                          onClick={() => handleNavigate('products')}
+                          className="px-8 py-4 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-colors shadow-2xl"
+                        >
+                          Explorar Todas as Peças
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </ScrollExpand>
+                  );
+                  return (
+                    <ErrorBoundary fallback={<div className="relative w-full h-[65vh]">{showcaseInner}</div>}>
+                      <AnimationGate
+                        renderFull={() => (
+                          <ScrollExpand scaleFrom={0.75} scaleTo={1} borderRadius="28px">
+                            {showcaseInner}
+                          </ScrollExpand>
+                        )}
+                        renderStatic={() => (
+                          <div className="relative w-full h-[65vh]">{showcaseInner}</div>
+                        )}
+                      />
+                    </ErrorBoundary>
+                  );
+                })()}
               </div>
             </section>
 
@@ -234,7 +304,7 @@ function AppContent() {
             <section className="relative h-[75vh] flex items-center justify-center overflow-hidden bg-black border-y border-white/10">
 
               <div className="relative z-10 max-w-3xl mx-auto px-6 text-center mix-blend-difference pointer-events-none space-y-4">
-                <h3 className="text-3xl md:text-2xl font-extrabold uppercase tracking-tight leading-tight text-white">
+                <h3 className="text-2xl sm:text-3xl md:text-2xl font-extrabold uppercase tracking-tight leading-snug text-white break-words">
   VITTA acredita que o básico também pode ser extraordinário. Peças essenciais que unem conforto, qualidade e estilo atemporal
                 </h3>
               </div>
@@ -243,11 +313,27 @@ function AppContent() {
             {/* CUBES FEATURE GRID */}
             <section className="py-28 bg-[#0a0a0c] relative overflow-hidden">
               <div className="absolute inset-0 opacity-40 pointer-events-auto flex items-center justify-center">
-                <Cubes faceColor="#555555" rippleColor="#ffffff" autoAnimate={true} />
+                <ErrorBoundary fallback={<div className="w-full h-full" />}>
+                  <AnimationGate
+                    renderFull={() => <Cubes faceColor="#555555" rippleColor="#ffffff" autoAnimate={true} />}
+                    renderReduced={() => (
+                      <Cubes faceColor="#555555" rippleColor="#ffffff" autoAnimate={false} />
+                    )}
+                    renderStatic={() => (
+                      <div className="w-full h-full min-h-[350px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_65%)]" />
+                    )}
+                  />
+                </ErrorBoundary>
               </div>
               <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 <h2 className="text-3xl font-extrabold uppercase tracking-[0.2em] mb-16 text-white text-center">
-                  <WarpText text="PURE FORM & MATERIAL" />
+                  <ErrorBoundary fallback={<span className="block">PURE FORM &amp; MATERIAL</span>}>
+                    <AnimationGate
+                      renderFull={() => <WarpText text="PURE FORM & MATERIAL" />}
+                      renderReduced={() => <WarpText text="PURE FORM & MATERIAL" speed={0.2} ripple={false} />}
+                      renderStatic={() => <span className="block">PURE FORM &amp; MATERIAL</span>}
+                    />
+                  </ErrorBoundary>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
                   {[
@@ -256,8 +342,8 @@ function AppContent() {
                     { title: "Sustentabilidade", desc: "Produção consciente com tiragens limitadas e atemporais." }
                   ].map((item, i) => (
                     <div key={i} className="text-center p-10 border border-white/15 bg-white/5 backdrop-blur-md rounded-3xl shadow-2xl transition-all duration-300 hover:border-white hover:-translate-y-2">
-                      <h4 className="text-xl font-extrabold mb-3 uppercase tracking-wider text-white">{item.title}</h4>
-                      <p className="text-gray-400 font-normal text-xs sm:text-sm tracking-wide leading-relaxed">{item.desc}</p>
+                      <h4 className="text-xl font-extrabold mb-3 uppercase tracking-wider text-white break-words">{item.title}</h4>
+                      <p className="text-gray-400 font-normal text-sm tracking-wide leading-relaxed break-words">{item.desc}</p>
                     </div>
                   ))}
                 </div>

@@ -122,7 +122,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
             <Magnet strength={10}>
               <button
                 onClick={() => handleNavClick('search')}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10"
+                className="tap-target w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10"
                 aria-label="Buscar produtos"
               >
                 <Search className="w-4 h-4" />
@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
             <Magnet strength={10}>
               <button
                 onClick={() => handleNavClick('products')}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10 relative"
+                className="tap-target w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10 relative"
                 aria-label="Lista de desejos"
                 title="Favoritos"
               >
@@ -172,7 +172,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
                   <Magnet strength={10}>
                     <button
                       onClick={() => handleNavClick('admin')}
-                      className="hidden sm:flex w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white items-center justify-center transition-all border border-white/10"
+                      className="tap-target hidden sm:flex w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white items-center justify-center transition-all border border-white/10"
                       aria-label="Painel Admin"
                       title="Painel Admin"
                     >
@@ -183,7 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
                 <Magnet strength={10}>
                   <button
                     onClick={() => { logout(); handleNavClick('home'); }}
-                    className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all border border-white/10"
+                    className="tap-target w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all border border-white/10"
                     aria-label="Sair"
                     title="Sair"
                   >
@@ -207,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
         
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="tap-target lg:hidden flex items-center justify-center p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
               aria-label="Abrir menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

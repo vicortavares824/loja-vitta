@@ -98,8 +98,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-        <div className="w-screen max-w-md bg-[#111116] border-l border-white/15 flex flex-col justify-between shadow-2xl text-white">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-full sm:max-w-md bg-[#111116] border-l border-white/15 flex flex-col justify-between shadow-2xl text-white">
           {/* Header */}
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-3">

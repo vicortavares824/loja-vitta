@@ -401,7 +401,7 @@ export const TomatoAdminPanel: React.FC = () => {
     <div className="pt-28 pb-24 min-h-screen bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Admin Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/5 p-6 rounded-3xl border border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5 p-6 rounded-3xl border border-white/10">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
@@ -548,8 +548,8 @@ export const TomatoAdminPanel: React.FC = () => {
                       <tr key={order.id} className="hover:bg-white/5 transition-colors">
                         <td className="py-4 px-4 font-mono font-bold text-white">#{order.id}</td>
                         <td className="py-4 px-4">
-                          <div className="font-semibold text-white">{order.customerName}</div>
-                          <div className="text-gray-400 text-[11px]">{order.customerEmail}</div>
+                          <div className="font-semibold text-white break-words">{order.customerName}</div>
+                          <div className="text-gray-400 text-[11px] break-words">{order.customerEmail}</div>
                         </td>
                         <td className="py-4 px-4 font-bold text-white">{formatPrice(order.totalAmount)}</td>
                         <td className="py-4 px-4 text-gray-400">
@@ -699,7 +699,7 @@ export const TomatoAdminPanel: React.FC = () => {
                         <span className="font-mono text-sm font-extrabold text-white">#{order.id}</span>
                         <span className="text-xs text-gray-400">• {new Date(order.createdAt).toLocaleString('pt-BR')}</span>
                       </div>
-                      <div className="text-xs text-gray-300 mt-1">
+                      <div className="text-xs text-gray-300 mt-1 break-words">
                         Cliente: <strong className="text-white">{order.customerName}</strong> ({order.customerEmail})
                       </div>
                     </div>
@@ -967,7 +967,7 @@ export const TomatoAdminPanel: React.FC = () => {
 
         {/* MODAL: ADD / EDIT PRODUCT */}
         {isProductModalOpen && editingProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
             <div className="bg-[#121216] border border-white/20 w-full max-w-2xl rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <h3 className="text-lg font-bold uppercase tracking-wider text-white">

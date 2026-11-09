@@ -4,6 +4,14 @@ import { observability } from '../services/observability';
 
 interface Props {
   children: ReactNode;
+  /**
+   * Optional lightweight fallback rendered in place of the full-page error
+   * screen when an error is caught. Useful for wrapping small, non-critical
+   * sections (e.g. decorative WebGL animations) so a runtime failure degrades
+   * gracefully instead of taking over the whole page. When omitted, the
+   * default full-page error screen is shown (backwards compatible).
+   */
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -34,6 +42,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      // When a lightweight fallback is provided, render it instead of the
+      // full-page error screen. This lets small sections (like decorative
+      // animations) fail without disrupting the rest of the page (R11.4).
+      if (this.props.fallback !== undefined) {
+        return this.props.fallback;
+      }
+
       return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center p-6 font-sans">
           <div className="max-w-md w-full bg-[#121216] border border-white/20 rounded-3xl p-8 text-center space-y-6 shadow-2xl">

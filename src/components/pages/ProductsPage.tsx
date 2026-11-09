@@ -107,8 +107,8 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar Filters */}
-          <aside className={`lg:col-span-3 space-y-8 ${mobileFilterOpen ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 space-y-6">
+          <aside className={`w-full lg:col-span-3 space-y-8 ${mobileFilterOpen ? 'block' : 'hidden lg:block'}`}>
+            <div className="w-full bg-white/5 rounded-3xl p-6 border border-white/10 space-y-6">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-white" />
@@ -250,7 +250,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
           {/* Main Products Grid Column */}
           <main className="lg:col-span-9 space-y-6">
             {/* Top Toolbar (Sort & Active filter chips) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-center flex-wrap justify-between gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
               {/* Active Badges */}
               <div className="flex items-center gap-2 flex-wrap text-xs">
                 <span className="text-gray-400">Ativos:</span>
@@ -278,12 +278,12 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
               </div>
 
               {/* Sort Dropdown */}
-              <div className="flex items-center gap-2 justify-end">
-                <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+              <div className="flex items-center gap-2 sm:justify-end min-w-0">
+                <ArrowUpDown className="w-3.5 h-3.5 shrink-0 text-gray-400" />
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="bg-black text-white text-xs font-semibold rounded-xl px-3 py-2 border border-white/20 focus:outline-none cursor-pointer"
+                  className="min-w-0 max-w-full bg-black text-white text-xs font-semibold rounded-xl px-3 py-2 border border-white/20 focus:outline-none cursor-pointer"
                 >
                   <option value="default">Relevância / Lançamentos</option>
                   <option value="price-asc">Menor Preço</option>

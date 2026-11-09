@@ -1,0 +1,490 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Criar o hook `useMediaQuery`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868332
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190878553
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190990037
+      }
+    ],
+    "1.3 Criar o hook `useBreakpoint` e as faixas canônicas": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868430
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190998805
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191111741
+      }
+    ],
+    "1.5 Criar o hook `usePrefersReducedMotion`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868516
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190999752
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191113133
+      }
+    ],
+    "1.7 Adicionar guarda global de overflow horizontal e utilitário de toque no CSS": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868586
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190879966
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190990964
+      }
+    ],
+    "1.8 Verificar o container raiz em `App.tsx`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868660
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190880911
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190992365
+      }
+    ],
+    "2.1 Implementar o wrapper `AnimationGate`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868723
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191355895
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191466883
+      }
+    ],
+    "2.3 Conectar os Heavy_Animation_Components ao `AnimationGate` na home": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868786
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191473735
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191608834
+      }
+    ],
+    "2.4 Formalizar o fallback de inicialização WebGL e envolver seções com ErrorBoundary": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868870
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191612681
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191763194
+      }
+    ],
+    "3.1 Verificar e ajustar o `Navbar` para alvos de toque e ausência de overflow": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190868948
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191001152
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191114562
+      }
+    ],
+    "4.1 Verificar e ajustar `Product_Grid` e `Product_Card`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869010
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191002100
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191115487
+      }
+    ],
+    "5.1 Ajustar sidebar de filtros vs. toggle mobile e toolbar": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869070
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191003215
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191116596
+      }
+    ],
+    "6.1 Empilhar cabeçalho, ajustar KPIs e abas roláveis no admin": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869151
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191127247
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191207778
+      }
+    ],
+    "6.2 Envolver cada Data_Table em `overflow-x-auto` nos subpainéis": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869229
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191126340
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191343518
+      }
+    ],
+    "6.3 Ajustar o modal de edição de produto para caber no mobile": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869314
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191124939
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191344958
+      }
+    ],
+    "7.1 Ajustar o `Cart_Drawer` para largura total no mobile": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869377
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191123984
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191205246
+      }
+    ],
+    "7.2 Verificar o empilhamento e a rolagem do `Quick_View_Modal`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869450
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191122594
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191206645
+      }
+    ],
+    "7.3 Verificar a largura e a rolagem do `Search_Modal`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869523
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191216318
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191345865
+      }
+    ],
+    "8. Checkpoint - Garantir que fundações, animações, grade, filtros, admin e overlays estejam consistentes": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869586
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191768794
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191823531
+      }
+    ],
+    "9.1 Ajustar o CSS compartilhado de login para largura total e toque de 44px": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869662
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191215329
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191347284
+      }
+    ],
+    "9.2 Aplicar o padrão de card centralizado nas quatro Auth_Page": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869725
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191354968
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191468845
+      }
+    ],
+    "10.1 Reduzir títulos de destaque e reforçar pisos de texto no mobile": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869786
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191214381
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191348190
+      }
+    ],
+    "11.1 Reduzir o tamanho da logo do `Footer` no mobile": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869861
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191354021
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191467879
+      }
+    ],
+    "12.1 Verificar a tag de meta viewport em `index.html`": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190869933
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190881902
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190993068
+      }
+    ],
+    "14. Checkpoint final - Garantir que toda a suíte passe": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190870029
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191827595
+      },
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191831099
+      }
+    ],
+    "12. Verificação de meta viewport": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794190993152
+      }
+    ],
+    "1. Fundações: hooks de ambiente, guarda global de overflow e utilitário de toque": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191113203
+      }
+    ],
+    "3. Navegação responsiva (Navbar)": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191114650
+      }
+    ],
+    "4. Grade de produtos e cards de produto": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191115578
+      }
+    ],
+    "5. Filtros de catálogo responsivos (ProductsPage)": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191116665
+      }
+    ],
+    "6. Painel administrativo responsivo": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191345048
+      }
+    ],
+    "7. Sobreposições: Cart_Drawer, Quick_View_Modal, Search_Modal": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191345958
+      }
+    ],
+    "10. Escala tipográfica": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191348274
+      }
+    ],
+    "11. Ajuste de layout do rodapé": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191467974
+      }
+    ],
+    "9. Formulários de autenticação e cadastro responsivos": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191468914
+      }
+    ],
+    "2. Camada de degradação de animações pesadas (AnimationGate)": [
+      {
+        "executionId": "2c616639-6977-48ed-b284-6ccafe7c234a",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1794191763283
+      }
+    ]
+  }
+}

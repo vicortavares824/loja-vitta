@@ -146,7 +146,7 @@ export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, c
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
                 Cores
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {product.colors.map((color) => {
                   const isSelected = selectedColor.name === color.name;
                   return (

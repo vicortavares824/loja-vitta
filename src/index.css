@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "./styles/global.css";
 
+/* Global horizontal overflow guard (R1.1, R1.4)
+   Safety net against positioned blocks (overlays, blur, absolute) that could
+   push the document width beyond the viewport. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 /* Glassmorphism Containers */
 .glass-panel {
   background: var(--glass-bg);
@@ -174,4 +182,12 @@
   border-color: var(--color-accent-gold);
   color: var(--color-accent-gold-light);
   transform: scale(1.08);
+}
+
+/* Touch target utility (R4.1, R4.4)
+   Guarantees a tappable area of at least 44x44px for interactive controls on
+   mobile, matching the 44x44 reference already used by .btn-icon. */
+.tap-target {
+  min-width: 44px;
+  min-height: 44px;
 }

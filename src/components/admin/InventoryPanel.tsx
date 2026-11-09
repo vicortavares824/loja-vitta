@@ -583,7 +583,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
                   {/* SKU */}
                   <td className="py-3 px-5">
-                    <code className="text-xs font-mono text-gray-300 bg-black/40 px-2 py-1 rounded border border-white/10">
+                    <code className="text-xs font-mono text-gray-300 bg-black/40 px-2 py-1 rounded border border-white/10 break-all">
                       {item.sku}
                     </code>
                   </td>
