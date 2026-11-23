@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Trash2, ShoppingBag, ArrowRight, Check, Sparkles, Lock, ShieldAlert, UserPlus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useOptionalAuth } from '../context/AuthContext';
-import { tomatoApi } from '../services/tomatoApi';
+import { checkoutService, CheckoutError, CHECKOUT_ERROR_MESSAGES_PT } from '../services/checkoutService';
+import type {
+  CardPaymentInput,
+  CheckoutItemInput,
+  CheckoutRequest,
+  CheckoutResponse,
+  PaymentMethod,
+  PricingBreakdown
+} from '../types/checkout';
+import { CardPaymentBrick } from './CardPaymentBrick';
 import { Magnet } from './react-bits/Magnet';
 import confetti from 'canvas-confetti';
 
@@ -30,9 +39,61 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
-  const [orderId, setOrderId] = useState('');
+  const [result, setResult] = useState<CheckoutResponse | null>(null);
+  const [orderStatus, setOrderStatus] = useState<string>('pending_payment');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
+  const [address, setAddress] = useState('');
+  const [couponInput, setCouponInput] = useState('');
+  const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
+  const [isQuoting, setIsQuoting] = useState(false);
+
+  const mpPublicKey = (import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY as string | undefined) || '';
+  const cardEnabled = mpPublicKey.length > 0;
+
+  const idempotencyKey = useRef<string>(crypto.randomUUID());
+  const renewKey = () => {
+    idempotencyKey.current = crypto.randomUUID();
+  };
+
+  const buildItems = (): CheckoutItemInput[] =>
+    cart.map(item => ({
+      productId: String(item.product.id),
+      color: item.selectedColor.name,
+      size: item.selectedSize,
+      quantity: item.quantity
+    }));
+
+  // Mudanca no carrinho: nova chave e cotacao anterior descartada.
+  const cartSignature = JSON.stringify(
+    cart.map(i => [i.product.id, i.selectedColor.name, i.selectedSize, i.quantity])
+  );
+  useEffect(() => {
+    idempotencyKey.current = crypto.randomUUID();
+    setPricing(null);
+  }, [cartSignature]);
+
+  // Polling do status do pedido Pix a cada 5 s.
+  const pixOrderId = result?.payment.kind === 'pix' ? result.orderId : null;
+  useEffect(() => {
+    if (!pixOrderId || orderStatus !== 'pending_payment') return;
+    const timer = setInterval(async () => {
+      try {
+        const status = await checkoutService.getOrderStatus(pixOrderId);
+        setOrderStatus(status);
+      } catch {
+        /* tenta novamente no proximo ciclo */
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [pixOrderId, orderStatus]);
 
   if (!isCartOpen) return null;
+
+  const closeDrawer = () => {
+    setIsCartOpen(false);
+    setCheckoutSuccess(false);
+    setResult(null);
+  };
 
   const handleNavigateTo = (tab: 'login-client' | 'signup-client') => {
     setIsCartOpen(false);
@@ -50,30 +111,62 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  const handleCheckout = async () => {
-    setIsCheckingOut(true);
-    const orderPayload = {
-      customerName: user?.name || 'Cliente Vitta VIP',
-      customerEmail: user?.email || 'cliente.vip@vittabasics.com',
-      items: cart.map(item => ({
-        productId: item.product.id,
-        productName: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        selectedColor: item.selectedColor.name,
-        selectedSize: item.selectedSize,
-        image: item.product.images[0]
-      })),
-      totalAmount: total,
-      paymentMethod: 'PIX / Cartão Seguro',
-      shippingAddress: 'Endereço Principal - Entrega Expressa'
+  const handleCheckoutError = (err: unknown) => {
+    if (err instanceof CheckoutError) {
+      if (
+        err.code === 'PRICE_CHANGED' ||
+        err.code === 'INSUFFICIENT_STOCK' ||
+        err.code === 'IDEMPOTENCY_KEY_REUSED'
+      ) {
+        renewKey();
+      }
+      // NETWORK_ERROR mantem a chave para repetir a mesma requisicao com seguranca.
+      showToast(err.message, 'error');
+    } else {
+      showToast(CHECKOUT_ERROR_MESSAGES_PT.INTERNAL_ERROR, 'error');
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) {
+      setPricing(null);
+      return;
+    }
+    setIsQuoting(true);
+    try {
+      const res = await checkoutService.quote({ items: buildItems(), couponCode: code });
+      setPricing(res.pricing);
+    } catch (err) {
+      setPricing(null);
+      handleCheckoutError(err);
+    } finally {
+      setIsQuoting(false);
+    }
+  };
+
+  const submitCheckout = async (card?: CardPaymentInput) => {
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
+      showToast('Informe o endere\u00e7o de entrega.', 'error');
+      throw new Error('address-required');
+    }
+    const request: CheckoutRequest = {
+      items: buildItems(),
+      couponCode: couponInput.trim() || undefined,
+      paymentMethod,
+      shippingAddress: trimmedAddress.slice(0, 300),
+      ...(paymentMethod === 'card' && card ? { card } : {})
     };
 
-    const res = await tomatoApi.createOrder(orderPayload);
-    setIsCheckingOut(false);
-
-    if (res.success) {
-      setOrderId(res.orderId);
+    setIsCheckingOut(true);
+    try {
+      const res = await checkoutService.createCheckout(request, idempotencyKey.current);
+      renewKey();
+      setResult(res);
+      setOrderStatus(
+        res.payment.kind === 'card' && res.payment.status === 'approved' ? 'processing' : res.status
+      );
       setCheckoutSuccess(true);
       clearCart();
       confetti({
@@ -82,19 +175,33 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         origin: { y: 0.6 },
         colors: ['#ffffff', '#000000', '#cccccc']
       });
-    } else {
-      showToast('Erro ao processar pedido.', 'error');
+    } catch (err) {
+      handleCheckoutError(err);
+      throw err;
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
+  const handlePixCheckout = () => {
+    submitCheckout().catch(() => undefined);
+  };
+
+  const isPaid = orderStatus !== 'pending_payment' && orderStatus !== 'pending' && orderStatus !== 'cancelled';
+  const displayTotal = pricing ? pricing.totalCents / 100 : total;
+  const copyPix = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('C\u00f3digo Pix copiado.', 'success');
+    } catch {
+      showToast('N\u00e3o foi poss\u00edvel copiar. Selecione o c\u00f3digo manualmente.', 'error');
+    }
+  };
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
-        onClick={() => {
-          setIsCartOpen(false);
-          setCheckoutSuccess(false);
-        }}
+        onClick={closeDrawer}
         className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
       />
 
@@ -107,10 +214,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
               <h2 className="font-display font-extrabold text-xl text-white uppercase tracking-wider">Sua Sacola</h2>
             </div>
             <button
-              onClick={() => {
-                setIsCartOpen(false);
-                setCheckoutSuccess(false);
-              }}
+              onClick={closeDrawer}
               className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
               aria-label="Fechar carrinho"
             >
@@ -189,20 +293,51 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
               <div className="w-20 h-20 rounded-full bg-white/10 border border-white text-white flex items-center justify-center mx-auto animate-bounce">
                 <Sparkles className="w-10 h-10" />
               </div>
-              <h3 className="font-display font-extrabold text-2xl text-white">PEDIDO CONFIRMADO!</h3>
+              <h3 className="font-display font-extrabold text-2xl text-white">
+                {orderStatus === 'cancelled'
+                  ? 'PEDIDO CANCELADO'
+                  : isPaid
+                    ? 'PAGAMENTO CONFIRMADO!'
+                    : 'AGUARDANDO PAGAMENTO'}
+              </h3>
               <p className="text-gray-300 text-xs leading-relaxed">
-                Seu pedido <strong className="text-white">#{orderId}</strong> foi registrado com sucesso na TomatoPHP API e encaminhado para separação.
+                {orderStatus === 'cancelled' ? (
+                  <>O pedido <strong className="text-white">#{result?.orderId}</strong> expirou ou foi cancelado. Você pode refazer a compra.</>
+                ) : isPaid ? (
+                  <>Pagamento do pedido <strong className="text-white">#{result?.orderId}</strong> confirmado. Ele será encaminhado para separação.</>
+                ) : (
+                  <>Pedido <strong className="text-white">#{result?.orderId}</strong> criado. Ele será confirmado assim que o pagamento for aprovado.</>
+                )}
               </p>
-              <div className="bg-white/5 p-4 rounded-2xl text-xs text-gray-400 border border-white/10">
-                Você pode acompanhar o status deste pedido a qualquer momento no Painel Administrativo.
-              </div>
+              {result?.payment.kind === 'pix' && orderStatus === 'pending_payment' && (
+                <div className="bg-white/5 p-4 rounded-2xl text-xs text-gray-300 border border-white/10 space-y-3">
+                  <img
+                    src={`data:image/png;base64,${result.payment.qrCodeBase64}`}
+                    alt="QR Code Pix"
+                    className="w-44 h-44 mx-auto rounded-xl bg-white p-2"
+                  />
+                  <textarea
+                    readOnly
+                    value={result.payment.qrCode}
+                    rows={3}
+                    className="w-full bg-black/60 border border-white/15 rounded-xl p-2 text-[11px] text-gray-300 break-all"
+                    aria-label="Pix copia e cola"
+                  />
+                  <button
+                    onClick={() => result.payment.kind === 'pix' && copyPix(result.payment.qrCode)}
+                    className="w-full min-h-[44px] rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest"
+                  >
+                    Copiar código Pix
+                  </button>
+                  <p className="text-gray-400">
+                    Válido até {new Date(result.payment.expiresAt).toLocaleString('pt-BR')}
+                  </p>
+                </div>
+              )}
               <Magnet strength={12}>
                 <button
-                  onClick={() => {
-                    setCheckoutSuccess(false);
-                    setIsCartOpen(false);
-                  }}
-                  className="px-8 py-3 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-colors shadow-lg"
+                  onClick={closeDrawer}
+                  className="px-8 py-3 min-h-[44px] bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-colors shadow-lg"
                 >
                   Continuar Comprando
                 </button>
@@ -320,7 +455,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
 
               {/* Footer Calculations */}
               {cart.length > 0 && (
-                <div className="p-6 border-t border-white/10 space-y-4 bg-black/60">
+                <div className="p-6 border-t border-white/10 space-y-4 bg-black/60 max-h-[60vh] overflow-y-auto">
                   {/* Summary Rows */}
                   <div className="space-y-1.5 text-xs text-gray-300">
                     <div className="flex justify-between">
@@ -333,21 +468,100 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                         {remainingForFreeShipping === 0 ? 'GRÁTIS' : formatPrice(50)}
                       </span>
                     </div>
+                    {pricing && pricing.discountCents > 0 && (
+                      <div className="flex justify-between text-green-400">
+                        <span>Desconto{pricing.couponCode ? ` (${pricing.couponCode})` : ''}</span>
+                        <span className="font-semibold">- {formatPrice(pricing.discountCents / 100)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm font-extrabold text-white pt-2.5 border-t border-white/10">
                       <span className="uppercase tracking-wider">Total</span>
-                      <span className="text-lg text-white">{formatPrice(total)}</span>
+                      <span className="text-lg text-white">{formatPrice(displayTotal)}</span>
                     </div>
                   </div>
 
-                  {/* Checkout Button */}
-                  <button
-                    onClick={handleCheckout}
-                    disabled={isCheckingOut}
-                    className="w-full flex items-center justify-center gap-2 bg-white text-black font-extrabold text-xs uppercase tracking-widest py-4 px-6 rounded-full hover:bg-gray-200 transition-all shadow-xl"
-                  >
-                    <span>{isCheckingOut ? 'Registrando Pedido...' : 'Finalizar Compra'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  {/* Cupom */}
+                  <div className="flex gap-2">
+                    <input
+                      value={couponInput}
+                      onChange={e => {
+                        setCouponInput(e.target.value.slice(0, 32));
+                        setPricing(null);
+                      }}
+                      placeholder="Cupom de desconto"
+                      aria-label="Cupom de desconto"
+                      className="flex-1 min-w-0 min-h-[44px] bg-black/60 border border-white/15 rounded-full px-4 text-xs text-white placeholder-gray-500"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={isQuoting}
+                      className="min-h-[44px] px-4 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest disabled:opacity-50"
+                    >
+                      {isQuoting ? '...' : 'Aplicar'}
+                    </button>
+                  </div>
+
+                  {/* Endereço */}
+                  <textarea
+                    value={address}
+                    onChange={e => setAddress(e.target.value.slice(0, 300))}
+                    rows={2}
+                    required
+                    placeholder="Endereço de entrega (obrigatório)"
+                    aria-label="Endereço de entrega"
+                    className="w-full bg-black/60 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-gray-500"
+                  />
+
+                  {/* Método de pagamento */}
+                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Forma de pagamento">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={paymentMethod === 'pix'}
+                      onClick={() => setPaymentMethod('pix')}
+                      className={`min-h-[44px] rounded-full border text-xs font-bold uppercase tracking-widest ${
+                        paymentMethod === 'pix' ? 'bg-white text-black border-white' : 'border-white/15 bg-white/5 text-white'
+                      }`}
+                    >
+                      Pix
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={paymentMethod === 'card'}
+                      disabled={!cardEnabled}
+                      onClick={() => setPaymentMethod('card')}
+                      className={`min-h-[44px] rounded-full border text-xs font-bold uppercase tracking-widest disabled:opacity-40 ${
+                        paymentMethod === 'card' ? 'bg-white text-black border-white' : 'border-white/15 bg-white/5 text-white'
+                      }`}
+                    >
+                      Cartão
+                    </button>
+                  </div>
+                  {!cardEnabled && (
+                    <p className="text-[11px] text-gray-500">
+                      Pagamento com cartão indisponível no momento. Use Pix.
+                    </p>
+                  )}
+
+                  {/* Checkout */}
+                  {paymentMethod === 'card' && cardEnabled ? (
+                    <CardPaymentBrick
+                      publicKey={mpPublicKey}
+                      amount={Math.round(displayTotal * 100) / 100}
+                      onSubmit={card => submitCheckout(card)}
+                      onLoadError={() => showToast('Não foi possível carregar o pagamento por cartão.', 'error')}
+                    />
+                  ) : (
+                    <button
+                      onClick={handlePixCheckout}
+                      disabled={isCheckingOut}
+                      className="w-full min-h-[44px] flex items-center justify-center gap-2 bg-white text-black font-extrabold text-xs uppercase tracking-widest py-4 px-6 rounded-full hover:bg-gray-200 transition-all shadow-xl disabled:opacity-60"
+                    >
+                      <span>{isCheckingOut ? 'Processando...' : 'Finalizar Compra'}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               )}
             </>

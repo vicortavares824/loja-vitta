@@ -60,7 +60,7 @@ export interface Order {
   customerEmail: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'pending_payment' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
   paymentMethod: string;
   shippingAddress: string;

@@ -153,6 +153,7 @@ describe('Cart Authentication Interceptor & Blocked Drawer', () => {
       showToast: vi.fn(),
       formatPrice: (v: number) => `R$ ${v}`,
       subtotal: 0,
+      shipping: 0,
       total: 0,
       itemsCount: 0
     });

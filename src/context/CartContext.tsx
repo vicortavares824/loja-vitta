@@ -34,12 +34,17 @@ interface CartContextType {
   
   // Computed
   subtotal: number;
+  shipping: number;
   total: number;
   itemsCount: number;
 }
 
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
+// Valores de interface (BRL) para estimativa. Não importar de api/; o servidor recalcula o frete.
+const SHIPPING_FEE = 50;
+const FREE_SHIPPING_THRESHOLD = 1500;
 
 const CURRENCY_RATES: Record<Currency, { rate: number; symbol: string; prefix: string }> = {
   BRL: { rate: 1, symbol: 'R$', prefix: 'R$ ' },
@@ -228,7 +233,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const total = subtotal;
+  // Estimativa de exibição. A fonte da verdade é a resposta do servidor (/api/checkout).
+  const shipping = cart.length === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const total = subtotal + shipping;
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -255,6 +262,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         showToast,
         formatPrice,
         subtotal,
+        shipping,
         total,
         itemsCount
       }}

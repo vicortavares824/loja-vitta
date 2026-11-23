@@ -1,0 +1,489 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Adicionar dependências e configuração TypeScript da pasta `api`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401443774
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401453532
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401577331
+      }
+    ],
+    "1.2 Criar os tipos de contrato do checkout": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444102
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401454017
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401577532
+      }
+    ],
+    "1.3 Atualizar `architecture.contract.json`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444204
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401454647
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401578004
+      }
+    ],
+    "2.1 Criar `supabase/migrations/20261122000000_secure_checkout.sql`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444305
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401583573
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401663502
+      }
+    ],
+    "2.2 Criar `supabase/rollback/20261122000000_secure_checkout.down.sql`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444453
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401666813
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401708340
+      }
+    ],
+    "3. Checkpoint - Banco e tipos": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444564
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401711728
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401785750
+      }
+    ],
+    "4.1 Criar `errors.ts`, `logger.ts` e `env.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444649
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401794591
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401865954
+      }
+    ],
+    "4.2 Criar `http.ts` e `rateLimit.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444732
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401869569
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401993325
+      }
+    ],
+    "4.3 Criar `supabase.ts`, `auth.ts` e `schemas.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444839
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401870348
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401994125
+      }
+    ],
+    "4.4 Criar a configuração de frete e cupons e o `pricing/engine.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444910
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401871147
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401994676
+      }
+    ],
+    "4.5 Criar `payments/webhookSignature.ts` e `payments/mercadoPago.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401444995
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401871694
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401995473
+      }
+    ],
+    "4.6 Criar `orders/stateMachine.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445083
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401872274
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401995957
+      }
+    ],
+    "4.7 Criar `stock/stockService.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445175
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401999852
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402042487
+      }
+    ],
+    "4.8 Criar `orders/orderService.ts` e `orders/expire.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445262
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402045704
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402159097
+      }
+    ],
+    "5.1 Criar `api/quote.ts` (`POST /api/quote`)": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445368
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402162695
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402224754
+      }
+    ],
+    "5.2 Criar `api/checkout.ts` (`POST /api/checkout`)": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445448
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402163491
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402225555
+      }
+    ],
+    "5.3 Criar `api/webhooks/mercadopago.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445534
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402163997
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402226354
+      }
+    ],
+    "5.4 Criar `api/cron/expire-orders.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445617
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402164653
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402226822
+      }
+    ],
+    "6. Checkpoint - API completa": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445689
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402231995
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402307584
+      }
+    ],
+    "7.1 Criar `src/services/checkoutService.ts`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445785
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402311089
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402385458
+      }
+    ],
+    "7.2 Ajustar `src/context/CartContext.tsx`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445858
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402311731
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402385604
+      }
+    ],
+    "7.3 Ajustar `src/components/CartDrawer.tsx`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401445932
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402389511
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402541087
+      }
+    ],
+    "8.1 Atualizar `.env.example`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401446027
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402390309
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402539131
+      }
+    ],
+    "8.2 Atualizar `vercel.json`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401446110
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402391099
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402539951
+      }
+    ],
+    "8.3 Ajustar a configuração do Vitest para `api/_tests`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401446194
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402391562
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402540424
+      }
+    ],
+    "10. Checkpoint final - Ensure all tests pass": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401446279
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402544796
+      },
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402582454
+      }
+    ],
+    "1. Preparar dependências, tipos e contrato de camadas": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401578089
+      }
+    ],
+    "2. Criar a migração SQL e o rollback": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795401708440
+      }
+    ],
+    "4. Implementar os módulos compartilhados em `api/_lib`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402159196
+      }
+    ],
+    "5. Implementar as rotas da API": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402226933
+      }
+    ],
+    "8. Configurar ambiente, Vercel e Vitest": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402540523
+      }
+    ],
+    "7. Implementar o `checkoutService` e ajustar `CartContext` e `CartDrawer`": [
+      {
+        "executionId": "82d8a4fc-f89d-40c6-abdf-9c9f0e4ff89c",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795402541181
+      }
+    ]
+  }
+}

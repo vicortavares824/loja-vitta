@@ -366,3 +366,7 @@ VITE_CLOUDINARY_UPLOAD_PRESET=Vita_basics
 # Admin Secret Key (Configurado exclusivamente no Supabase Vault em produção)
 # ADMIN_SECRET_KEY=...
 ```
+
+## Deploy na Vercel: cron de expiração de pedidos
+
+`vercel.json` agenda `GET /api/cron/expire-orders` a cada 10 minutos (`*/10 * * * *`). Essa frequência exige o plano **Pro**. No plano **Hobby** a Vercel só aceita crons com execução diária, e um deploy com agenda mais frequente pode ser rejeitado. Em Hobby, troque a agenda para `0 3 * * *` (diária). A expiração preguiçosa em `POST /api/checkout` cobre o intervalo entre execuções. A rota exige `CRON_SECRET`.

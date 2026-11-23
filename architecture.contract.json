@@ -8,9 +8,19 @@
       "allowedDependencies": []
     },
     {
+      "name": "config",
+      "path": "src/config/**",
+      "allowedDependencies": []
+    },
+    {
+      "name": "api",
+      "path": "api/**",
+      "allowedDependencies": ["types"]
+    },
+    {
       "name": "services",
       "path": "src/services/**",
-      "allowedDependencies": ["types"]
+      "allowedDependencies": ["types", "config"]
     },
     {
       "name": "context",
