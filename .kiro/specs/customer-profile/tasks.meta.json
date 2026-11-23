@@ -1,0 +1,90 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Criar a migração das tabelas do cliente": [
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473011159
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473016844
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473099404
+      }
+    ],
+    "2. Criar tipos, serviço e liberar o ViaCEP": [
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473011248
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473104791
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473237035
+      }
+    ],
+    "3. Adicionar dados pessoais e endereços à `ProfilePage`": [
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473011332
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473242978
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473340204
+      }
+    ],
+    "4. Usar o endereço salvo no `CartDrawer`": [
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473011426
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473243563
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473341188
+      }
+    ],
+    "5. Checkpoint - Ensure all tests pass, ask the user if questions arise.": [
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473011496
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473369641
+      },
+      {
+        "executionId": "6fabd404-a54d-458e-b248-f3c5a098fca3",
+        "chatSessionId": "sess_b091007c-41fd-44a2-92ba-bb3d5e41dd89",
+        "timestamp": 1795473377052
+      }
+    ]
+  }
+}

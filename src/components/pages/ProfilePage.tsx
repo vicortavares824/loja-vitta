@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { tomatoApi } from '../../services/tomatoApi';
 import { authService } from '../../services/authService';
+import { PersonalDetailsSection } from '../profile/PersonalDetailsSection';
+import { AddressesSection } from '../profile/AddressesSection';
 
 interface ProfilePageProps {
   onNavigate: (tab: string) => void;
@@ -162,7 +164,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
               <span className="text-sm text-gray-200">{user.role === 'admin' ? 'Administrador' : 'Cliente'}</span>
             </div>
           </section>
-          <section className="lg:col-span-2 bg-white/5 rounded-3xl border border-white/10 p-6 space-y-5">
+          <div className="lg:col-span-2 space-y-8 min-w-0">
+          <PersonalDetailsSection />
+          <AddressesSection userName={user.name} />
+          <section className="bg-white/5 rounded-3xl border border-white/10 p-6 space-y-5">
             <h2 className="text-sm font-extrabold uppercase tracking-wider text-gray-300 flex items-center gap-2">
               <Package className="w-4 h-4" /> Meus pedidos
             </h2>
@@ -215,6 +220,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
               </ul>
             )}
           </section>
+          </div>
         </div>
       </div>
     </div>

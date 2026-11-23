@@ -15,6 +15,11 @@ import { CardPaymentBrick } from './CardPaymentBrick';
 import { Magnet } from './react-bits/Magnet';
 import confetti from 'canvas-confetti';
 
+import * as customerService from '../services/customerService';
+import type { CustomerAddress } from '../types/customer';
+
+const OTHER_ADDRESS = '__other__';
+
 export interface CartDrawerProps {
   onNavigate?: (tab: string) => void;
 }
@@ -43,6 +48,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const [orderStatus, setOrderStatus] = useState<string>('pending_payment');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [address, setAddress] = useState('');
+  const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(OTHER_ADDRESS);
   const [couponInput, setCouponInput] = useState('');
   const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
   const [isQuoting, setIsQuoting] = useState(false);
@@ -87,7 +94,52 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
     return () => clearInterval(timer);
   }, [pixOrderId, orderStatus]);
 
+  // Endereços salvos: carregados uma vez por abertura do carrinho (falha não bloqueia o checkout).
+  const userId = user?.id ?? null;
+  useEffect(() => {
+    if (!isCartOpen || !isAuthenticated || !userId) return;
+    let cancelled = false;
+    customerService
+      .listAddresses()
+      .then(list => {
+        if (cancelled) return;
+        setSavedAddresses(list);
+        const preferred = list.find(a => a.isDefault) ?? list[0];
+        if (preferred) {
+          setSelectedAddressId(preferred.id);
+          setAddress(customerService.formatAddress(preferred).slice(0, 300));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setSavedAddresses([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isCartOpen, isAuthenticated, userId]);
+
   if (!isCartOpen) return null;
+
+  const handleSelectAddress = (id: string) => {
+    setSelectedAddressId(id);
+    if (id === OTHER_ADDRESS) {
+      setAddress('');
+      return;
+    }
+    const found = savedAddresses.find(a => a.id === id);
+    if (found) setAddress(customerService.formatAddress(found).slice(0, 300));
+  };
+
+  const handleManageAddresses = () => {
+    setIsCartOpen(false);
+    if (onNavigate) {
+      onNavigate('profile');
+    } else {
+      window.history.pushState({}, '', '/profile');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const closeDrawer = () => {
     setIsCartOpen(false);
@@ -502,6 +554,30 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                   </div>
 
                   {/* Endereço */}
+                  <div className="space-y-1.5">
+                    {savedAddresses.length > 0 && (
+                      <select
+                        value={selectedAddressId}
+                        onChange={e => handleSelectAddress(e.target.value)}
+                        aria-label="Endereços salvos"
+                        className="w-full min-h-[44px] bg-black/60 border border-white/15 rounded-2xl px-4 text-xs text-white"
+                      >
+                        {savedAddresses.map(a => (
+                          <option key={a.id} value={a.id}>
+                            {(a.label || a.recipientName) + ' - ' + a.street + ', ' + a.number + ' - ' + a.city + '/' + a.state}
+                          </option>
+                        ))}
+                        <option value={OTHER_ADDRESS}>Outro endereço</option>
+                      </select>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleManageAddresses}
+                      className="min-h-[44px] px-2 text-[11px] font-bold uppercase tracking-widest text-gray-300 hover:text-white underline underline-offset-4"
+                    >
+                      Gerenciar endereços
+                    </button>
+                  </div>
                   <textarea
                     value={address}
                     onChange={e => setAddress(e.target.value.slice(0, 300))}
