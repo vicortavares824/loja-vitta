@@ -1,14 +1,14 @@
-import { AppError, isAppError } from '../_lib/errors';
-import { route } from '../_lib/http';
-import { decidePaymentTransition, type OrderStatus } from '../_lib/orders/stateMachine';
+import { AppError, isAppError } from '../_lib/errors.js';
+import { route } from '../_lib/http.js';
+import { decidePaymentTransition, type OrderStatus } from '../_lib/orders/stateMachine.js';
 import {
   CANCEL_REASON_EXPIRED,
   CANCEL_REASON_PAYMENT_REJECTED,
-} from '../_lib/orders/orderService';
-import { createMercadoPagoClient } from '../_lib/payments/mercadoPago';
-import { verifyMercadoPagoSignature } from '../_lib/payments/webhookSignature';
-import { releaseOrderStock } from '../_lib/stock/stockService';
-import { createAdminClient } from '../_lib/supabase';
+} from '../_lib/orders/orderService.js';
+import { createMercadoPagoClient } from '../_lib/payments/mercadoPago.js';
+import { verifyMercadoPagoSignature } from '../_lib/payments/webhookSignature.js';
+import { releaseOrderStock } from '../_lib/stock/stockService.js';
+import { createAdminClient } from '../_lib/supabase.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

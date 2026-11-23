@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { AppError, isAppError, toErrorResponse } from './errors';
-import { loadEnv, type ServerEnv } from './env';
-import { createLogger, type Logger } from './logger';
-import { enforceRateLimit, getClientIp, RateLimitError } from './rateLimit';
+import { AppError, isAppError, toErrorResponse } from './errors.js';
+import { loadEnv, type ServerEnv } from './env.js';
+import { createLogger, type Logger } from './logger.js';
+import { enforceRateLimit, getClientIp, RateLimitError } from './rateLimit.js';
 
 export type HttpMethod = 'GET' | 'POST';
 

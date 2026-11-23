@@ -154,6 +154,31 @@ export const tomatoApi = {
     })) as Order[];
   },
 
+  async getMyOrders(): Promise<Order[]> {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData?.session?.user?.id;
+    if (!userId) throw new Error('Não autenticado');
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    return (data || []).map((o: any) => ({
+      id: o.id,
+      customerName: o.customerName,
+      customerEmail: o.customerEmail,
+      items: o.order_items || [],
+      totalAmount: o.totalAmount,
+      status: o.status,
+      createdAt: o.created_at,
+      paymentMethod: o.paymentMethod,
+      shippingAddress: o.shippingAddress
+    })) as Order[];
+  },
+
   async updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {
     const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
     if (error) throw error;

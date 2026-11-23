@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppError } from '../errors';
+import { AppError } from '../errors.js';
 
 /** Item enviado à RPC. `color` e `size` são obrigatórios (order_items.selectedColor/selectedSize são NOT NULL). */
 export interface ReserveItem {

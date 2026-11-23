@@ -1,4 +1,4 @@
-import { AppError } from './errors';
+import { AppError } from './errors.js';
 
 /** Limites do MVP (design: "Rate limiting simples"). */
 export const RATE_LIMITS = {

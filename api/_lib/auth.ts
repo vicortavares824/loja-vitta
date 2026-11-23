@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppError } from './errors';
+import { AppError } from './errors.js';
 
 export interface AuthenticatedUser {
   id: string;

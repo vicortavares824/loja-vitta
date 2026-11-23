@@ -133,6 +133,18 @@ export const authService = {
   },
 
   /**
+   * Update the display name of the logged-in user (stored in auth user_metadata).
+   * The AuthContext picks the change up through onAuthStateChange (USER_UPDATED).
+   */
+  async updateName(name: string): Promise<void> {
+    const { error } = await supabase.auth.updateUser({ data: { name } });
+    if (error) {
+      observability.captureException(error);
+      throw new Error(error.message || 'Erro ao atualizar o nome.');
+    }
+  },
+
+  /**
    * Resend signup confirmation email.
    */
   async resendConfirmation(email: string): Promise<void> {

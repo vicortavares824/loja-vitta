@@ -1,11 +1,11 @@
 import { waitUntil } from '@vercel/functions';
-import { authenticate } from './_lib/auth';
-import { route } from './_lib/http';
-import { createCheckout } from './_lib/orders/orderService';
-import { expireStaleOrders } from './_lib/orders/expire';
-import { createMercadoPagoClient } from './_lib/payments/mercadoPago';
-import { checkoutSchema, parseBody, parseIdempotencyKey } from './_lib/schemas';
-import { createAdminClient } from './_lib/supabase';
+import { authenticate } from './_lib/auth.js';
+import { route } from './_lib/http.js';
+import { createCheckout } from './_lib/orders/orderService.js';
+import { expireStaleOrders } from './_lib/orders/expire.js';
+import { createMercadoPagoClient } from './_lib/payments/mercadoPago.js';
+import { checkoutSchema, parseBody, parseIdempotencyKey } from './_lib/schemas.js';
+import { createAdminClient } from './_lib/supabase.js';
 
 /** Limite de pedidos vencidos liberados por requisição (expiração preguiçosa). */
 const LAZY_EXPIRE_LIMIT = 5;

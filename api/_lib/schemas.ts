@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { CheckoutRequest, QuoteRequest } from '../../src/types/checkout';
-import { AppError } from './errors';
+import type { CheckoutRequest, QuoteRequest } from '../../src/types/checkout.js';
+import { AppError } from './errors.js';
 
 const itemSchema = z
   .object({

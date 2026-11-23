@@ -1,7 +1,7 @@
-import type { CheckoutItemInput, PricingBreakdown } from '../../../src/types/checkout';
-import { AppError } from '../errors';
-import { COUPON_RULES, type CouponRule } from '../config/coupons';
-import { FREE_SHIPPING_THRESHOLD_CENTS, SHIPPING_FEE_CENTS } from '../config/shipping';
+import type { CheckoutItemInput, PricingBreakdown } from '../../../src/types/checkout.js';
+import { AppError } from '../errors.js';
+import { COUPON_RULES, type CouponRule } from '../config/coupons.js';
+import { FREE_SHIPPING_THRESHOLD_CENTS, SHIPPING_FEE_CENTS } from '../config/shipping.js';
 
 export interface CatalogProduct {
   id: string;

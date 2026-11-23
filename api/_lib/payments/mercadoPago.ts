@@ -1,5 +1,5 @@
-import type { CardPaymentInput, CardPaymentData, PixPaymentData } from '../../../src/types/checkout';
-import { AppError } from '../errors';
+import type { CardPaymentInput, CardPaymentData, PixPaymentData } from '../../../src/types/checkout.js';
+import { AppError } from '../errors.js';
 
 /**
  * Cliente Mercado Pago por `fetch` (sem SDK).

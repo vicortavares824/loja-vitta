@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { AppError } from './errors';
-import { createLogger } from './logger';
+import { AppError } from './errors.js';
+import { createLogger } from './logger.js';
 
 const nonEmpty = z.string().min(1);
 

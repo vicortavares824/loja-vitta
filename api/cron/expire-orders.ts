@@ -1,9 +1,9 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { AppError } from '../_lib/errors';
-import { route } from '../_lib/http';
-import { expireStaleOrders } from '../_lib/orders/expire';
-import { createMercadoPagoClient } from '../_lib/payments/mercadoPago';
-import { createAdminClient } from '../_lib/supabase';
+import { AppError } from '../_lib/errors.js';
+import { route } from '../_lib/http.js';
+import { expireStaleOrders } from '../_lib/orders/expire.js';
+import { createMercadoPagoClient } from '../_lib/payments/mercadoPago.js';
+import { createAdminClient } from '../_lib/supabase.js';
 
 function sha256(value: string): Buffer {
   return createHash('sha256').update(value).digest();

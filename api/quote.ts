@@ -1,11 +1,11 @@
-import type { QuoteResponse } from '../src/types/checkout';
-import { authenticate } from './_lib/auth';
-import { route } from './_lib/http';
-import { hasPriorOrder, loadCatalog } from './_lib/orders/orderService';
-import { calculatePricing } from './_lib/pricing/engine';
-import { RATE_LIMITS } from './_lib/rateLimit';
-import { parseBody, quoteSchema } from './_lib/schemas';
-import { createAdminClient } from './_lib/supabase';
+import type { QuoteResponse } from '../src/types/checkout.js';
+import { authenticate } from './_lib/auth.js';
+import { route } from './_lib/http.js';
+import { hasPriorOrder, loadCatalog } from './_lib/orders/orderService.js';
+import { calculatePricing } from './_lib/pricing/engine.js';
+import { RATE_LIMITS } from './_lib/rateLimit.js';
+import { parseBody, quoteSchema } from './_lib/schemas.js';
+import { createAdminClient } from './_lib/supabase.js';
 
 /** POST /api/quote: calcula o preço sem criar pedido, reservar estoque ou chamar o provedor de pagamento. */
 export default route({

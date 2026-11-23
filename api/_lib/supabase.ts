@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { ServerEnv } from './env';
+import type { ServerEnv } from './env.js';
 
 /** Cliente com a service role key. Uso exclusivo do servidor; ignora RLS. */
 export function createAdminClient(

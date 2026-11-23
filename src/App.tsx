@@ -12,6 +12,8 @@ import { CheckCircle2, Info, AlertTriangle, ArrowRight, Sparkles } from 'lucide-
 import { ProductsPage } from './components/pages/ProductsPage';
 import { CategoriesPage } from './components/pages/CategoriesPage';
 import { SearchPage } from './components/pages/SearchPage';
+import { ProfilePage } from './components/pages/ProfilePage';
+
 import { TomatoAdminPanel } from './components/admin/TomatoAdminPanel';
 import { ClientLoginPage } from './components/pages/ClientLoginPage';
 import { AdminLoginPage } from './components/pages/AdminLoginPage';
@@ -74,10 +76,11 @@ function AppContent() {
     if (path === '/products') return 'products';
     if (path === '/categories') return 'categories';
     if (path === '/search') return 'search';
+    if (path === '/perfil' || path === '/profile') return 'profile';
     return 'home';
   };
 
-  const [currentTab, setCurrentTab] = useState<'home' | 'products' | 'categories' | 'search' | 'admin' | 'login-client' | 'login-admin' | 'signup-client' | 'signup-admin'>(getInitialTab);
+  const [currentTab, setCurrentTab] = useState<'home' | 'products' | 'categories' | 'search' | 'profile' | 'admin' | 'login-client' | 'login-admin' | 'signup-client' | 'signup-admin'>(getInitialTab);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Configuração global para fundo escuro
@@ -103,6 +106,7 @@ function AppContent() {
     else if (tab === 'signup-admin') path = '/signup-admin';
     else if (tab === 'login-client') path = '/login';
     else if (tab === 'signup-client') path = '/signup';
+    else if (tab === 'profile') path = '/perfil';
     else if (tab !== 'home') path = `/${tab}`;
     
     window.history.pushState({}, '', path);
@@ -370,6 +374,13 @@ function AppContent() {
         {currentTab === 'search' && (
           <div className="animate-fadeIn">
             <SearchPage />
+          </div>
+        )}
+
+        {/* VIEW: CLIENT PROFILE */}
+        {currentTab === 'profile' && (
+          <div className="animate-fadeIn">
+            <ProfilePage onNavigate={handleNavigate} />
           </div>
         )}
 

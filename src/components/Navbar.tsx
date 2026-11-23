@@ -165,9 +165,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
       
             {isAuthenticated && user ? (
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline text-xs font-semibold text-gray-300 tracking-wide max-w-[100px] truncate">
+                <button
+                  onClick={() => handleNavClick('profile')}
+                  className="hidden sm:inline min-h-[44px] text-xs font-semibold text-gray-300 hover:text-white tracking-wide max-w-[100px] truncate"
+                  aria-label="Meu perfil"
+                  title="Meu perfil"
+                >
                   {user.name.split(' ')[0]}
-                </span>
+                </button>
                 {isAdmin && (
                   <Magnet strength={10}>
                     <button
@@ -262,6 +267,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate 
                 <span>Busca Avançada</span>
               </button>
 
+              {isAuthenticated && (
+                <button
+                  onClick={() => handleNavClick('profile')}
+                  className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
+                    currentTab === 'profile' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
+                  }`}
+                >
+                  <User className="w-5 h-5" />
+                  <span>Meu Perfil</span>
+                </button>
+              )}
               {isAuthenticated && !isAdmin && (
                 <button
                   onClick={() => { logout(); handleNavClick('home'); }}

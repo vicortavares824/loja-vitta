@@ -6,13 +6,13 @@ import type {
   CheckoutResponse,
   PixPaymentData,
   PricingBreakdown,
-} from '../../../src/types/checkout';
-import { AppError } from '../errors';
-import type { AuthenticatedUser } from '../auth';
-import type { Logger } from '../logger';
-import type { MercadoPagoClient } from '../payments/mercadoPago';
-import { type CatalogProduct, calculatePricing, normalizeCouponCode } from '../pricing/engine';
-import { releaseOrderStock, reserveAndCreateOrder } from '../stock/stockService';
+} from '../../../src/types/checkout.js';
+import { AppError } from '../errors.js';
+import type { AuthenticatedUser } from '../auth.js';
+import type { Logger } from '../logger.js';
+import type { MercadoPagoClient } from '../payments/mercadoPago.js';
+import { type CatalogProduct, calculatePricing, normalizeCouponCode } from '../pricing/engine.js';
+import { releaseOrderStock, reserveAndCreateOrder } from '../stock/stockService.js';
 
 const DEFAULT_PIX_EXPIRATION_MINUTES = 30;
 const CARD_SAFETY_EXPIRATION_MINUTES = 15;

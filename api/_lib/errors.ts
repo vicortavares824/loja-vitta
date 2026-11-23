@@ -1,4 +1,4 @@
-import type { ApiErrorBody, CheckoutErrorCode } from '../../src/types/checkout';
+import type { ApiErrorBody, CheckoutErrorCode } from '../../src/types/checkout.js';
 
 interface ErrorCatalogEntry {
   status: number;

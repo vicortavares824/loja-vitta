@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { AppError } from '../errors';
-import type { Logger } from '../logger';
-import type { MercadoPagoClient } from '../payments/mercadoPago';
-import { releaseOrderStock } from '../stock/stockService';
-import { CANCEL_REASON_EXPIRED, CANCEL_REASON_PAYMENT_REJECTED } from './orderService';
-import { decidePaymentTransition, type OrderStatus } from './stateMachine';
+import { AppError } from '../errors.js';
+import type { Logger } from '../logger.js';
+import type { MercadoPagoClient } from '../payments/mercadoPago.js';
+import { releaseOrderStock } from '../stock/stockService.js';
+import { CANCEL_REASON_EXPIRED, CANCEL_REASON_PAYMENT_REJECTED } from './orderService.js';
+import { decidePaymentTransition, type OrderStatus } from './stateMachine.js';
 
 export const EXPIRE_BATCH_LIMIT = 25;
 

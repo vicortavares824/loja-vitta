@@ -1,4 +1,4 @@
-import type { Order } from '../../../src/types/ecommerce';
+import type { Order } from '../../../src/types/ecommerce.js';
 
 export type OrderStatus = Order['status'];
 
