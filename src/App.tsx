@@ -30,6 +30,18 @@ import ScrollExpand from './components/reactbits/ScrollExpand';
 import Cubes from './components/reactbits/Cubes';
 import { AnimationGate } from './components/reactbits/AnimationGate';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Magnet } from './components/react-bits/Magnet';
+import {
+  CustomCursor,
+  ScrollProgress,
+  SplitReveal,
+  Reveal,
+  HeroMotion,
+  ScrollCue,
+  ScrollWords,
+  ParallaxImage,
+  InteractiveCard,
+} from './components/home/HomeMotion';
 
 const ToastContainer = () => {
   const { toasts } = useCart();
@@ -130,6 +142,9 @@ function AppContent() {
         {/* VIEW 1: HOME PAGE WITH REACT BITS ANIMATIONS */}
         {currentTab === 'home' && (
           <main className="animate-fadeIn">
+            <ScrollProgress />
+            <CustomCursor />
+
             {/* HERO SECTION - MAGIC RINGS */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
               <div className="absolute inset-0 z-0 opacity-70">
@@ -162,41 +177,53 @@ function AppContent() {
                 </ErrorBoundary>
               </div>
               
-              <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-[0.25em] backdrop-blur-md border border-white/15">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <p>Nova Coleção 2026</p>
-                </div>
+              <HeroMotion className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto space-y-6">
+                <Reveal onMount delay={0.1} y={20}>
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-[0.25em] backdrop-blur-md border border-white/15">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <p>Nova Coleção 2026</p>
+                  </div>
+                </Reveal>
 
                 <h1 className="text-4xl sm:text-7xl md:text-[10rem] font-extrabold tracking-tighter uppercase leading-none text-white break-words">
-                  VITTA
+                  <SplitReveal text="VITTA" delay={0.25} stagger={0.08} hoverLift />
                 </h1>
-                
+
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-[0.3em] uppercase text-gray-300 break-words">
-                  Basics
+                  <SplitReveal text="Basics" delay={0.75} stagger={0.05} />
                 </h2>
 
-                <p className="text-gray-400 text-sm max-w-md mx-auto font-light tracking-widest uppercase pt-2 leading-relaxed break-words">
-                  Simplicidade e minimalismo em cada peça, com qualidade e conforto incomparáveis. Descubra a essência da moda básica com Vitta Basics.
-                </p>
+                <Reveal onMount delay={1.1} y={24}>
+                  <p className="text-gray-400 text-sm max-w-md mx-auto font-light tracking-widest uppercase pt-2 leading-relaxed break-words">
+                    Simplicidade e minimalismo em cada peça, com qualidade e conforto incomparáveis. Descubra a essência da moda básica com Vitta Basics.
+                  </p>
+                </Reveal>
 
-                <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-                  <button
-                    onClick={() => handleNavigate('products')}
-                    className="px-8 py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-2xl flex items-center gap-2"
-                  >
-                    <p>Ver Catálogo</p>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                <Reveal onMount delay={1.3} y={24}>
+                  <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+                    <Magnet strength={14}>
+                      <button
+                        onClick={() => handleNavigate('products')}
+                        className="px-8 py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-2xl flex items-center gap-2"
+                      >
+                        <p>Ver Catálogo</p>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </Magnet>
 
-                  <button
-                    onClick={() => handleNavigate('categories')}
-                    className="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-widest rounded-full border border-white/20 transition-all backdrop-blur-md"
-                  >
-                    Categorias
-                  </button>
-                </div>
-              </div>
+                    <Magnet strength={14}>
+                      <button
+                        onClick={() => handleNavigate('categories')}
+                        className="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-widest rounded-full border border-white/20 transition-all backdrop-blur-md"
+                      >
+                        Categorias
+                      </button>
+                    </Magnet>
+                  </div>
+                </Reveal>
+              </HeroMotion>
+
+              <ScrollCue />
             </section>
 
             {/* MARQUEE TEXT */}
@@ -255,11 +282,14 @@ function AppContent() {
               <div className="w-full max-w-6xl px-4">
                 {(() => {
                   const showcaseInner = (
-                    <div className="relative w-full h-[65vh] group overflow-hidden border border-white/20 rounded-[28px] shadow-2xl">
-                      <img
+                    <div
+                      data-cursor="Explorar"
+                      className="relative w-full h-[65vh] group overflow-hidden border border-white/20 rounded-[28px] shadow-2xl"
+                    >
+                      <ParallaxImage
                         src="https://imgs.search.brave.com/Bu0-d1osQDJB132vDOrFLtG7qXmTloZ2cRMrae7Stpg/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdDIu/ZGVwb3NpdHBob3Rv/cy5jb20vMTc2NjE4/Ni82OTExL2kvNDUw/L2RlcG9zaXRwaG90/b3NfNjkxMTExOTEt/c3RvY2stcGhvdG8t/ZmFzaGlvbi1zaG93/LmpwZw"
                         alt="New Collection Showcase"
-                        className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-1000"
+                        className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                         <button
@@ -308,20 +338,23 @@ function AppContent() {
             <section className="relative h-[75vh] flex items-center justify-center overflow-hidden bg-black border-y border-white/10">
 
               <div className="relative z-10 max-w-3xl mx-auto px-6 text-center mix-blend-difference pointer-events-none space-y-4">
-                <h3 className="text-2xl sm:text-3xl md:text-2xl font-extrabold uppercase tracking-tight leading-snug text-white break-words">
-  VITTA acredita que o básico também pode ser extraordinário. Peças essenciais que unem conforto, qualidade e estilo atemporal
-                </h3>
+                <ScrollWords
+                  text="VITTA acredita que o básico também pode ser extraordinário. Peças essenciais que unem conforto, qualidade e estilo atemporal."
+                  className="text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase tracking-tight leading-snug text-white break-words"
+                />
               </div>
             </section>
 
             {/* CUBES FEATURE GRID */}
             <section className="py-28 bg-[#0a0a0c] relative overflow-hidden">
-              <div className="absolute inset-0 opacity-40 pointer-events-auto flex items-center justify-center">
+              <div className="absolute inset-0 opacity-70 pointer-events-auto">
                 <ErrorBoundary fallback={<div className="w-full h-full" />}>
                   <AnimationGate
-                    renderFull={() => <Cubes faceColor="#555555" rippleColor="#ffffff" autoAnimate={true} />}
+                    renderFull={() => (
+                      <Cubes gridSize={7} radius={2.5} faceColor="#5a5a5a" rippleColor="#ffffff" autoAnimate={true} />
+                    )}
                     renderReduced={() => (
-                      <Cubes faceColor="#555555" rippleColor="#ffffff" autoAnimate={false} />
+                      <Cubes gridSize={6} radius={2} faceColor="#5a5a5a" rippleColor="#ffffff" autoAnimate={false} />
                     )}
                     renderStatic={() => (
                       <div className="w-full h-full min-h-[350px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_65%)]" />
@@ -345,10 +378,13 @@ function AppContent() {
                     { title: "Tecidos", desc: "Algodão orgânico, lã fria e seda pura de alta durabilidade." },
                     { title: "Sustentabilidade", desc: "Produção consciente com tiragens limitadas e atemporais." }
                   ].map((item, i) => (
-                    <div key={i} className="text-center p-10 border border-white/15 bg-white/5 backdrop-blur-md rounded-3xl shadow-2xl transition-all duration-300 hover:border-white hover:-translate-y-2">
-                      <h4 className="text-xl font-extrabold mb-3 uppercase tracking-wider text-white break-words">{item.title}</h4>
-                      <p className="text-gray-400 font-normal text-sm tracking-wide leading-relaxed break-words">{item.desc}</p>
-                    </div>
+                    <Reveal key={i} delay={i * 0.15}>
+                      <InteractiveCard className="h-full text-center p-10 border border-white/15 bg-[#0a0a0c]/80 rounded-3xl shadow-2xl transition-colors duration-300 hover:border-white">
+                        <span className="block mb-4 text-xs font-semibold tracking-[0.4em] text-white/40">0{i + 1}</span>
+                        <h4 className="text-xl font-extrabold mb-3 uppercase tracking-wider text-white break-words">{item.title}</h4>
+                        <p className="text-gray-400 font-normal text-sm tracking-wide leading-relaxed break-words">{item.desc}</p>
+                      </InteractiveCard>
+                    </Reveal>
                   ))}
                 </div>
               </div>

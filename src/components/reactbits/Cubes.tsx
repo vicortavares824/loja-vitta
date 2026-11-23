@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 export interface CubesProps {
+  /** Número de linhas da grade. As colunas acompanham a largura da seção. */
   gridSize?: number;
   cubeSize?: number;
   maxAngle?: number;
@@ -13,6 +14,14 @@ export interface CubesProps {
   rippleSpeed?: number;
 }
 
+/**
+ * Grade de cubos 3D que inclinam perto do cursor e cobre toda a seção.
+ *
+ * Desempenho:
+ * - Um único `InstancedMesh` (1 draw call) em vez de um mesh/material por cubo.
+ * - O loop só roda com a seção visível na tela e a aba ativa.
+ * - Nenhuma alocação por quadro; suavização baseada em tempo (independe do FPS).
+ */
 const Cubes: React.FC<CubesProps> = ({
   gridSize = 12,
   cubeSize = 0.55,
@@ -25,6 +34,31 @@ const Cubes: React.FC<CubesProps> = ({
   rippleSpeed = 2.5
 }) => {
   const mountRef = useRef<HTMLDivElement | null>(null);
+  const [colCount, setColCount] = useState(gridSize);
+
+  // Mede o container e calcula quantas colunas cabem para preencher a largura.
+  useEffect(() => {
+    const container = mountRef.current;
+    if (!container) return;
+    const measure = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (!w || !h) return;
+      setColCount(Math.max(gridSize, Math.ceil(gridSize * (w / h)) + 1));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const ro = new ResizeObserver(() => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(measure, 200);
+    });
+    ro.observe(container);
+    return () => {
+      ro.disconnect();
+      if (timer) clearTimeout(timer);
+    };
+  }, [gridSize]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -33,99 +67,90 @@ const Cubes: React.FC<CubesProps> = ({
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight;
 
-    // 1. Scene, Camera, Renderer
+    const rowCount = gridSize;
+    const step = cubeSize + 0.12;
+    const fov = 45;
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 0, gridSize * 0.85);
+    const camera = new THREE.PerspectiveCamera(fov, width / height, 0.1, 1000);
+    // Distância em que as linhas preenchem a altura (corte leve nas bordas).
+    const fitDistance = ((rowCount * step) / 2 / Math.tan(THREE.MathUtils.degToRad(fov / 2))) * 0.92;
+    camera.position.set(0, 0, fitDistance);
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
     } catch {
-      // WebGL context unavailable: render nothing and keep the surrounding
-      // layout intact (R11.4). The container div stays empty.
+      // WebGL indisponível: não renderiza nada e mantém o layout (R11.4).
       return;
     }
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     container.appendChild(renderer.domElement);
 
-    // 2. Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
-    scene.add(ambientLight);
-
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
     dirLight.position.set(5, 10, 7);
     scene.add(dirLight);
 
-    // 3. Grid of Cubes
+    // Grade instanciada
+    const offsetX = ((colCount - 1) * step) / 2;
+    const offsetY = ((rowCount - 1) * step) / 2;
+    const count = rowCount * colCount;
+
     const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-    const baseColorObj = new THREE.Color(faceColor);
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.2 });
+    const mesh = new THREE.InstancedMesh(geometry, material, count);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    scene.add(mesh);
+
+    const baseColor = new THREE.Color(faceColor);
     const rippleColorObj = new THREE.Color(rippleColor);
+    const tmpColor = new THREE.Color();
+    const dummy = new THREE.Object3D();
 
-    interface CubeItem {
-      mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
-      row: number;
-      col: number;
-      targetRotX: number;
-      targetRotY: number;
-      currentRotX: number;
-      currentRotY: number;
-      rippleTime: number;
-      rippleActive: boolean;
-      rippleDistance: number;
+    const rowOf = new Float32Array(count);
+    const colOf = new Float32Array(count);
+    const rotX = new Float32Array(count);
+    const rotY = new Float32Array(count);
+    const posZ = new Float32Array(count);
+    const rippleTime = new Float32Array(count);
+    const rippleActive = new Uint8Array(count);
+
+    for (let i = 0; i < count; i++) {
+      const r = Math.floor(i / colCount);
+      const c = i % colCount;
+      rowOf[i] = r;
+      colOf[i] = c;
+      dummy.position.set(c * step - offsetX, -(r * step - offsetY), 0);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      mesh.setColorAt(i, baseColor);
     }
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 
-    const cubes: CubeItem[] = [];
-    const group = new THREE.Group();
-
-    const offset = ((gridSize - 1) * (cubeSize + 0.12)) / 2;
-
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        const material = new THREE.MeshStandardMaterial({
-          color: baseColorObj.clone(),
-          roughness: 0.3,
-          metalness: 0.2
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.x = c * (cubeSize + 0.12) - offset;
-        mesh.position.y = -(r * (cubeSize + 0.12) - offset);
-        mesh.position.z = 0;
-
-        group.add(mesh);
-        cubes.push({
-          mesh,
-          row: r,
-          col: c,
-          targetRotX: 0,
-          targetRotY: 0,
-          currentRotX: 0,
-          currentRotY: 0,
-          rippleTime: 0,
-          rippleActive: false,
-          rippleDistance: 0
-        });
-      }
-    }
-
-    scene.add(group);
-
-    // Interaction & Simulation State
-    const mouse = { x: -999, y: -999 };
+    // Interação (ouve na janela para funcionar mesmo com cards por cima)
+    const pointer = new THREE.Vector2(-999, -999);
     const raycaster = new THREE.Raycaster();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const hit = new THREE.Vector3();
     let isUserActive = false;
     let userTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const simTarget = { r: gridSize / 2, c: gridSize / 2 };
-    const simPos = { r: gridSize / 2, c: gridSize / 2 };
+    const simTarget = { r: rowCount / 2, c: colCount / 2 };
+    const simPos = { r: rowCount / 2, c: colCount / 2 };
+
+    const toNdc = (clientX: number, clientY: number): boolean => {
+      const rect = container.getBoundingClientRect();
+      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return false;
+      pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+      return true;
+    };
 
     const updatePointer = (clientX: number, clientY: number) => {
-      const rect = container.getBoundingClientRect();
-      mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-
+      if (!toNdc(clientX, clientY)) return;
       isUserActive = true;
       if (userTimer) clearTimeout(userTimer);
       userTimer = setTimeout(() => {
@@ -133,144 +158,151 @@ const Cubes: React.FC<CubesProps> = ({
       }, 2500);
     };
 
-    const handlePointerMove = (e: MouseEvent) => {
-      updatePointer(e.clientX, e.clientY);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches[0]) {
-        updatePointer(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
+    const handlePointerMove = (e: PointerEvent) => updatePointer(e.clientX, e.clientY);
 
     const handleClick = (e: MouseEvent) => {
-      if (!rippleOnClick) return;
-      const rect = container.getBoundingClientRect();
-      const mX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const mY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(new THREE.Vector2(mX, mY), camera);
-      const intersects = raycaster.intersectObjects(group.children);
-
-      if (intersects.length > 0) {
-        const hitMesh = intersects[0].object;
-        const hitCube = cubes.find(item => item.mesh === hitMesh);
-        if (hitCube) {
-          cubes.forEach(item => {
-            const dist = Math.hypot(item.row - hitCube.row, item.col - hitCube.col);
-            item.rippleDistance = dist;
-            item.rippleTime = -dist * (0.12 / rippleSpeed);
-            item.rippleActive = true;
-          });
-        }
+      if (!rippleOnClick || !toNdc(e.clientX, e.clientY)) return;
+      raycaster.setFromCamera(pointer, camera);
+      const id = raycaster.intersectObject(mesh)[0]?.instanceId;
+      if (id === undefined) return;
+      for (let i = 0; i < count; i++) {
+        const dist = Math.hypot(rowOf[i] - rowOf[id], colOf[i] - colOf[id]);
+        rippleTime[i] = -dist * (0.12 / rippleSpeed);
+        rippleActive[i] = 1;
       }
+      start();
     };
 
-    container.addEventListener('pointermove', handlePointerMove);
-    container.addEventListener('touchmove', handleTouchMove);
-    container.addEventListener('click', handleClick);
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('click', handleClick);
 
     const handleResize = () => {
-      if (!container) return;
       const w = container.clientWidth || window.innerWidth;
       const h = container.clientHeight || window.innerHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      renderer.render(scene, camera);
     };
-
     window.addEventListener('resize', handleResize);
 
-    // Animation Loop
-    let animId: number;
-    const clock = new THREE.Clock();
+    // Loop de animação (pausável)
+    let animId = 0;
+    let running = false;
+    let inView = false;
+    const clock = new THREE.Clock(false);
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
+      // Limita o delta para não "pular" depois de pausas.
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const ease = 1 - Math.exp(-delta * 14);
 
       let targetR = -999;
       let targetC = -999;
 
       if (isUserActive) {
-        raycaster.setFromCamera(new THREE.Vector2(mouse.x, mouse.y), camera);
-        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-        const intersectPoint = new THREE.Vector3();
-        raycaster.ray.intersectPlane(plane, intersectPoint);
-
-        if (intersectPoint) {
-          targetC = (intersectPoint.x + offset) / (cubeSize + 0.12);
-          targetR = (-intersectPoint.y + offset) / (cubeSize + 0.12);
+        raycaster.setFromCamera(pointer, camera);
+        if (raycaster.ray.intersectPlane(plane, hit)) {
+          targetC = (hit.x + offsetX) / step;
+          targetR = (-hit.y + offsetY) / step;
         }
       } else if (autoAnimate) {
-        simPos.r += (simTarget.r - simPos.r) * 0.03;
-        simPos.c += (simTarget.c - simPos.c) * 0.03;
+        const simEase = 1 - Math.exp(-delta * 2.5);
+        simPos.r += (simTarget.r - simPos.r) * simEase;
+        simPos.c += (simTarget.c - simPos.c) * simEase;
         targetR = simPos.r;
         targetC = simPos.c;
-
-        if (Math.hypot(simPos.r - simTarget.r, simPos.c - simTarget.c) < 0.2) {
-          simTarget.r = Math.random() * gridSize;
-          simTarget.c = Math.random() * gridSize;
+        if (Math.hypot(simPos.r - simTarget.r, simPos.c - simTarget.c) < 0.3) {
+          simTarget.r = Math.random() * rowCount;
+          simTarget.c = Math.random() * colCount;
         }
       }
 
-      cubes.forEach(item => {
-        // Tilt animation
-        const dist = Math.hypot(item.row - targetR, item.col - targetC);
-        if (dist <= radius) {
-          const pct = 1 - dist / radius;
-          item.targetRotX = -pct * maxAngle;
-          item.targetRotY = pct * maxAngle;
-        } else {
-          item.targetRotX = 0;
-          item.targetRotY = 0;
-        }
+      let colorsChanged = false;
 
-        item.currentRotX += (item.targetRotX - item.currentRotX) * 0.1;
-        item.currentRotY += (item.targetRotY - item.currentRotY) * 0.1;
+      for (let i = 0; i < count; i++) {
+        const dist = Math.hypot(rowOf[i] - targetR, colOf[i] - targetC);
+        const pct = dist <= radius ? 1 - dist / radius : 0;
+        rotX[i] += (-pct * maxAngle - rotX[i]) * ease;
+        rotY[i] += (pct * maxAngle - rotY[i]) * ease;
 
-        item.mesh.rotation.x = item.currentRotX;
-        item.mesh.rotation.y = item.currentRotY;
-
-        // Ripple Effect Animation
-        if (item.rippleActive) {
-          item.rippleTime += delta * rippleSpeed;
-          if (item.rippleTime >= 0 && item.rippleTime <= 0.6) {
-            const p = Math.sin((item.rippleTime / 0.6) * Math.PI);
-            item.mesh.material.color.lerpColors(baseColorObj, rippleColorObj, p);
-            item.mesh.position.z = p * 0.4;
-          } else if (item.rippleTime > 0.6) {
-            item.mesh.material.color.copy(baseColorObj);
-            item.mesh.position.z = 0;
-            item.rippleActive = false;
+        if (rippleActive[i]) {
+          rippleTime[i] += delta * rippleSpeed;
+          const t = rippleTime[i];
+          if (t >= 0 && t <= 0.6) {
+            const p = Math.sin((t / 0.6) * Math.PI);
+            mesh.setColorAt(i, tmpColor.lerpColors(baseColor, rippleColorObj, p));
+            posZ[i] = p * 0.4;
+            colorsChanged = true;
+          } else if (t > 0.6) {
+            mesh.setColorAt(i, baseColor);
+            posZ[i] = 0;
+            rippleActive[i] = 0;
+            colorsChanged = true;
           }
         }
-      });
+
+        dummy.position.set(colOf[i] * step - offsetX, -(rowOf[i] * step - offsetY), posZ[i]);
+        dummy.rotation.set(rotX[i], rotY[i], 0);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+
+      mesh.instanceMatrix.needsUpdate = true;
+      if (colorsChanged && mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 
       renderer.render(scene, camera);
     };
 
-    animate();
+    const start = () => {
+      if (running || !inView || document.hidden) return;
+      running = true;
+      clock.start();
+      animate();
+    };
+    const stop = () => {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(animId);
+      clock.stop();
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) start();
+        else stop();
+      },
+      { rootMargin: '100px' }
+    );
+    observer.observe(container);
+
+    const handleVisibility = () => (document.hidden ? stop() : start());
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    renderer.render(scene, camera);
 
     return () => {
-      cancelAnimationFrame(animId);
+      stop();
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('resize', handleResize);
-      container.removeEventListener('pointermove', handlePointerMove);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('click', handleClick);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('click', handleClick);
       if (userTimer) clearTimeout(userTimer);
 
       geometry.dispose();
-      cubes.forEach(item => item.mesh.material.dispose());
+      material.dispose();
+      mesh.dispose();
       renderer.dispose();
-      if (renderer.domElement && container.contains(renderer.domElement)) {
+      if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [gridSize, cubeSize, maxAngle, radius, faceColor, autoAnimate, rippleOnClick, rippleColor, rippleSpeed]);
+  }, [gridSize, colCount, cubeSize, maxAngle, radius, faceColor, autoAnimate, rippleOnClick, rippleColor, rippleSpeed]);
 
   return <div ref={mountRef} className="w-full h-full min-h-[350px] relative pointer-events-auto" />;
 };
 
 export default Cubes;
-
