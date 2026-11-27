@@ -8,7 +8,7 @@ import { AppError } from '../errors.js';
  * Serviço indisponível para o trecho volta com `error` e sem preço: é descartado.
  */
 
-const BASE_URLS = {
+export const BASE_URLS = {
   sandbox: 'https://sandbox.melhorenvio.com.br',
   production: 'https://melhorenvio.com.br',
 } as const;

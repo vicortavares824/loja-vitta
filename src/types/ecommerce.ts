@@ -68,6 +68,8 @@ export interface Order {
   shippingServiceName?: string | null;
   /** Código de rastreio informado pelo admin após a postagem. */
   trackingCode?: string | null;
+  /** PDF da etiqueta gerada pela loja no Melhor Envio. */
+  labelUrl?: string | null;
 }
 
 export interface TomatoApiResponse<T> {

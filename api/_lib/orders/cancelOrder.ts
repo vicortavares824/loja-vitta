@@ -76,6 +76,9 @@ async function claimForCancel(deps: CancelOrderDeps, orderId: string): Promise<b
     .update({ cancel_requested_at: new Date().toISOString() })
     .eq('id', orderId)
     .eq('status', 'processing')
+    // Etiqueta sendo gerada ou já comprada no Melhor Envio: o cliente não cancela sozinho.
+    .is('label_claimed_at', null)
+    .is('me_order_id', null)
     .select('id');
   if (error) throw dbError('claimForCancel', error);
   return (data?.length ?? 0) > 0;

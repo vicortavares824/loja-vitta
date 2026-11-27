@@ -152,7 +152,8 @@ export const tomatoApi = {
       paymentMethod: o.paymentMethod,
       shippingAddress: o.shippingAddress,
       shippingServiceName: o.shipping_service_name ?? null,
-      trackingCode: o.tracking_code ?? null
+      trackingCode: o.tracking_code ?? null,
+      labelUrl: o.label_url ?? null
     })) as Order[];
   },
 
@@ -179,7 +180,8 @@ export const tomatoApi = {
       paymentMethod: o.paymentMethod,
       shippingAddress: o.shippingAddress,
       shippingServiceName: o.shipping_service_name ?? null,
-      trackingCode: o.tracking_code ?? null
+      trackingCode: o.tracking_code ?? null,
+      labelUrl: o.label_url ?? null
     })) as Order[];
   },
 

@@ -23,6 +23,8 @@ const baseSchema = z.object({
     .optional(),
   /** Exigido pela API: "Nome da aplicação (email de contato técnico)". */
   MELHORENVIO_USER_AGENT: nonEmpty.optional(),
+  /** Remetente das etiquetas, em JSON (validado em shipping/labelService.ts). */
+  MELHORENVIO_SENDER: nonEmpty.optional(),
 });
 
 const cronSchema = baseSchema.extend({ CRON_SECRET: nonEmpty });

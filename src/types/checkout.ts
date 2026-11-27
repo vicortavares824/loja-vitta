@@ -21,7 +21,20 @@ export interface CheckoutRequest {
   shippingAddress: string; // 1..300 caracteres após trim
   shippingCep: string; // 8 dígitos (pontuação é removida no servidor)
   shippingServiceId: number; // id de ShippingOption escolhido na cotação
+  shippingAddressId?: string; // endereço salvo usado (habilita a etiqueta automática)
   card?: CardPaymentInput; // obrigatório quando paymentMethod === 'card'
+}
+
+/** Endereço em campos separados, copiado do endereço salvo no checkout (etiqueta). */
+export interface ShippingAddressParts {
+  recipientName: string;
+  cep: string;
+  street: string;
+  number: string;
+  complement: string | null;
+  neighborhood: string;
+  city: string;
+  state: string;
 }
 
 export interface ShippingOption {
@@ -83,6 +96,12 @@ export interface CancelOrderResponse {
   refunded: boolean; // true quando o pedido já estava pago e o valor foi estornado
 }
 
+export interface ShippingLabelResponse {
+  labelUrl?: string; // PDF da etiqueta (ação generate)
+  trackingCode: string | null;
+  status?: string; // status do pedido após sincronizar (ação refresh)
+}
+
 export type CheckoutErrorCode =
   | 'VALIDATION_ERROR'
   | 'UNAUTHENTICATED'
@@ -100,6 +119,10 @@ export type CheckoutErrorCode =
   | 'SHIPPING_OPTION_UNAVAILABLE'
   | 'ORDER_NOT_FOUND'
   | 'ORDER_NOT_CANCELLABLE'
+  | 'FORBIDDEN'
+  | 'LABEL_DATA_MISSING'
+  | 'SHIPPING_LABEL_ERROR'
+  | 'LABEL_IN_PROGRESS'
   | 'RATE_LIMITED'
   | 'TOO_MANY_PENDING_ORDERS'
   | 'SERVER_MISCONFIGURED'

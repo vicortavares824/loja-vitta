@@ -7,6 +7,7 @@
 import type {
   CancelOrderResponse,
   CheckoutErrorCode,
+  ShippingLabelResponse,
   CheckoutRequest,
   CheckoutResponse,
   QuoteRequest,
@@ -34,6 +35,10 @@ export const CHECKOUT_ERROR_MESSAGES_PT: Record<ServiceErrorCode, string> = {
   SHIPPING_OPTION_UNAVAILABLE: 'A opção de frete escolhida não está disponível para este CEP. Escolha outra.',
   ORDER_NOT_FOUND: 'Pedido não encontrado.',
   ORDER_NOT_CANCELLABLE: 'Este pedido não pode mais ser cancelado. Atualize a página para ver o status atual.',
+  FORBIDDEN: 'Acesso restrito ao administrador.',
+  LABEL_DATA_MISSING: 'Faltam dados para gerar a etiqueta.',
+  SHIPPING_LABEL_ERROR: 'O Melhor Envio recusou ou não respondeu. Confira o saldo e tente novamente.',
+  LABEL_IN_PROGRESS: 'A etiqueta deste pedido já está sendo gerada. Aguarde e atualize a página.',
   RATE_LIMITED: 'Muitas tentativas. Aguarde um momento e tente novamente.',
   TOO_MANY_PENDING_ORDERS: 'Você já tem pedidos aguardando pagamento. Conclua ou aguarde a expiração deles.',
   SERVER_MISCONFIGURED: 'Serviço temporariamente indisponível. Tente novamente mais tarde.',
@@ -112,6 +117,11 @@ export const checkoutService = {
 
   async createCheckout(req: CheckoutRequest, idempotencyKey: string): Promise<CheckoutResponse> {
     return post<CheckoutResponse>('/api/checkout', req, { 'Idempotency-Key': idempotencyKey });
+  },
+
+  /** Admin: gera a etiqueta no Melhor Envio (generate) ou sincroniza o rastreio (refresh). */
+  async shippingLabel(orderId: string, action: 'generate' | 'refresh'): Promise<ShippingLabelResponse> {
+    return post<ShippingLabelResponse>('/api/admin/shipping-label', { orderId, action });
   },
 
   /** Cancela o próprio pedido (até antes do envio). Pedido pago é estornado no servidor. */

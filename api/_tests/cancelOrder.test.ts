@@ -44,6 +44,8 @@ function fakeSupabase(order: FakeOrder | null, opts: FakeOptions = {}) {
         return query;
       },
       eq: () => query,
+      is: () => query,
+      or: () => query,
       maybeSingle: async () => ({ data: reads++ === 0 ? order : (opts.reread ?? order), error: null }),
       then: (resolve: (v: unknown) => void) => resolve({ error: null }),
     };
