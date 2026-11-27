@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { addBusinessDays, ShippingJourney } from '../../components/cart/ShippingJourney';
 import { ShippingSelector } from '../../components/cart/ShippingSelector';
+import { OrderJourney } from '../../components/profile/OrderJourney';
 import type { ShippingOption } from '../../types/checkout';
 
 const sedex: ShippingOption = {
@@ -63,5 +64,27 @@ describe('ShippingSelector', () => {
     expect(screen.queryByText(/Previsão de entrega/)).not.toBeInTheDocument();
     rerender(<ShippingSelector {...baseProps} selectedId={2} isQuoting />);
     expect(screen.queryByText(/Previsão de entrega/)).not.toBeInTheDocument();
+  });
+});
+
+describe('OrderJourney', () => {
+  it.each([
+    ['pending_payment', /Aguardando a confirmação do pagamento/],
+    ['processing', /Estamos separando seu pedido/],
+    ['shipped', /Em trânsito com Correios/],
+    ['delivered', /Pedido entregue/],
+  ] as const)('describes the %s status', (status, text) => {
+    render(<OrderJourney order={{ status, shippingServiceName: 'Correios SEDEX' }} />);
+    expect(screen.getByRole('img', { name: text })).toBeInTheDocument();
+  });
+
+  it('renders nothing for cancelled orders', () => {
+    const { container } = render(<OrderJourney order={{ status: 'cancelled', shippingServiceName: null }} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('falls back to Correios when the order has no shipping service', () => {
+    render(<OrderJourney order={{ status: 'shipped', shippingServiceName: null }} />);
+    expect(screen.getByText('Correios')).toBeInTheDocument();
   });
 });

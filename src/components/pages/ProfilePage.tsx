@@ -7,6 +7,7 @@ import { tomatoApi } from '../../services/tomatoApi';
 import { authService } from '../../services/authService';
 import { PersonalDetailsSection } from '../profile/PersonalDetailsSection';
 import { AddressesSection } from '../profile/AddressesSection';
+import { OrderJourney } from '../profile/OrderJourney';
 
 interface ProfilePageProps {
   onNavigate: (tab: string) => void;
@@ -209,6 +210,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                           </li>
                         ))}
                       </ul>
+
+                      <OrderJourney order={order} />
 
                       {(order.shippingServiceName || order.trackingCode) && (
                         <div className="text-xs text-gray-400 space-y-1">
