@@ -14,6 +14,7 @@ import { useCart } from '../../context/CartContext';
 import { InventoryPanel } from './InventoryPanel';
 import { CategoryAdminPanel } from './CategoryAdminPanel';
 import { OrderTrackingField } from './OrderTrackingField';
+import { ShippingLabelActions } from './ShippingLabelActions';
 
 export const DEFAULT_IMPORT_JSON = JSON.stringify([
   {
@@ -755,7 +756,14 @@ export const TomatoAdminPanel: React.FC = () => {
                         )}
                         <div className="text-gray-400 pt-2">Método de Pagamento:</div>
                         <div className="text-white font-medium">{order.paymentMethod}</div>
-                        <div className="pt-2">
+                        <div className="pt-2 space-y-2">
+                          <ShippingLabelActions
+                            order={order}
+                            onDone={(message, type, reload) => {
+                              showToast(message, type);
+                              if (reload) loadAllData();
+                            }}
+                          />
                           <OrderTrackingField
                             key={`${order.id}-${order.trackingCode ?? ''}`}
                             orderId={order.id}

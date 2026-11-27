@@ -15,34 +15,16 @@ export const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) =
 
 export const CardSkeleton: React.FC = () => {
   return (
-    <div className="bg-white/5 rounded-[28px] p-4 sm:p-5 border border-white/10 flex flex-col justify-between h-[520px] space-y-4 animate-pulse">
-      {/* Image placeholder */}
-      <div className="w-full h-64 sm:h-72 rounded-[22px] bg-white/10 relative overflow-hidden">
-        <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/15" />
+    <div aria-hidden className="flex flex-col motion-safe:animate-pulse">
+      {/* Mesmo formato do ProductCardModern: foto 3:4 + linha nome/preço + cores */}
+      <div className="aspect-[3/4] w-full bg-ink-2" />
+      <div className="flex items-start justify-between gap-3 pt-3">
+        <div className="h-3.5 w-3/5 bg-ink-3" />
+        <div className="h-3.5 w-14 bg-ink-3" />
       </div>
-
-      {/* Content */}
-      <div className="space-y-4 flex-1 flex flex-col justify-between">
-        <div className="space-y-2">
-          <div className="h-5 bg-white/15 rounded-lg w-3/4" />
-          <div className="h-6 bg-white/20 rounded-lg w-1/3" />
-          <div className="h-3 bg-white/10 rounded w-full mt-2" />
-          <div className="h-3 bg-white/10 rounded w-4/5" />
-        </div>
-
-        {/* Colors and sizes */}
-        <div className="space-y-3 pt-2 border-t border-white/5">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-white/15" />
-            <div className="w-5 h-5 rounded-full bg-white/15" />
-            <div className="w-5 h-5 rounded-full bg-white/15" />
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <div className="w-20 h-7 rounded-full bg-white/10" />
-            <div className="w-24 h-9 rounded-full bg-white/20" />
-          </div>
-        </div>
+      <div className="mt-3 flex gap-2">
+        <div className="h-3 w-3 rounded-full bg-ink-3" />
+        <div className="h-3 w-3 rounded-full bg-ink-3" />
       </div>
     </div>
   );

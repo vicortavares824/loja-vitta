@@ -1,77 +1,52 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ReactNode, PointerEvent as ReactPointerEvent } from 'react';
-import {
-  motion,
-  useMotionValue,
-  useScroll,
-  useSpring,
-  useTransform,
-} from 'framer-motion';
+import type { CSSProperties, ReactNode } from 'react';
+import { AnimatePresence, motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
+import { EASE_IN_OUT, EASE_OUT } from './motionTokens';
 
 /**
- * Animações e interações da Home, inspiradas em sites editoriais de motion
- * design (ex.: motiondesignawards.com): cursor customizado, revelação de
- * texto por máscara, palavras que acendem com o scroll e parallax.
+ * Primitivas de movimento do design "Editorial Monocromo".
  *
- * Todos os componentes respeitam `prefers-reduced-motion` e renderizam a
- * versão estática quando o usuário pede menos movimento.
+ * Uma única família de curvas para o site inteiro:
+ *  - EASE_OUT para tudo que entra (resposta imediata, assentamento suave)
+ *  - EASE_IN_OUT para o que se move na tela (cortinas de imagem)
+ *
+ * Tudo respeita `prefers-reduced-motion`: nesse caso o conteúdo aparece direto,
+ * sem deslocamento.
  */
 
-const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as const;
 
 /* ------------------------------------------------------------------ */
-/* Cursor customizado                                                  */
+/* Cursor com rótulo (apenas sobre elementos com data-cursor)          */
 /* ------------------------------------------------------------------ */
-
-type CursorVariant = 'default' | 'hover' | 'label';
 
 /**
- * Círculo que segue o mouse com mola. Cresce sobre links/botões e mostra um
- * rótulo sobre elementos com `data-cursor="Texto"`. Só ativa em dispositivos
- * com mouse (pointer: fine) e sem preferência de movimento reduzido.
+ * Círculo com rótulo ("Ver", "Abrir") que segue o mouse com mola, mas só
+ * aparece sobre elementos marcados com `data-cursor="Texto"`. O cursor nativo
+ * continua visível no resto do site. Desligado em toque e em movimento reduzido.
  */
 export function CustomCursor() {
   const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
   const reduced = usePrefersReducedMotion();
   const enabled = finePointer && !reduced;
 
-  const x = useMotionValue(-100);
-  const y = useMotionValue(-100);
-  const springX = useSpring(x, { stiffness: 450, damping: 38, mass: 0.5 });
-  const springY = useSpring(y, { stiffness: 450, damping: 38, mass: 0.5 });
-
-  const [variant, setVariant] = useState<CursorVariant>('default');
-  const [label, setLabel] = useState('');
-  const [visible, setVisible] = useState(false);
+  const x = useMotionValue(-200);
+  const y = useMotionValue(-200);
+  const springX = useSpring(x, { stiffness: 500, damping: 40, mass: 0.4 });
+  const springY = useSpring(y, { stiffness: 500, damping: 40, mass: 0.4 });
+  const [label, setLabel] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
-
     const handleMove = (e: PointerEvent) => {
       x.set(e.clientX);
       y.set(e.clientY);
-      setVisible(true);
-
-      const target = (e.target as Element | null)?.closest?.('[data-cursor], a, button');
-      if (!target) {
-        setVariant('default');
-        setLabel('');
-        return;
-      }
-      const text = target.getAttribute('data-cursor');
-      if (text) {
-        setVariant('label');
-        setLabel(text);
-      } else {
-        setVariant('hover');
-        setLabel('');
-      }
+      const target = (e.target as Element | null)?.closest?.('[data-cursor]');
+      setLabel(target ? target.getAttribute('data-cursor') : null);
     };
-    const handleLeave = () => setVisible(false);
-
+    const handleLeave = () => setLabel(null);
     window.addEventListener('pointermove', handleMove, { passive: true });
     document.documentElement.addEventListener('pointerleave', handleLeave);
     return () => {
@@ -82,26 +57,22 @@ export function CustomCursor() {
 
   if (!enabled) return null;
 
-  const size = variant === 'label' ? 96 : variant === 'hover' ? 56 : 14;
-
   return (
-    <motion.div
-      aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-[95] flex items-center justify-center rounded-full bg-white mix-blend-difference"
-      style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
-      animate={{ width: size, height: size, opacity: visible ? 1 : 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-    >
-      {variant === 'label' && (
-        <motion.span
-          key={label}
-          initial={{ opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-[10px] font-extrabold uppercase tracking-widest text-black"
-        >
-          {label}
-        </motion.span>
-      )}
+    <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-[95]" style={{ x: springX, y: springY }}>
+      <AnimatePresence>
+        {label && (
+          <motion.div
+            key="cursor"
+            className="-ml-10 -mt-10 flex h-20 w-20 items-center justify-center rounded-full bg-paper text-ink"
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.3, ease: EASE_OUT }}
+          >
+            <span className="font-mono text-[11px] uppercase tracking-[0.08em]">{label}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -111,56 +82,78 @@ export function CustomCursor() {
 /* ------------------------------------------------------------------ */
 
 export function ScrollProgress() {
+  const reduced = usePrefersReducedMotion();
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 });
-  return (
-    <motion.div
-      aria-hidden
-      className="fixed inset-x-0 top-0 z-[90] h-[2px] origin-left bg-white"
-      style={{ scaleX }}
-    />
-  );
+  const scaleX = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
+  if (reduced) return null;
+  return <motion.div aria-hidden className="fixed inset-x-0 top-0 z-[90] h-px origin-left bg-paper" style={{ scaleX }} />;
 }
 
 /* ------------------------------------------------------------------ */
-/* Texto revelado letra a letra por máscara                            */
+/* Linhas de título reveladas por máscara                              */
 /* ------------------------------------------------------------------ */
 
-interface SplitRevealProps {
-  text: string;
+interface LineRevealProps {
+  /** Cada item vira uma linha com máscara própria. */
+  lines: ReactNode[];
   className?: string;
+  lineClassName?: string;
   delay?: number;
   stagger?: number;
-  /** Letras sobem levemente ao passar o mouse. */
-  hoverLift?: boolean;
+  /** Anima ao montar (hero) em vez de ao entrar na tela. */
+  onMount?: boolean;
+  /** Texto para leitores de tela (as linhas visuais ficam aria-hidden). */
+  label?: string;
 }
 
-export function SplitReveal({ text, className = '', delay = 0, stagger = 0.06, hoverLift = false }: SplitRevealProps) {
+export function LineReveal({
+  lines,
+  className = '',
+  lineClassName = '',
+  delay = 0,
+  stagger = 0.08,
+  onMount = false,
+  label,
+}: LineRevealProps) {
   const reduced = usePrefersReducedMotion();
-  if (reduced) return <span className={className}>{text}</span>;
+
+  if (reduced) {
+    return (
+      <span className={className}>
+        {label && <span className="sr-only">{label}</span>}
+        {lines.map((line, i) => (
+          <span key={i} aria-hidden={label ? true : undefined} className={`block ${lineClassName}`}>
+            {line}
+          </span>
+        ))}
+      </span>
+    );
+  }
+
+  const trigger = onMount
+    ? { animate: 'shown' as const }
+    : { whileInView: 'shown' as const, viewport: { once: true, margin: '-10% 0px' } };
 
   return (
-    <span className={className}>
-      <span className="sr-only">{text}</span>
-      {Array.from(text).map((char, i) => (
-        <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.08em] align-bottom">
+    <motion.span className={className} initial="hidden" {...trigger}>
+      {label && <span className="sr-only">{label}</span>}
+      {lines.map((line, i) => (
+        <span key={i} aria-hidden={label ? true : undefined} className={`-mt-[0.14em] block overflow-hidden pb-[0.06em] pt-[0.14em] ${lineClassName}`}>
           <motion.span
-            className="inline-block"
-            initial={{ y: '110%', rotate: 6 }}
-            animate={{ y: '0%', rotate: 0 }}
-            whileHover={hoverLift ? { y: '-10%', transition: { duration: 0.25 } } : undefined}
-            transition={{ duration: 1, delay: delay + i * stagger, ease: EASE_OUT_EXPO }}
+            className="block"
+            variants={{ hidden: { y: '105%' }, shown: { y: '0%' } }}
+            transition={{ duration: 0.9, delay: delay + i * stagger, ease: EASE_OUT }}
           >
-            {char === ' ' ? '\u00A0' : char}
+            {line}
           </motion.span>
         </span>
       ))}
-    </span>
+    </motion.span>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Entrada ao aparecer na tela                                         */
+/* Entrada simples ao aparecer na tela                                 */
 /* ------------------------------------------------------------------ */
 
 interface RevealProps {
@@ -168,17 +161,16 @@ interface RevealProps {
   className?: string;
   delay?: number;
   y?: number;
-  /** Anima no mount em vez de ao entrar na viewport (útil no hero). */
   onMount?: boolean;
 }
 
-export function Reveal({ children, className = '', delay = 0, y = 40, onMount = false }: RevealProps) {
+export function Reveal({ children, className = '', delay = 0, y = 16, onMount = false }: RevealProps) {
   const reduced = usePrefersReducedMotion();
   if (reduced) return <div className={className}>{children}</div>;
 
-  const hidden = { opacity: 0, y, filter: 'blur(8px)' };
-  const shown = { opacity: 1, y: 0, filter: 'blur(0px)' };
-  const transition = { duration: 0.9, delay, ease: EASE_OUT_EXPO };
+  const hidden = { opacity: 0, y };
+  const shown = { opacity: 1, y: 0 };
+  const transition = { duration: 0.7, delay, ease: EASE_OUT };
 
   return onMount ? (
     <motion.div className={className} initial={hidden} animate={shown} transition={transition}>
@@ -189,7 +181,7 @@ export function Reveal({ children, className = '', delay = 0, y = 40, onMount = 
       className={className}
       initial={hidden}
       whileInView={shown}
-      viewport={{ once: true, margin: '-80px' }}
+      viewport={{ once: true, margin: '-8% 0px' }}
       transition={transition}
     >
       {children}
@@ -198,58 +190,108 @@ export function Reveal({ children, className = '', delay = 0, y = 40, onMount = 
 }
 
 /* ------------------------------------------------------------------ */
-/* Hero: parallax com o mouse + saída suave ao rolar                   */
+/* Imagem revelada por cortina + zoom que assenta                      */
 /* ------------------------------------------------------------------ */
 
-export function HeroMotion({ children, className = '' }: { children: ReactNode; className?: string }) {
+interface ImageRevealProps {
+  src: string;
+  alt: string;
+  className?: string;
+  imgClassName?: string;
+  delay?: number;
+  onMount?: boolean;
+  /** Parallax interno leve ao rolar (desligado em movimento reduzido). */
+  parallax?: boolean;
+  loading?: 'eager' | 'lazy';
+  style?: CSSProperties;
+}
+
+/**
+ * Cortina cor de tinta que recolhe para cima (scaleY, só transform) enquanto
+ * a foto assenta de 1.15 para 1. Tudo em propriedades compostas pela GPU.
+ */
+export function ImageReveal({
+  src,
+  alt,
+  className = '',
+  imgClassName = '',
+  delay = 0,
+  onMount = false,
+  parallax = false,
+  loading = 'lazy',
+  style,
+}: ImageRevealProps) {
+  const ref = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
-  const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ['-6%', '6%']);
 
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const px = useSpring(mx, { stiffness: 80, damping: 20 });
-  const py = useSpring(my, { stiffness: 80, damping: 20 });
+  const img = (
+    <img
+      src={src}
+      alt={alt}
+      loading={loading}
+      decoding="async"
+      draggable={false}
+      className={`h-full w-full object-cover ${imgClassName}`}
+    />
+  );
 
-  const { scrollY } = useScroll();
-  const opacity = useTransform(scrollY, [0, 600], [1, 0]);
-  const scale = useTransform(scrollY, [0, 600], [1, 0.88]);
-  const scrollShift = useTransform(scrollY, [0, 600], [0, 140]);
-  const combinedY = useTransform([py, scrollShift], ([a, b]) => (a as number) + (b as number));
+  if (reduced) {
+    return (
+      <div ref={ref} className={`relative overflow-hidden ${className}`} style={style}>
+        {img}
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (reduced || !finePointer) return;
-    const handle = (e: PointerEvent) => {
-      mx.set((e.clientX / window.innerWidth - 0.5) * -30);
-      my.set((e.clientY / window.innerHeight - 0.5) * -20);
-    };
-    window.addEventListener('pointermove', handle, { passive: true });
-    return () => window.removeEventListener('pointermove', handle);
-  }, [reduced, finePointer, mx, my]);
-
-  if (reduced) return <div className={className}>{children}</div>;
+  const trigger = onMount
+    ? { animate: 'shown' as const }
+    : { whileInView: 'shown' as const, viewport: { once: true, margin: '-10% 0px' } };
 
   return (
-    <motion.div className={className} style={{ x: px, y: combinedY, opacity, scale }}>
-      {children}
+    <motion.div ref={ref} className={`relative overflow-hidden ${className}`} style={style} initial="hidden" {...trigger}>
+      <motion.div className="absolute inset-x-0 -inset-y-[7%]" style={parallax ? { y: parallaxY } : undefined}>
+        <motion.div
+          className="h-full w-full"
+          variants={{ hidden: { scale: 1.15 }, shown: { scale: 1 } }}
+          transition={{ duration: 1.4, delay, ease: EASE_OUT }}
+        >
+          {img}
+        </motion.div>
+      </motion.div>
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 origin-top bg-ink"
+        variants={{ hidden: { scaleY: 1 }, shown: { scaleY: 0 } }}
+        transition={{ duration: 1, delay, ease: EASE_IN_OUT }}
+      />
     </motion.div>
   );
 }
 
-/** Indicador "role para baixo" com linha animada. */
-export function ScrollCue() {
+/* ------------------------------------------------------------------ */
+/* Faixa de texto que anda com o scroll (não fica em loop)             */
+/* ------------------------------------------------------------------ */
+
+interface ScrollTrackProps {
+  children: ReactNode;
+  className?: string;
+  /** Quanto (em % da largura) a faixa anda durante a passagem pela tela. */
+  distance?: number;
+}
+
+export function ScrollTrack({ children, className = '', distance = 25 }: ScrollTrackProps) {
+  const ref = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', `-${distance}%`]);
+
   return (
-    <div className="pointer-events-none absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">
-      <span>Scroll</span>
-      <span className="relative block h-12 w-px overflow-hidden bg-white/20">
-        {!reduced && (
-          <motion.span
-            className="absolute inset-x-0 top-0 h-1/2 bg-white"
-            animate={{ y: ['-100%', '200%'] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-      </span>
+    <div ref={ref} className="overflow-hidden">
+      <motion.div className={`whitespace-nowrap ${className}`} style={reduced ? undefined : { x }}>
+        {children}
+      </motion.div>
     </div>
   );
 }
@@ -258,109 +300,66 @@ export function ScrollCue() {
 /* Palavras que acendem conforme o scroll                              */
 /* ------------------------------------------------------------------ */
 
-function ScrollWord({ children, progress, range }: { children: string; progress: MotionValue<number>; range: [number, number] }) {
-  const opacity = useTransform(progress, range, [0.12, 1]);
-  const y = useTransform(progress, range, [8, 0]);
+interface ScrollWordProps {
+  children: ReactNode;
+  progress: MotionValue<number>;
+  range: [number, number];
+}
+
+function ScrollWord({ children, progress, range }: ScrollWordProps) {
+  const opacity = useTransform(progress, range, [0.16, 1]);
   return (
-    <motion.span style={{ opacity, y }} className="mr-[0.25em] inline-block">
+    <motion.span style={{ opacity }} className="mr-[0.25em] inline-block">
       {children}
     </motion.span>
   );
 }
 
+const ACCENT_WORD = /^\*.+\*[.,;:!?]?$/;
+
+function renderWord(word: string): ReactNode {
+  if (!ACCENT_WORD.test(word)) return word;
+  return <span className="font-serif-accent">{word.replace(/\*/g, '')}</span>;
+}
+
+/**
+ * Parágrafo cujas palavras acendem de acordo com o scroll. Palavras envoltas
+ * em `*asteriscos*` ganham a serifa itálica de acento.
+ */
 export function ScrollWords({ text, className = '' }: { text: string; className?: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const reduced = usePrefersReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'end 0.4'] });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'end 0.45'] });
 
   const words = text.trim().split(/\s+/);
+  const plain = text.replace(/\*/g, '');
 
-  if (reduced) return <p className={className}>{text}</p>;
+  if (reduced) {
+    return (
+      <p className={className}>
+        {words.map((w, i) => (
+          <span key={i} className="mr-[0.25em] inline-block">
+            {renderWord(w)}
+          </span>
+        ))}
+      </p>
+    );
+  }
 
   return (
     <p ref={ref} className={className}>
-      <span className="sr-only">{text}</span>
+      <span className="sr-only">{plain}</span>
       <span aria-hidden>
         {words.map((word, i) => {
           const start = i / words.length;
           const end = start + 1 / words.length;
           return (
             <ScrollWord key={i} progress={scrollYProgress} range={[start, end]}>
-              {word}
+              {renderWord(word)}
             </ScrollWord>
           );
         })}
       </span>
     </p>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Imagem com parallax interno                                         */
-/* ------------------------------------------------------------------ */
-
-export function ParallaxImage({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduced = usePrefersReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
-
-  return (
-    <div ref={ref} className="absolute inset-0 overflow-hidden">
-      <motion.div className="absolute -inset-y-[12%] inset-x-0" style={reduced ? undefined : { y }}>
-        <img src={src} alt={alt} className={className} />
-      </motion.div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Card com holofote seguindo o mouse + inclinação 3D                  */
-/* ------------------------------------------------------------------ */
-
-export function InteractiveCard({ children, className = '' }: { children: ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduced = usePrefersReducedMotion();
-  const rx = useMotionValue(0);
-  const ry = useMotionValue(0);
-  const rotateX = useSpring(rx, { stiffness: 200, damping: 18 });
-  const rotateY = useSpring(ry, { stiffness: 200, damping: 18 });
-
-  const handleMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const el = ref.current;
-    if (!el || e.pointerType !== 'mouse') return;
-    const rect = el.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;
-    const py = (e.clientY - rect.top) / rect.height;
-    el.style.setProperty('--spot-x', `${px * 100}%`);
-    el.style.setProperty('--spot-y', `${py * 100}%`);
-    if (!reduced) {
-      ry.set((px - 0.5) * 12);
-      rx.set((0.5 - py) * 12);
-    }
-  };
-  const handleLeave = () => {
-    rx.set(0);
-    ry.set(0);
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      onPointerMove={handleMove}
-      onPointerLeave={handleLeave}
-      style={{ rotateX, rotateY, transformPerspective: 900 }}
-      className={`group relative overflow-hidden ${className}`}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background:
-            'radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,255,255,0.16), transparent 45%)',
-        }}
-      />
-      <div className="relative z-10">{children}</div>
-    </motion.div>
   );
 }

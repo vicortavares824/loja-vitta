@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { ProductGrid } from './components/ProductGrid';
 import { CartProvider, useCart } from './context/CartContext';
 import { ProductQuickViewModal } from './components/ProductQuickViewModal';
 import { CartDrawer } from './components/CartDrawer';
 import { SearchModal } from './components/SearchModal';
-import { CheckCircle2, Info, AlertTriangle, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, Info, AlertTriangle } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // New Pages
 import { ProductsPage } from './components/pages/ProductsPage';
@@ -21,48 +21,40 @@ import { ClientSignUpPage } from './components/pages/ClientSignUpPage';
 import { AdminSignUpPage } from './components/pages/AdminSignUpPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// React Bits Animations
-import MagicRings from './components/reactbits/MagicRings';
-import WarpText from './components/reactbits/WarpText';
-import ScrollVelocity from './components/reactbits/ScrollVelocity';
-import ScrollExpand from './components/reactbits/ScrollExpand';
-
-import Cubes from './components/reactbits/Cubes';
-import { AnimationGate } from './components/reactbits/AnimationGate';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { Magnet } from './components/react-bits/Magnet';
-import {
-  CustomCursor,
-  ScrollProgress,
-  SplitReveal,
-  Reveal,
-  HeroMotion,
-  ScrollCue,
-  ScrollWords,
-  ParallaxImage,
-  InteractiveCard,
-} from './components/home/HomeMotion';
+import { HomePage } from './components/home/HomePage';
+import { EASE_OUT } from './components/home/motionTokens';
 
 const ToastContainer = () => {
   const { toasts } = useCart();
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
-      {toasts.map(toast => (
-        <div
-          key={toast.id}
-          className="pointer-events-auto bg-white text-black font-semibold p-4 rounded-2xl border border-gray-200 shadow-2xl flex items-center gap-3 text-xs max-w-sm"
-        >
-          {toast.type === 'error' ? (
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-          ) : toast.type === 'info' ? (
-            <Info className="w-5 h-5 text-gray-700 shrink-0" />
-          ) : (
-            <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
-          )}
-          <p>{toast.message}</p>
-        </div>
-      ))}
+    <div
+      aria-live="polite"
+      className="pointer-events-none fixed inset-x-4 bottom-[calc(16px+env(safe-area-inset-bottom))] z-[100] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-6 sm:bottom-6"
+    >
+      <AnimatePresence initial={false}>
+        {toasts.map(toast => (
+          <motion.div
+            key={toast.id}
+            layout
+            role={toast.type === 'error' ? 'alert' : 'status'}
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.35, ease: EASE_OUT }}
+            className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-[2px] border border-line bg-ink-2 p-4 text-[13px] leading-snug text-paper shadow-[0_24px_60px_-24px_rgba(0,0,0,0.9)] sm:w-auto"
+          >
+            {toast.type === 'error' ? (
+              <AlertTriangle className="mt-px h-4 w-4 shrink-0 text-danger" strokeWidth={1.75} />
+            ) : toast.type === 'info' ? (
+              <Info className="mt-px h-4 w-4 shrink-0 text-paper-2" strokeWidth={1.75} />
+            ) : (
+              <CheckCircle2 className="mt-px h-4 w-4 shrink-0 text-paper" strokeWidth={1.75} />
+            )}
+            <p>{toast.message}</p>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 };
@@ -97,8 +89,8 @@ function AppContent() {
 
   // Configuração global para fundo escuro
   useEffect(() => {
-    document.body.style.backgroundColor = '#000000';
-    document.body.style.color = '#ffffff';
+    document.body.style.backgroundColor = '#0b0b0a';
+    document.body.style.color = '#f2f0eb';
     
     // Handle browser back/forward buttons
     const handlePopState = () => setCurrentTab(getInitialTab());
@@ -133,7 +125,7 @@ function AppContent() {
 
   return (
     <CartProvider>
-      <div className="min-h-screen relative overflow-x-hidden text-white bg-black font-sans selection:bg-white selection:text-black">
+      <div className="min-h-screen relative overflow-x-clip bg-ink font-sans text-paper">
       
 
         {/* Dynamic Global Navbar */}
@@ -141,255 +133,7 @@ function AppContent() {
 
         {/* VIEW 1: HOME PAGE WITH REACT BITS ANIMATIONS */}
         {currentTab === 'home' && (
-          <main className="animate-fadeIn">
-            <ScrollProgress />
-            <CustomCursor />
-
-            {/* HERO SECTION - MAGIC RINGS */}
-            <section className="relative h-screen flex items-center justify-center overflow-hidden bg-black">
-              <div className="absolute inset-0 z-0 opacity-70">
-                <ErrorBoundary fallback={<div className="w-full h-full" />}>
-                  <AnimationGate
-                    renderFull={() => (
-                      <MagicRings
-                        color="#ffffff"
-                        colorTwo="#999999"
-                        ringCount={8}
-                        speed={1.4}
-                        followMouse={true}
-                        blur={1}
-                      />
-                    )}
-                    renderReduced={() => (
-                      <MagicRings
-                        color="#ffffff"
-                        colorTwo="#999999"
-                        ringCount={3}
-                        speed={0.8}
-                        followMouse={false}
-                        blur={0}
-                      />
-                    )}
-                    renderStatic={() => (
-                      <div className="w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.12),transparent_60%)]" />
-                    )}
-                  />
-                </ErrorBoundary>
-              </div>
-              
-              <HeroMotion className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto space-y-6">
-                <Reveal onMount delay={0.1} y={20}>
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-[0.25em] backdrop-blur-md border border-white/15">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <p>Nova Coleção 2026</p>
-                  </div>
-                </Reveal>
-
-                <h1 className="text-4xl sm:text-7xl md:text-[10rem] font-extrabold tracking-tighter uppercase leading-none text-white break-words">
-                  <SplitReveal text="VITTA" delay={0.25} stagger={0.08} hoverLift />
-                </h1>
-
-                <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-[0.3em] uppercase text-gray-300 break-words">
-                  <SplitReveal text="Basics" delay={0.75} stagger={0.05} />
-                </h2>
-
-                <Reveal onMount delay={1.1} y={24}>
-                  <p className="text-gray-400 text-sm max-w-md mx-auto font-light tracking-widest uppercase pt-2 leading-relaxed break-words">
-                    Simplicidade e minimalismo em cada peça, com qualidade e conforto incomparáveis. Descubra a essência da moda básica com Vitta Basics.
-                  </p>
-                </Reveal>
-
-                <Reveal onMount delay={1.3} y={24}>
-                  <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-                    <Magnet strength={14}>
-                      <button
-                        onClick={() => handleNavigate('products')}
-                        className="px-8 py-3.5 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-2xl flex items-center gap-2"
-                      >
-                        <p>Ver Catálogo</p>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </Magnet>
-
-                    <Magnet strength={14}>
-                      <button
-                        onClick={() => handleNavigate('categories')}
-                        className="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-widest rounded-full border border-white/20 transition-all backdrop-blur-md"
-                      >
-                        Categorias
-                      </button>
-                    </Magnet>
-                  </div>
-                </Reveal>
-              </HeroMotion>
-
-              <ScrollCue />
-            </section>
-
-            {/* MARQUEE TEXT */}
-            <section className="py-20 bg-black border-y border-white/10 overflow-hidden">
-              <ErrorBoundary fallback={<div className="w-full h-full" />}>
-                <AnimationGate
-                  renderFull={() => (
-                    <ScrollVelocity
-                      texts={['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION']}
-                      className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white"
-                      velocity={45}
-                    />
-                  )}
-                  renderReduced={() => (
-                    <ScrollVelocity
-                      texts={['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION']}
-                      className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white"
-                      velocity={15}
-                    />
-                  )}
-                  renderStatic={() => (
-                    <div className="flex flex-col items-center gap-2 text-center px-4">
-                      {['Seu closet começa pelo essencial', 'O básico que combina com você.', 'MINIMALIST FASHION'].map(
-                        (t, i) => (
-                          <p
-                            key={i}
-                            className="text-4xl md:text-6xl font-extrabold uppercase tracking-tight text-white break-words"
-                          >
-                            {t}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  )}
-                />
-              </ErrorBoundary>
-            </section>
-
-            {/* SCROLL EXPAND - SHOWCASE */}
-            <section className="py-28 bg-[#050507] relative flex flex-col items-center border-b border-white/10">
-              <div className="container mx-auto px-4 mb-16 text-center">
-                <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight text-white mx-auto">
-                  <ErrorBoundary fallback={<span className="block">DESCUBRA SEU ESTILO</span>}>
-                    <AnimationGate
-                      renderFull={() => <WarpText text="DESCUBRA SEU ESTILO" />}
-                      renderReduced={() => <WarpText text="DESCUBRA SEU ESTILO" speed={0.2} ripple={false} />}
-                      renderStatic={() => <span className="block">DESCUBRA SEU ESTILO</span>}
-                    />
-                  </ErrorBoundary>
-                </h2>
-                <p className="text-gray-400 text-sm mt-3 font-normal max-w-md mx-auto leading-relaxed break-words">
-                 Vista menos tendências. Vista mais você.
-                </p>
-              </div>
-              
-              <div className="w-full max-w-6xl px-4">
-                {(() => {
-                  const showcaseInner = (
-                    <div
-                      data-cursor="Explorar"
-                      className="relative w-full h-[65vh] group overflow-hidden border border-white/20 rounded-[28px] shadow-2xl"
-                    >
-                      <ParallaxImage
-                        src="https://imgs.search.brave.com/Bu0-d1osQDJB132vDOrFLtG7qXmTloZ2cRMrae7Stpg/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdDIu/ZGVwb3NpdHBob3Rv/cy5jb20vMTc2NjE4/Ni82OTExL2kvNDUw/L2RlcG9zaXRwaG90/b3NfNjkxMTExOTEt/c3RvY2stcGhvdG8t/ZmFzaGlvbi1zaG93/LmpwZw"
-                        alt="New Collection Showcase"
-                        className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <button
-                          onClick={() => handleNavigate('products')}
-                          className="px-8 py-4 bg-white text-black font-extrabold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-colors shadow-2xl"
-                        >
-                          Explorar Todas as Peças
-                        </button>
-                      </div>
-                    </div>
-                  );
-                  return (
-                    <ErrorBoundary fallback={<div className="relative w-full h-[65vh]">{showcaseInner}</div>}>
-                      <AnimationGate
-                        renderFull={() => (
-                          <ScrollExpand scaleFrom={0.75} scaleTo={1} borderRadius="28px">
-                            {showcaseInner}
-                          </ScrollExpand>
-                        )}
-                        renderStatic={() => (
-                          <div className="relative w-full h-[65vh]">{showcaseInner}</div>
-                        )}
-                      />
-                    </ErrorBoundary>
-                  );
-                })()}
-              </div>
-            </section>
-
-            {/* PRODUCT GRID SECTION (LATEST ARRIVALS) */}
-            <section className="py-24 bg-black relative z-10" id="shop">
-              <ProductGrid maxItems={6} onCategoryChange={handleSelectCategoryFromHomeOrPage} />
-              
-              <div className="text-center mt-12">
-                <button
-                  onClick={() => handleNavigate('products')}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-bold text-xs uppercase tracking-widest rounded-full hover:bg-gray-200 transition-all shadow-xl hover:scale-105"
-                >
-                  <p>Abrir Catálogo Completo com Filtros</p>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </section>
-
-            {/* LASER FLOW SECTION */}
-            <section className="relative h-[75vh] flex items-center justify-center overflow-hidden bg-black border-y border-white/10">
-
-              <div className="relative z-10 max-w-3xl mx-auto px-6 text-center mix-blend-difference pointer-events-none space-y-4">
-                <ScrollWords
-                  text="VITTA acredita que o básico também pode ser extraordinário. Peças essenciais que unem conforto, qualidade e estilo atemporal."
-                  className="text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase tracking-tight leading-snug text-white break-words"
-                />
-              </div>
-            </section>
-
-            {/* CUBES FEATURE GRID */}
-            <section className="py-28 bg-[#0a0a0c] relative overflow-hidden">
-              <div className="absolute inset-0 opacity-70 pointer-events-auto">
-                <ErrorBoundary fallback={<div className="w-full h-full" />}>
-                  <AnimationGate
-                    renderFull={() => (
-                      <Cubes gridSize={7} radius={2.5} faceColor="#5a5a5a" rippleColor="#ffffff" autoAnimate={true} />
-                    )}
-                    renderReduced={() => (
-                      <Cubes gridSize={6} radius={2} faceColor="#5a5a5a" rippleColor="#ffffff" autoAnimate={false} />
-                    )}
-                    renderStatic={() => (
-                      <div className="w-full h-full min-h-[350px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_65%)]" />
-                    )}
-                  />
-                </ErrorBoundary>
-              </div>
-              <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
-                <h2 className="text-3xl font-extrabold uppercase tracking-[0.2em] mb-16 text-white text-center">
-                  <ErrorBoundary fallback={<span className="block">PURE FORM &amp; MATERIAL</span>}>
-                    <AnimationGate
-                      renderFull={() => <WarpText text="PURE FORM & MATERIAL" />}
-                      renderReduced={() => <WarpText text="PURE FORM & MATERIAL" speed={0.2} ripple={false} />}
-                      renderStatic={() => <span className="block">PURE FORM &amp; MATERIAL</span>}
-                    />
-                  </ErrorBoundary>
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
-                  {[
-                    { title: "Design", desc: "Geometria minimalista e proporções milimétricas." },
-                    { title: "Tecidos", desc: "Algodão orgânico, lã fria e seda pura de alta durabilidade." },
-                    { title: "Sustentabilidade", desc: "Produção consciente com tiragens limitadas e atemporais." }
-                  ].map((item, i) => (
-                    <Reveal key={i} delay={i * 0.15}>
-                      <InteractiveCard className="h-full text-center p-10 border border-white/15 bg-[#0a0a0c]/80 rounded-3xl shadow-2xl transition-colors duration-300 hover:border-white">
-                        <span className="block mb-4 text-xs font-semibold tracking-[0.4em] text-white/40">0{i + 1}</span>
-                        <h4 className="text-xl font-extrabold mb-3 uppercase tracking-wider text-white break-words">{item.title}</h4>
-                        <p className="text-gray-400 font-normal text-sm tracking-wide leading-relaxed break-words">{item.desc}</p>
-                      </InteractiveCard>
-                    </Reveal>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </main>
+          <HomePage onNavigate={handleNavigate} onSelectCategory={handleSelectCategoryFromHomeOrPage} />
         )}
 
         {/* VIEW 2: PRODUCTS CATALOG PAGE */}

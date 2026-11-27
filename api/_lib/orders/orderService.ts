@@ -6,6 +6,7 @@ import type {
   CheckoutResponse,
   PixPaymentData,
   PricingBreakdown,
+  ShippingAddressParts,
   ShippingOption,
 } from '../../../src/types/checkout.js';
 import { AppError } from '../errors.js';
@@ -194,19 +195,55 @@ interface ChargeContext {
   shipping?: ShippingOption;
 }
 
-/** Grava CEP e serviço de frete no pedido (colunas da migração de frete). */
+/**
+ * Cópia do endereço salvo usado no checkout, com os campos que a etiqueta exige.
+ * Só vale se o endereço for do próprio cliente e tiver o mesmo CEP cotado; senão, null
+ * (o pedido segue normalmente e a etiqueta é feita pelo painel do Melhor Envio).
+ */
+async function loadAddressParts(
+  deps: CheckoutDeps,
+  userId: string,
+  addressId: string | undefined,
+  cep: string,
+): Promise<ShippingAddressParts | null> {
+  if (!addressId) return null;
+  const { data, error } = await deps.supabase
+    .from('customer_addresses')
+    .select('recipient_name, cep, street, number, complement, neighborhood, city, state')
+    .eq('id', addressId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw dbError('loadAddressParts', error);
+  const row = data as Record<string, string | null> | null;
+  if (!row || row.cep !== cep) return null;
+  return {
+    recipientName: String(row.recipient_name),
+    cep: String(row.cep),
+    street: String(row.street),
+    number: String(row.number),
+    complement: row.complement ?? null,
+    neighborhood: String(row.neighborhood),
+    city: String(row.city),
+    state: String(row.state),
+  };
+}
+
+/** Grava CEP, serviço de frete e endereço estruturado no pedido. */
 async function recordShipping(
   deps: CheckoutDeps,
   orderId: string,
-  cep: string,
+  userId: string,
+  request: CheckoutRequest,
   shipping: ShippingOption,
 ): Promise<void> {
+  const parts = await loadAddressParts(deps, userId, request.shippingAddressId, request.shippingCep);
   const { error } = await deps.supabase
     .from('orders')
     .update({
-      shipping_cep: cep,
+      shipping_cep: request.shippingCep,
       shipping_service_id: shipping.serviceId,
       shipping_service_name: [shipping.company, shipping.name].filter(Boolean).join(' '),
+      shipping_address_parts: parts,
     })
     .eq('id', orderId);
   if (error) throw dbError('recordShipping', error);
@@ -224,7 +261,7 @@ async function chargeWithCompensation(ctx: ChargeContext): Promise<PixPaymentDat
   let createdPaymentId: string | null = null;
 
   try {
-    if (ctx.shipping) await recordShipping(deps, orderId, request.shippingCep, ctx.shipping);
+    if (ctx.shipping) await recordShipping(deps, orderId, user.id, request, ctx.shipping);
 
     let payment: PixPaymentData | CardPaymentData;
     let paymentId: string;

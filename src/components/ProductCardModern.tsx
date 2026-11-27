@@ -1,272 +1,200 @@
-import React, { useState } from 'react';
-import { Heart, ShoppingBag, Eye, Plus, Minus, Check } from 'lucide-react';
+import { useState } from 'react';
+import type { MouseEvent } from 'react';
+import { ArrowUpRight, Heart, Plus } from 'lucide-react';
 import type { Product, ProductColor } from '../types/ecommerce';
 import { useCart } from '../context/CartContext';
-import { LazyImage } from './ui/LazyImage';
 
 interface ProductCardModernProps {
   product: Product;
   className?: string;
 }
 
-export const ProductCardModern: React.FC<ProductCardModernProps> = ({ product, className = '' }) => {
+const FALLBACK_COLOR: ProductColor = { name: 'Padrão', hex: '#f2f0eb' };
+
+/**
+ * Card editorial: foto 3:4 sem moldura, nome e preço em linha.
+ *  - Mouse: a segunda foto entra por cima no hover e uma barra de tamanhos
+ *    sobe da base da foto; clicar num tamanho já adiciona à sacola.
+ *  - Toque: botão "+" fixo abre a visualização rápida (escolha de cor/tamanho).
+ */
+export function ProductCardModern({ product, className = '' }: ProductCardModernProps) {
   const { addToCart, toggleWishlist, isInWishlist, formatPrice, setQuickViewProduct } = useCart();
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(
-    product.colors?.[0] || { name: 'Padrão', hex: '#ffffff' }
-  );
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || 'M');
-  const [quantity, setQuantity] = useState<number>(1);
-  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+  const colors = product.colors?.length ? product.colors : [FALLBACK_COLOR];
+  const [selectedColor, setSelectedColor] = useState<ProductColor>(colors[0]);
   const inWishlist = isInWishlist(product.id);
+  const soldOut = product.inStock === false || product.stockCount === 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    addToCart(product, selectedColor, selectedSize, quantity);
-  };
+  const primary = product.images?.[0] ?? '';
+  const secondary = product.images?.[1];
 
-  const handleDecrease = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (quantity > 1) setQuantity(prev => prev - 1);
-  };
+  const openQuickView = () => setQuickViewProduct(product);
 
-  const handleIncrease = (e: React.MouseEvent) => {
+  const stop = (e: MouseEvent) => e.stopPropagation();
+
+  const addSize = (e: MouseEvent, size: string) => {
     e.stopPropagation();
-    if (quantity < (product.stockCount || 99)) setQuantity(prev => prev + 1);
+    addToCart(product, selectedColor, size, 1);
   };
 
   return (
-    <div 
-      className={`group relative bg-white text-black rounded-[28px] p-4 sm:p-5 shadow-2xl transition-all duration-500 hover:-translate-y-2.5 flex flex-col justify-between border border-gray-100 ${className}`}
-      style={{
-        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.05)'
-      }}
-    >
-
-      <div 
-        onClick={() => setQuickViewProduct(product)}
-        className="relative w-full h-64 sm:h-72 rounded-[22px] overflow-hidden bg-gray-50 flex items-center justify-center cursor-pointer"
+    <article className={`group/card relative flex flex-col ${className}`}>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={openQuickView}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openQuickView();
+          }
+        }}
+        data-cursor="Ver"
+        aria-label={`Ver ${product.name}`}
+        className="relative aspect-[3/4] cursor-pointer overflow-hidden bg-ink-2"
       >
-        <LazyImage
-          src={product.images?.[activeImageIndex] || product.images?.[0] || ''}
-          alt={product.name}
-          className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
-          containerClassName="w-full h-full"
-        />
+        {primary && (
+          <img
+            src={primary}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] [@media(hover:hover)]:group-hover/card:scale-[1.03]"
+          />
+        )}
+        {secondary && (
+          <img
+            src={secondary}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] [@media(hover:hover)]:group-hover/card:opacity-100"
+          />
+        )}
 
-    
-        {product.tag && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="bg-black text-white text-[10px] font-extrabold tracking-widest uppercase px-3 py-1 rounded-full shadow-md">
-              {product.tag}
-            </span>
+        {/* Selos */}
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {soldOut ? (
+            <span className="eyebrow bg-ink/80 px-2 py-1 text-paper">Esgotado</span>
+          ) : (
+            product.tag && <span className="eyebrow max-w-[8rem] truncate bg-paper px-2 py-1 text-ink">{product.tag}</span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            stop(e);
+            toggleWishlist(product);
+          }}
+          aria-pressed={inWishlist}
+          aria-label={inWishlist ? `Remover ${product.name} dos favoritos` : `Favoritar ${product.name}`}
+          className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center text-paper transition-transform duration-150 active:scale-90"
+        >
+          <Heart className={`h-[18px] w-[18px] drop-shadow ${inWishlist ? 'fill-paper' : ''}`} strokeWidth={1.5} />
+        </button>
+
+        {/* Barra de tamanhos (mouse) */}
+        {!soldOut && product.sizes?.length > 0 && (
+          <div
+            onClick={stop}
+            className="absolute inset-x-2 bottom-2 hidden translate-y-[calc(100%+8px)] bg-ink/90 p-1.5 backdrop-blur-sm transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-focus-within/card:translate-y-0 group-hover/card:translate-y-0 [@media(hover:hover)_and_(pointer:fine)]:block"
+          >
+            <p className="eyebrow px-1.5 pb-1 pt-0.5">Adicionar tamanho</p>
+            <div className="flex flex-wrap gap-1">
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={(e) => addSize(e, size)}
+                  className="min-w-9 flex-1 py-2 font-mono text-[12px] text-paper transition-colors duration-150 hover:bg-paper hover:text-ink active:scale-95"
+                  aria-label={`Adicionar ${product.name} tamanho ${size} à sacola`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+        {/* Botão rápido (toque) */}
+        {!soldOut && (
           <button
+            type="button"
             onClick={(e) => {
-              e.stopPropagation();
-              toggleWishlist(product);
+              stop(e);
+              openQuickView();
             }}
-            className={`w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all shadow-md hover:scale-110 ${
-              inWishlist ? 'text-red-500 fill-red-500' : 'text-gray-700 hover:text-black'
-            }`}
-            aria-label="Favoritar produto"
+            aria-label={`Escolher tamanho de ${product.name}`}
+            className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-paper text-ink active:scale-90 [@media(hover:hover)_and_(pointer:fine)]:hidden"
           >
-            <Heart className={`w-4 h-4 ${inWishlist ? 'fill-red-500' : ''}`} />
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
           </button>
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setQuickViewProduct(product);
-            }}
-            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-700 hover:text-black transition-all shadow-md hover:scale-110 opacity-0 group-hover:opacity-100"
-            title="Visualização Rápida"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-        </div>
-
-
-        {product.images && product.images.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full">
-            {product.images.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveImageIndex(idx);
-                }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  activeImageIndex === idx ? 'w-4 bg-white' : 'bg-white/50 hover:bg-white/80'
-                }`}
-                aria-label={`Ver imagem ${idx + 1}`}
-              />
-            ))}
-          </div>
         )}
       </div>
 
-
-      <div className="pt-4 flex-1 flex flex-col justify-between space-y-4">
-
-        <div>
-          <div className="flex items-start justify-between gap-2">
-            <h3 
-              onClick={() => setQuickViewProduct(product)}
-              className="font-bold text-base sm:text-lg text-black tracking-tight line-clamp-1 hover:underline cursor-pointer"
-            >
+      {/* Informações */}
+      <div className="flex flex-1 flex-col gap-2 pt-3">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="min-w-0 font-display text-[13px] font-medium uppercase leading-snug tracking-[0.02em] sm:text-sm">
+            <button type="button" onClick={openQuickView} className="line-clamp-2 text-left [overflow-wrap:anywhere]">
               {product.name}
-            </h3>
-          </div>
-          
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="font-extrabold text-xl sm:text-2xl text-black">
-              {formatPrice(product.price)}
-            </span>
-            {product.originalPrice && (
-              <span className="text-xs text-gray-400 line-through">
-                {formatPrice(product.originalPrice)}
-              </span>
+            </button>
+          </h3>
+          <div className="shrink-0 text-right">
+            <p className="font-mono text-[12px] tabular-nums text-paper sm:text-[13px]">{formatPrice(product.price)}</p>
+            {product.originalPrice !== undefined && product.originalPrice > product.price && (
+              <p className="font-mono text-[11px] tabular-nums text-mute line-through">{formatPrice(product.originalPrice)}</p>
             )}
           </div>
-
-          <p className="text-xs text-gray-600 font-normal line-clamp-2 mt-2 leading-relaxed">
-            {product.description}
-          </p>
         </div>
 
-      
-        <div className="space-y-3 pt-1 border-t border-gray-100">
-
-          {product.colors && product.colors.length > 0 && (
-            <div>
-              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
-                Cores
-              </span>
-              <div className="flex items-center gap-2 flex-wrap">
-                {product.colors.map((color) => {
-                  const isSelected = selectedColor.name === color.name;
-                  return (
-                    <button
-                      key={color.name}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedColor(color);
-                      }}
-                      className={`w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center ${
-                        isSelected 
-                          ? 'border-black scale-125 shadow-sm ring-2 ring-black/20' 
-                          : 'border-gray-200 hover:scale-110'
+        <div className="flex items-center justify-between gap-3">
+          {colors.length > 1 ? (
+            <div className="-ml-1.5 flex flex-wrap items-center" role="radiogroup" aria-label="Cor">
+              {colors.map((color) => {
+                const selected = selectedColor.name === color.name;
+                return (
+                  <button
+                    key={color.name}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setSelectedColor(color)}
+                    title={color.name}
+                    aria-label={color.name}
+                    className="flex h-7 w-7 items-center justify-center"
+                  >
+                    <span
+                      className={`block h-3 w-3 rounded-full ring-1 ring-offset-2 ring-offset-ink transition-shadow ${
+                        selected ? 'ring-paper' : 'ring-transparent'
                       }`}
-                      style={{ backgroundColor: color.hex }}
-                      title={color.name}
-                      aria-label={`Selecionar cor ${color.name}`}
-                    >
-                      {isSelected && (
-                        <Check className="w-2.5 h-2.5 text-white stroke-[3] mix-blend-difference" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                      style={{ backgroundColor: color.hex, boxShadow: 'inset 0 0 0 1px rgba(242,240,235,0.25)' }}
+                    />
+                  </button>
+                );
+              })}
             </div>
+          ) : (
+            <span className="eyebrow truncate">{colors[0].name}</span>
           )}
 
-        
-          {product.sizes && product.sizes.length > 0 && (
-            <div>
-              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
-                Tamanho
-              </span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {product.sizes.map((size) => {
-                  const isSelected = selectedSize === size;
-                  return (
-                    <button
-                      key={size}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSize(size);
-                      }}
-                      className={`min-w-[32px] h-7 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center ${
-                        isSelected
-                          ? 'bg-black text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          {product.shopeeUrl && (
+            <a
+              href={product.shopeeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="eyebrow link-line flex shrink-0 items-center gap-1 hover:text-paper"
+            >
+              Shopee
+              <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
+            </a>
           )}
-
-      
-          <div className="pt-3 border-t border-gray-100 space-y-3">
-
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider hidden sm:inline">
-                Qtd
-              </span>
-              <div className="flex items-center bg-gray-100 rounded-full px-2 py-1 border border-gray-200">
-                <button
-                  onClick={handleDecrease}
-                  disabled={quantity <= 1}
-                  className="w-5 h-5 flex items-center justify-center text-gray-600 hover:text-black disabled:opacity-30"
-                  aria-label="Diminuir quantidade"
-                >
-                  <Minus className="w-3 h-3" />
-                </button>
-                <span className="w-6 text-center text-xs font-bold text-black">
-                  {quantity}
-                </span>
-                <button
-                  onClick={handleIncrease}
-                  disabled={quantity >= (product.stockCount || 99)}
-                  className="w-5 h-5 flex items-center justify-center text-gray-600 hover:text-black disabled:opacity-30"
-                  aria-label="Aumentar quantidade"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 bg-black hover:bg-gray-800 text-white px-3 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all transform hover:scale-[1.02] active:scale-95 group/btn"
-                title="Adicionar ao Carrinho"
-              >
-                <ShoppingBag className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Comprar
-                </span>
-              </button>
-
-              {product.shopeeUrl && (
-                <a
-                  href={product.shopeeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex-1 text-white px-3 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all transform hover:scale-[1.02] active:scale-95"
-                  style={{ backgroundColor: '#ee4d2d' }}
-                  title="Comprar na Shopee"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    Shopee
-                  </span>
-                </a>
-              )}
-            </div>
-          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
-};
+}

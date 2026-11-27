@@ -1,112 +1,139 @@
-import React from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, Award } from 'lucide-react';
-import { WavesBackground } from './react-bits/WavesBackground';
-import { BlurText } from './react-bits/BlurText';
-import { Magnet } from './react-bits/Magnet';
-import { TiltedCard } from './react-bits/TiltedCard';
-import { STORE_CONFIG } from '../config/storeConfig';
+import { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { LineReveal, Reveal } from './home/HomeMotion';
+import { EASE_IN_OUT, EASE_OUT } from './home/motionTokens';
 
-export const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  onNavigate: (tab: string) => void;
+}
+
+const HERO_IMAGE = '/images/hero-fashion.jpg';
+
+const FACTS = [
+  { label: 'Frete', value: 'Calculado na sacola' },
+  { label: 'Pagamento', value: 'Pix ou cartão' },
+  { label: 'Pedido', value: 'Cancele antes do envio' },
+];
+
+/**
+ * Hero editorial em tela cheia.
+ *
+ * Coreografia (só na primeira visita da página):
+ *  0ms     cortina da foto recolhe (1.1s, ease-in-out) e a foto assenta de 1.12 → 1
+ *  250ms   rótulos do topo aparecem (fade)
+ *  350ms   título sobe linha a linha (stagger 90ms, 0.9s)
+ *  650ms   texto de apoio e botões (fade + 16px)
+ * Ao rolar: a foto aproxima levemente e escurece; o texto sobe mais rápido que a foto.
+ */
+export function HeroSection({ onNavigate }: HeroSectionProps) {
+  const ref = useRef<HTMLElement>(null);
+  const reduced = usePrefersReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  const shade = useTransform(scrollYProgress, [0, 1], [0, 0.6]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '-18%']);
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-28 pb-16 overflow-hidden">
-      {/* Canvas Waves Background */}
-      <WavesBackground lineColor="rgba(212, 175, 55, 0.15)" particleColor="rgba(139, 92, 246, 0.35)" />
+    <section ref={ref} aria-label="Destaque da coleção" className="relative flex min-h-[100svh] flex-col overflow-hidden bg-ink">
+      {/* Foto */}
+      <div className="absolute inset-0">
+        <motion.div className="absolute inset-0" style={reduced ? undefined : { scale: imageScale }}>
+          <motion.img
+            src={HERO_IMAGE}
+            alt="Modelo vestindo peça da coleção Vitta Basics"
+            fetchPriority="high"
+            decoding="async"
+            draggable={false}
+            className="h-full w-full object-cover object-[50%_30%] brightness-[0.85] contrast-[1.08] grayscale"
+            initial={reduced ? false : { scale: 1.12 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.6, ease: EASE_OUT }}
+          />
+        </motion.div>
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-ink/40" />
+        {!reduced && <motion.div aria-hidden className="absolute inset-0 bg-ink" style={{ opacity: shade }} />}
+        {!reduced && (
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 origin-top bg-ink"
+            initial={{ scaleY: 1 }}
+            animate={{ scaleY: 0 }}
+            transition={{ duration: 1.1, ease: EASE_IN_OUT }}
+          />
+        )}
+      </div>
 
-      {/* Glow Radial Orbs */}
-      <div className="pointer-events-none absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-[#d4af37]/10 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-1/4 right-1/4 w-[450px] h-[450px] rounded-full bg-[#8b5cf6]/10 blur-[140px]" />
+      {/* Conteúdo */}
+      <motion.div
+        className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col justify-between px-[var(--gutter)] pb-8 pt-28 md:pb-12"
+        style={reduced ? undefined : { y: contentY }}
+      >
+        <Reveal onMount delay={0.25} y={0} className="flex items-start justify-between gap-6">
+          <p className="eyebrow text-paper-2">
+            Coleção 2026
+            <br />
+            N°01 — Essenciais
+          </p>
+          <p className="eyebrow hidden text-right text-paper-2 sm:block">
+            Essencial é
+            <br />
+            estar bem
+          </p>
+        </Reveal>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        {/* Left Column: Headline & CTA */}
-        <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 badge-gold">
-            <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-            <span>{STORE_CONFIG.heroBadge}</span>
-          </div>
-
-          {/* Main Animated Title */}
-          <h1 className="font-display font-extrabold text-4xl sm:text-6xl lg:text-7xl leading-[1.08] tracking-tight text-white">
-            <BlurText
-              text={STORE_CONFIG.heroTitle}
-              animateBy="words"
-              delay={80}
-              className="text-gradient-gold"
+        <div className="grid grid-cols-1 items-end gap-8 md:grid-cols-12">
+          <h1 className="font-display text-[clamp(3rem,10.5vw,10rem)] font-semibold uppercase leading-[0.86] tracking-[-0.05em] md:col-span-8">
+            <LineReveal
+              onMount
+              delay={0.35}
+              stagger={0.09}
+              label="O básico, feito para durar."
+              lines={[
+                'O básico,',
+                <>
+                  feito para <span className="font-serif-accent text-[1.08em] tracking-[-0.02em]">durar.</span>
+                </>,
+              ]}
             />
           </h1>
 
-          {/* Description */}
-          <p className="text-gray-300 text-base sm:text-lg max-w-2xl font-normal leading-relaxed mx-auto lg:mx-0">
-            {STORE_CONFIG.description} Integração nativa de estoque e cupons via <strong className="text-[#d4af37] font-semibold">TomatoPHP API</strong>.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
-            <Magnet strength={20}>
-              <a href="#colecao" className="btn-primary group">
-                <span>Explorar Coleção</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Magnet>
-
-            <Magnet strength={20}>
-              <a href="#lookbook" className="btn-secondary">
-                <Award className="w-4 h-4 text-[#d4af37]" />
-                <span>Ver Lookbook</span>
-              </a>
-            </Magnet>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0">
-            <div>
-              <div className="font-display font-extrabold text-2xl sm:text-3xl text-white">100%</div>
-              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mt-1">Lã & Seda Pura</div>
+          <Reveal onMount delay={0.65} className="md:col-span-4 md:pb-3">
+            <p className="mb-6 max-w-sm text-[15px] leading-relaxed text-paper-2">
+              Peças essenciais em cortes limpos e tecidos macios, pensadas para combinar entre si e acompanhar todos os seus dias.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button type="button" onClick={() => onNavigate('products')} className="btn-primary group">
+                Ver coleção
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={1.75} />
+              </button>
+              <button type="button" onClick={() => onNavigate('categories')} className="btn-secondary">
+                Categorias
+              </button>
             </div>
-            <div>
-              <div className="font-display font-extrabold text-2xl sm:text-3xl text-white">LIMITED</div>
-              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mt-1">Exclusividade</div>
-            </div>
-            <div>
-              <div className="font-display font-extrabold text-2xl sm:text-3xl text-white">REST API</div>
-              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mt-1">TomatoPHP Engine</div>
-            </div>
-          </div>
+          </Reveal>
         </div>
+      </motion.div>
 
-        {/* Right Column: Hero Visual Card (Tilted 3D Showcase) */}
-        <div className="lg:col-span-5 flex justify-center">
-          <TiltedCard maxRotateX={18} maxRotateY={18} scaleOnHover={1.04} className="max-w-md">
-            <div className="relative rounded-2xl overflow-hidden glass-panel border border-[#d4af37]/30 shadow-2xl group">
-              <img
-                src="/images/hero-fashion.jpg"
-                alt={`${STORE_CONFIG.name} Editorial`}
-                className="w-full h-[520px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-transparent to-transparent opacity-90" />
-
-              {/* Floating Badge on Card */}
-              <div className="absolute bottom-6 left-6 right-6 glass-panel p-5 rounded-xl border border-white/15 backdrop-blur-md">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] tracking-[0.2em] font-bold text-[#d4af37] uppercase">
-                      PEÇA DE DESFILE
-                    </span>
-                    <h3 className="font-display font-bold text-lg text-white mt-0.5">
-                      Sobretudo Velvet Noir
-                    </h3>
-                  </div>
-                  <span className="font-display font-extrabold text-lg text-[#d4af37]">R$ 3.890</span>
-                </div>
-                <div className="mt-3 flex items-center gap-2 text-xs text-gray-300">
-                  <ShieldCheck className="w-4 h-4 text-[#d4af37]" />
-                  <span>Edição Limitada 01 / 50</span>
-                </div>
-              </div>
-            </div>
-          </TiltedCard>
-        </div>
+      {/* Faixa de fatos */}
+      <div className="relative z-10 border-t border-line bg-ink">
+        <ul className="mx-auto grid max-w-[1600px] grid-cols-1 sm:grid-cols-3">
+          {FACTS.map((fact, i) => (
+            <li
+              key={fact.label}
+              className={`flex items-baseline justify-between gap-4 px-[var(--gutter)] py-4 ${
+                i > 0 ? 'border-t border-line sm:border-l sm:border-t-0' : ''
+              }`}
+            >
+              <span className="eyebrow">
+                {String(i + 1).padStart(2, '0')} / {fact.label}
+              </span>
+              <span className="text-[13px] text-paper">{fact.value}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
-};
+}

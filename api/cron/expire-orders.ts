@@ -3,6 +3,7 @@ import { AppError } from '../_lib/errors.js';
 import { route } from '../_lib/http.js';
 import { expireStaleOrders } from '../_lib/orders/expire.js';
 import { createMercadoPagoClient } from '../_lib/payments/mercadoPago.js';
+import { createLabelDeps, syncTrackings } from '../_lib/shipping/labelService.js';
 import { createAdminClient } from '../_lib/supabase.js';
 
 function sha256(value: string): Buffer {
@@ -34,6 +35,16 @@ export default route({
     const { expired, confirmed } = await expireStaleOrders({ supabase, mp, log });
     log.info('cron.expire_orders', { expired, confirmed });
 
-    return { status: 200, body: { expired, confirmed } };
+    // Rastreio diário das etiquetas (só com o Melhor Envio configurado; falha não derruba o cron).
+    let trackingsSynced = 0;
+    if (env.MELHORENVIO_TOKEN && env.MELHORENVIO_SENDER) {
+      try {
+        trackingsSynced = await syncTrackings(createLabelDeps(env, supabase, log));
+      } catch (err) {
+        log.warn('cron.sync_trackings_failed', { error: err });
+      }
+    }
+
+    return { status: 200, body: { expired, confirmed, trackingsSynced } };
   },
 });

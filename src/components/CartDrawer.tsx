@@ -221,6 +221,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
       shippingAddress: trimmedAddress.slice(0, 300),
       shippingCep: cepDigits(shippingCep),
       shippingServiceId: selectedShipping.serviceId,
+      // Endereço salvo permite gerar a etiqueta automática (o servidor confere dono e CEP).
+      ...(selectedAddressId !== OTHER_ADDRESS ? { shippingAddressId: selectedAddressId } : {}),
       ...(paymentMethod === 'card' && card ? { card } : {})
     };
 

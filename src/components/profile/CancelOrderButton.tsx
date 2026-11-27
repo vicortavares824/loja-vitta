@@ -9,7 +9,7 @@ const CANCELLABLE: ReadonlySet<Order['status']> = new Set(['pending', 'pending_p
 export const isCancellable = (status: Order['status']): boolean => CANCELLABLE.has(status);
 
 export interface CancelOrderButtonProps {
-  order: Pick<Order, 'id' | 'status'>;
+  order: Pick<Order, 'id' | 'status' | 'labelUrl'>;
   onCancelled: (orderId: string, refunded: boolean) => void;
   onError: (message: string) => void;
 }
@@ -19,7 +19,8 @@ export function CancelOrderButton({ order, onCancelled, onError }: CancelOrderBu
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  if (!isCancellable(order.status)) return null;
+  // Com etiqueta comprada, o cancelamento passa pelo atendimento (o servidor também recusa).
+  if (!isCancellable(order.status) || order.labelUrl) return null;
 
   const paid = order.status === 'processing';
   const warning = paid

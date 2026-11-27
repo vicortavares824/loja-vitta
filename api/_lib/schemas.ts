@@ -41,6 +41,7 @@ export const checkoutSchema = z
     shippingAddress: z.string().trim().min(1).max(300),
     shippingCep: cepSchema,
     shippingServiceId: shippingServiceIdSchema,
+    shippingAddressId: z.string().uuid().optional(),
     card: cardSchema.optional(),
   })
   .strip()

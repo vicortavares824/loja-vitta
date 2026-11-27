@@ -43,6 +43,19 @@ export const ERROR_CATALOG: Readonly<Record<CheckoutErrorCode, ErrorCatalogEntry
     status: 409,
     message: 'Este pedido não pode mais ser cancelado.',
   },
+  FORBIDDEN: { status: 403, message: 'Acesso restrito ao administrador.' },
+  LABEL_DATA_MISSING: {
+    status: 422,
+    message: 'Faltam dados para gerar a etiqueta.',
+  },
+  SHIPPING_LABEL_ERROR: {
+    status: 502,
+    message: 'O Melhor Envio recusou ou não respondeu. Tente novamente.',
+  },
+  LABEL_IN_PROGRESS: {
+    status: 409,
+    message: 'A etiqueta deste pedido já está sendo gerada. Aguarde e atualize a página.',
+  },
   SERVER_MISCONFIGURED: { status: 500, message: 'Erro interno do servidor.' },
   INTERNAL_ERROR: { status: 500, message: 'Erro interno do servidor.' },
 };
