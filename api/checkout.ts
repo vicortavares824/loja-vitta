@@ -5,6 +5,7 @@ import { createCheckout } from './_lib/orders/orderService.js';
 import { expireStaleOrders } from './_lib/orders/expire.js';
 import { createMercadoPagoClient } from './_lib/payments/mercadoPago.js';
 import { checkoutSchema, parseBody, parseIdempotencyKey } from './_lib/schemas.js';
+import { createShippingQuoter } from './_lib/shipping/shippingService.js';
 import { createAdminClient } from './_lib/supabase.js';
 
 /** Limite de pedidos vencidos liberados por requisição (expiração preguiçosa). */
@@ -40,7 +41,13 @@ export default route({
     );
 
     const result = await createCheckout(
-      { supabase, mp, log, pixExpirationMinutes: env.PIX_EXPIRATION_MINUTES },
+      {
+        supabase,
+        mp,
+        log,
+        quoteShipping: createShippingQuoter(env),
+        pixExpirationMinutes: env.PIX_EXPIRATION_MINUTES,
+      },
       { user, idempotencyKey, request },
     );
 

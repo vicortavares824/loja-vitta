@@ -1,7 +1,7 @@
 import type { CheckoutItemInput, PricingBreakdown } from '../../../src/types/checkout.js';
 import { AppError } from '../errors.js';
 import { COUPON_RULES, type CouponRule } from '../config/coupons.js';
-import { FREE_SHIPPING_THRESHOLD_CENTS, SHIPPING_FEE_CENTS } from '../config/shipping.js';
+import { FREE_SHIPPING_THRESHOLD_CENTS } from '../config/shipping.js';
 
 export interface CatalogProduct {
   id: string;
@@ -18,6 +18,8 @@ export interface PricingInput {
   couponCode?: string;
   /** Existe pedido não cancelado do usuário. */
   hasPriorOrder: boolean;
+  /** Preço da opção de frete escolhida, em centavos (0 quando ainda não há CEP). */
+  shippingBaseCents: number;
   rules?: ReadonlyArray<CouponRule>;
   /** Instante de referência para validade do cupom. Padrão: agora. */
   now?: Date;
@@ -92,7 +94,9 @@ export function calculatePricing(input: PricingInput): PricingBreakdown {
   }
 
   const shippingCents =
-    freeShippingCoupon || subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS ? 0 : SHIPPING_FEE_CENTS;
+    freeShippingCoupon || subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS
+      ? 0
+      : Math.max(0, Math.round(input.shippingBaseCents));
   const totalCents = subtotalCents - discountCents + shippingCents;
 
   return { subtotalCents, discountCents, shippingCents, totalCents, couponCode };

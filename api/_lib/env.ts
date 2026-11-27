@@ -11,6 +11,18 @@ const baseSchema = z.object({
   MERCADOPAGO_WEBHOOK_SECRET: nonEmpty,
   SITE_URL: nonEmpty,
   PIX_EXPIRATION_MINUTES: z.coerce.number().int().min(1).max(1440).default(30),
+  // Melhor Envio (opcional). Sem token, o checkout usa o frete fixo de config/shipping.ts.
+  // Com token, CEP de origem e User-Agent são exigidos em shipping/shippingService.ts.
+  MELHORENVIO_TOKEN: nonEmpty.optional(),
+  MELHORENVIO_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+  /** CEP de onde a loja posta (pontuação é removida). */
+  MELHORENVIO_FROM_CEP: z
+    .string()
+    .transform((v) => v.replace(/\D/g, ''))
+    .pipe(z.string().length(8))
+    .optional(),
+  /** Exigido pela API: "Nome da aplicação (email de contato técnico)". */
+  MELHORENVIO_USER_AGENT: nonEmpty.optional(),
 });
 
 const cronSchema = baseSchema.extend({ CRON_SECRET: nonEmpty });

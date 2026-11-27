@@ -30,6 +30,14 @@ export const ERROR_CATALOG: Readonly<Record<CheckoutErrorCode, ErrorCatalogEntry
     status: 502,
     message: 'O provedor de pagamento está indisponível. Tente novamente.',
   },
+  SHIPPING_UNAVAILABLE: {
+    status: 502,
+    message: 'Não foi possível calcular o frete agora. Tente novamente.',
+  },
+  SHIPPING_OPTION_UNAVAILABLE: {
+    status: 422,
+    message: 'A opção de frete escolhida não está disponível para este CEP.',
+  },
   SERVER_MISCONFIGURED: { status: 500, message: 'Erro interno do servidor.' },
   INTERNAL_ERROR: { status: 500, message: 'Erro interno do servidor.' },
 };

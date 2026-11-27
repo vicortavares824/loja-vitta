@@ -8,10 +8,11 @@ import type {
   CheckoutItemInput,
   CheckoutRequest,
   CheckoutResponse,
-  PaymentMethod,
-  PricingBreakdown
+  PaymentMethod
 } from '../types/checkout';
 import { CardPaymentBrick } from './CardPaymentBrick';
+import { ShippingSelector } from './cart/ShippingSelector';
+import { cepDigits, useShippingQuote } from '../hooks/useShippingQuote';
 import { Magnet } from './react-bits/Magnet';
 import confetti from 'canvas-confetti';
 
@@ -33,7 +34,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
     updateQuantity,
     clearCart,
     subtotal,
-    total,
     formatPrice,
     showToast
   } = useCart();
@@ -51,8 +51,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>(OTHER_ADDRESS);
   const [couponInput, setCouponInput] = useState('');
-  const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
-  const [isQuoting, setIsQuoting] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | undefined>(undefined);
+  const [shippingCep, setShippingCep] = useState('');
 
   const mpPublicKey = (import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY as string | undefined) || '';
   const cardEnabled = mpPublicKey.length > 0;
@@ -76,8 +76,37 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   );
   useEffect(() => {
     idempotencyKey.current = crypto.randomUUID();
-    setPricing(null);
   }, [cartSignature]);
+
+  const handleCheckoutError = (err: unknown) => {
+    if (err instanceof CheckoutError) {
+      if (
+        err.code === 'PRICE_CHANGED' ||
+        err.code === 'INSUFFICIENT_STOCK' ||
+        err.code === 'IDEMPOTENCY_KEY_REUSED'
+      ) {
+        renewKey();
+      }
+      if (err.code === 'INVALID_COUPON' || err.code === 'COUPON_NOT_ELIGIBLE') {
+        setAppliedCoupon(undefined);
+      }
+      // NETWORK_ERROR mantem a chave para repetir a mesma requisicao com seguranca.
+      showToast(err.message, 'error');
+    } else {
+      showToast(CHECKOUT_ERROR_MESSAGES_PT.INTERNAL_ERROR, 'error');
+    }
+  };
+
+  // Frete e total calculados no servidor a partir do CEP (Melhor Envio).
+  const shipping = useShippingQuote({
+    items: buildItems(),
+    itemsKey: cartSignature,
+    cep: shippingCep,
+    couponCode: appliedCoupon,
+    enabled: isCartOpen && isAuthenticated && !checkoutSuccess,
+    onError: handleCheckoutError
+  });
+  const pricing = shipping.pricing;
 
   // Polling do status do pedido Pix a cada 5 s.
   const pixOrderId = result?.payment.kind === 'pix' ? result.orderId : null;
@@ -108,6 +137,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
         if (preferred) {
           setSelectedAddressId(preferred.id);
           setAddress(customerService.formatAddress(preferred).slice(0, 300));
+          setShippingCep(cepDigits(preferred.cep));
         }
       })
       .catch(() => {
@@ -124,10 +154,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
     setSelectedAddressId(id);
     if (id === OTHER_ADDRESS) {
       setAddress('');
+      setShippingCep('');
       return;
     }
     const found = savedAddresses.find(a => a.id === id);
-    if (found) setAddress(customerService.formatAddress(found).slice(0, 300));
+    if (found) {
+      setAddress(customerService.formatAddress(found).slice(0, 300));
+      setShippingCep(cepDigits(found.cep));
+    }
   };
 
   const handleManageAddresses = () => {
@@ -163,38 +197,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   const progressPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  const handleCheckoutError = (err: unknown) => {
-    if (err instanceof CheckoutError) {
-      if (
-        err.code === 'PRICE_CHANGED' ||
-        err.code === 'INSUFFICIENT_STOCK' ||
-        err.code === 'IDEMPOTENCY_KEY_REUSED'
-      ) {
-        renewKey();
-      }
-      // NETWORK_ERROR mantem a chave para repetir a mesma requisicao com seguranca.
-      showToast(err.message, 'error');
-    } else {
-      showToast(CHECKOUT_ERROR_MESSAGES_PT.INTERNAL_ERROR, 'error');
-    }
-  };
-
-  const handleApplyCoupon = async () => {
-    const code = couponInput.trim();
-    if (!code) {
-      setPricing(null);
-      return;
-    }
-    setIsQuoting(true);
-    try {
-      const res = await checkoutService.quote({ items: buildItems(), couponCode: code });
-      setPricing(res.pricing);
-    } catch (err) {
-      setPricing(null);
-      handleCheckoutError(err);
-    } finally {
-      setIsQuoting(false);
-    }
+  // O hook refaz a cotacao com o cupom; cupom invalido volta como erro e e descartado.
+  const handleApplyCoupon = () => {
+    setAppliedCoupon(couponInput.trim() || undefined);
   };
 
   const submitCheckout = async (card?: CardPaymentInput) => {
@@ -203,11 +208,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
       showToast('Informe o endere\u00e7o de entrega.', 'error');
       throw new Error('address-required');
     }
+    const selectedShipping = shipping.selected;
+    if (!selectedShipping || cepDigits(shippingCep).length !== 8) {
+      showToast('Informe o CEP e escolha uma op\u00e7\u00e3o de frete.', 'error');
+      throw new Error('shipping-required');
+    }
     const request: CheckoutRequest = {
       items: buildItems(),
-      couponCode: couponInput.trim() || undefined,
+      // Só o cupom aplicado (o mesmo da cotação exibida e do valor do Brick).
+      couponCode: appliedCoupon,
       paymentMethod,
       shippingAddress: trimmedAddress.slice(0, 300),
+      shippingCep: cepDigits(shippingCep),
+      shippingServiceId: selectedShipping.serviceId,
       ...(paymentMethod === 'card' && card ? { card } : {})
     };
 
@@ -240,7 +253,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
   };
 
   const isPaid = orderStatus !== 'pending_payment' && orderStatus !== 'pending' && orderStatus !== 'cancelled';
-  const displayTotal = pricing ? pricing.totalCents / 100 : total;
+  // Sem cotacao ainda (sem CEP), o total mostra so os produtos.
+  const displayTotal = pricing ? pricing.totalCents / 100 : subtotal;
+  const canPay = shipping.selected !== null && !shipping.isQuoting;
+  const shippingLabel = shipping.selected
+    ? shipping.selected.priceCents === 0
+      ? 'GR\u00c1TIS'
+      : formatPrice(shipping.selected.priceCents / 100)
+    : 'Informe o CEP';
   const copyPix = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -310,7 +330,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                   </div>
                   <div className="flex items-center gap-2.5 text-gray-300">
                     <Check className="w-4 h-4 text-white shrink-0" />
-                    <span>Frete Expresso Grátis acima de R$ 1.500</span>
+                    <span>Frete Grátis acima de R$ 1.500</span>
                   </div>
                   <div className="flex items-center gap-2.5 text-gray-300">
                     <Check className="w-4 h-4 text-white shrink-0" />
@@ -401,11 +421,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
               <div className="px-6 py-3.5 bg-white/5 border-b border-white/10 text-xs">
                 {remainingForFreeShipping > 0 ? (
                   <p className="text-gray-300 mb-1.5 font-medium">
-                    Faltam <strong className="text-white">{formatPrice(remainingForFreeShipping)}</strong> para Frete Expresso Grátis!
+                    Faltam <strong className="text-white">{formatPrice(remainingForFreeShipping)}</strong> para Frete Grátis!
                   </p>
                 ) : (
                   <p className="text-white font-bold flex items-center gap-1.5 mb-1.5">
-                    <Check className="w-4 h-4 text-green-400" /> Parabéns! Você ganhou Frete Expresso Grátis!
+                    <Check className="w-4 h-4 text-green-400" /> Parabéns! Você ganhou Frete Grátis!
                   </p>
                 )}
                 <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
@@ -515,10 +535,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                       <span className="text-white font-semibold">{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Frete Expresso</span>
-                      <span className="text-white font-semibold">
-                        {remainingForFreeShipping === 0 ? 'GRÁTIS' : formatPrice(50)}
-                      </span>
+                      <span>Frete{shipping.selected ? ` (${shipping.selected.name})` : ''}</span>
+                      <span className="text-white font-semibold">{shippingLabel}</span>
                     </div>
                     {pricing && pricing.discountCents > 0 && (
                       <div className="flex justify-between text-green-400">
@@ -538,7 +556,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                       value={couponInput}
                       onChange={e => {
                         setCouponInput(e.target.value.slice(0, 32));
-                        setPricing(null);
+                        setAppliedCoupon(undefined);
                       }}
                       placeholder="Cupom de desconto"
                       aria-label="Cupom de desconto"
@@ -546,10 +564,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                     />
                     <button
                       onClick={handleApplyCoupon}
-                      disabled={isQuoting}
+                      disabled={shipping.isQuoting}
                       className="min-h-[44px] px-4 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-widest disabled:opacity-50"
                     >
-                      {isQuoting ? '...' : 'Aplicar'}
+                      {shipping.isQuoting && appliedCoupon ? '...' : 'Aplicar'}
                     </button>
                   </div>
 
@@ -588,6 +606,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                     className="w-full bg-black/60 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-gray-500"
                   />
 
+                  {/* Frete */}
+                  <ShippingSelector
+                    cep={shippingCep}
+                    onCepChange={setShippingCep}
+                    options={shipping.options}
+                    selectedId={shipping.selectedId}
+                    onSelect={shipping.select}
+                    isQuoting={shipping.isQuoting}
+                    formatPrice={formatPrice}
+                  />
+
                   {/* Método de pagamento */}
                   <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Forma de pagamento">
                     <button
@@ -621,7 +650,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onNavigate }) => {
                   )}
 
                   {/* Checkout */}
-                  {paymentMethod === 'card' && cardEnabled ? (
+                  {!canPay ? (
+                    <p className="text-[11px] text-gray-400 text-center">
+                      Informe o CEP e escolha o frete para finalizar.
+                    </p>
+                  ) : paymentMethod === 'card' && cardEnabled ? (
                     <CardPaymentBrick
                       publicKey={mpPublicKey}
                       amount={Math.round(displayTotal * 100) / 100}

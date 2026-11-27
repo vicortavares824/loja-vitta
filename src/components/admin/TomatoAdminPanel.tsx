@@ -13,6 +13,7 @@ import { uploadImage } from '../../services/cloudinary';
 import { useCart } from '../../context/CartContext';
 import { InventoryPanel } from './InventoryPanel';
 import { CategoryAdminPanel } from './CategoryAdminPanel';
+import { OrderTrackingField } from './OrderTrackingField';
 
 export const DEFAULT_IMPORT_JSON = JSON.stringify([
   {
@@ -746,8 +747,25 @@ export const TomatoAdminPanel: React.FC = () => {
                       <div className="space-y-1">
                         <div className="text-gray-400">Endereço de Entrega:</div>
                         <div className="text-white font-medium">{order.shippingAddress}</div>
+                        {order.shippingServiceName && (
+                          <>
+                            <div className="text-gray-400 pt-2">Frete:</div>
+                            <div className="text-white font-medium">{order.shippingServiceName}</div>
+                          </>
+                        )}
                         <div className="text-gray-400 pt-2">Método de Pagamento:</div>
                         <div className="text-white font-medium">{order.paymentMethod}</div>
+                        <div className="pt-2">
+                          <OrderTrackingField
+                            key={`${order.id}-${order.trackingCode ?? ''}`}
+                            orderId={order.id}
+                            initialCode={order.trackingCode}
+                            onSaved={(message, type) => {
+                              showToast(message, type);
+                              if (type === 'success') loadAllData();
+                            }}
+                          />
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-white/10 font-bold text-sm">

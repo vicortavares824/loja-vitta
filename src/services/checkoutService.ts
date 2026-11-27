@@ -29,6 +29,8 @@ export const CHECKOUT_ERROR_MESSAGES_PT: Record<ServiceErrorCode, string> = {
   PRICE_CHANGED: 'Os preços foram atualizados. Revise sua sacola.',
   PAYMENT_REJECTED: 'Pagamento recusado. Tente outro cartão ou use Pix.',
   PAYMENT_PROVIDER_ERROR: 'Não foi possível processar o pagamento agora. Tente novamente em instantes.',
+  SHIPPING_UNAVAILABLE: 'Não foi possível calcular o frete agora. Tente novamente em instantes.',
+  SHIPPING_OPTION_UNAVAILABLE: 'A opção de frete escolhida não está disponível para este CEP. Escolha outra.',
   RATE_LIMITED: 'Muitas tentativas. Aguarde um momento e tente novamente.',
   TOO_MANY_PENDING_ORDERS: 'Você já tem pedidos aguardando pagamento. Conclua ou aguarde a expiração deles.',
   SERVER_MISCONFIGURED: 'Serviço temporariamente indisponível. Tente novamente mais tarde.',

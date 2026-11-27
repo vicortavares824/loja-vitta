@@ -64,6 +64,10 @@ export interface Order {
   createdAt: string;
   paymentMethod: string;
   shippingAddress: string;
+  /** Ex.: 'Correios SEDEX' (null em pedidos anteriores ao Melhor Envio). */
+  shippingServiceName?: string | null;
+  /** Código de rastreio informado pelo admin após a postagem. */
+  trackingCode?: string | null;
 }
 
 export interface TomatoApiResponse<T> {

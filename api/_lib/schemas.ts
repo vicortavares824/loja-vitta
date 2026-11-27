@@ -20,6 +20,15 @@ const cardSchema = z
   })
   .strict();
 
+/** CEP com ou sem pontuação; sai só com os 8 dígitos. */
+const cepSchema = z
+  .string()
+  .max(12)
+  .transform((v) => v.replace(/\D/g, ''))
+  .pipe(z.string().length(8, 'CEP deve ter 8 dígitos'));
+
+const shippingServiceIdSchema = z.number().int().min(0).max(1_000_000);
+
 /**
  * `.strip()` na raiz descarta campos desconhecidos (price, total, shipping, cardNumber...).
  * `itemSchema` é `.strict()`: item com campo extra é erro de validação.
@@ -30,6 +39,8 @@ export const checkoutSchema = z
     couponCode: z.string().trim().max(32).optional(),
     paymentMethod: z.enum(['pix', 'card']),
     shippingAddress: z.string().trim().min(1).max(300),
+    shippingCep: cepSchema,
+    shippingServiceId: shippingServiceIdSchema,
     card: cardSchema.optional(),
   })
   .strip()
@@ -42,6 +53,8 @@ export const quoteSchema = z
   .object({
     items: z.array(itemSchema).min(1).max(50),
     couponCode: z.string().trim().max(32).optional(),
+    shippingCep: cepSchema.optional(),
+    shippingServiceId: shippingServiceIdSchema.optional(),
   })
   .strip() satisfies z.ZodType<QuoteRequest>;
 

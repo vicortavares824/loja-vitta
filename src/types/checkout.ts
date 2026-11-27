@@ -19,7 +19,17 @@ export interface CheckoutRequest {
   couponCode?: string; // até 32 caracteres
   paymentMethod: PaymentMethod;
   shippingAddress: string; // 1..300 caracteres após trim
+  shippingCep: string; // 8 dígitos (pontuação é removida no servidor)
+  shippingServiceId: number; // id de ShippingOption escolhido na cotação
   card?: CardPaymentInput; // obrigatório quando paymentMethod === 'card'
+}
+
+export interface ShippingOption {
+  serviceId: number; // id do serviço no Melhor Envio (0 = frete padrão sem integração)
+  name: string; // ex.: 'PAC'
+  company: string; // ex.: 'Correios'
+  priceCents: number; // preço cobrado do cliente (0 quando o frete é grátis)
+  deliveryDays: number | null; // prazo em dias úteis
 }
 
 export interface PricingBreakdown {
@@ -52,10 +62,15 @@ export interface CheckoutResponse {
   replayed: boolean; // true quando a Idempotency-Key já havia sido usada
 }
 
-export type QuoteRequest = Pick<CheckoutRequest, 'items' | 'couponCode'>;
+export type QuoteRequest = Pick<CheckoutRequest, 'items' | 'couponCode'> & {
+  shippingCep?: string; // sem CEP, a cotação não traz opções de frete
+  shippingServiceId?: number; // padrão: a opção mais barata
+};
 
 export interface QuoteResponse {
   pricing: PricingBreakdown;
+  shippingOptions: ShippingOption[]; // vazio quando o CEP não foi informado
+  shippingServiceId: number | null; // opção usada em pricing.shippingCents
 }
 
 export type CheckoutErrorCode =
@@ -71,6 +86,8 @@ export type CheckoutErrorCode =
   | 'PRICE_CHANGED'
   | 'PAYMENT_REJECTED'
   | 'PAYMENT_PROVIDER_ERROR'
+  | 'SHIPPING_UNAVAILABLE'
+  | 'SHIPPING_OPTION_UNAVAILABLE'
   | 'RATE_LIMITED'
   | 'TOO_MANY_PENDING_ORDERS'
   | 'SERVER_MISCONFIGURED'

@@ -150,7 +150,9 @@ export const tomatoApi = {
       status: o.status,
       createdAt: o.created_at,
       paymentMethod: o.paymentMethod,
-      shippingAddress: o.shippingAddress
+      shippingAddress: o.shippingAddress,
+      shippingServiceName: o.shipping_service_name ?? null,
+      trackingCode: o.tracking_code ?? null
     })) as Order[];
   },
 
@@ -175,8 +177,19 @@ export const tomatoApi = {
       status: o.status,
       createdAt: o.created_at,
       paymentMethod: o.paymentMethod,
-      shippingAddress: o.shippingAddress
+      shippingAddress: o.shippingAddress,
+      shippingServiceName: o.shipping_service_name ?? null,
+      trackingCode: o.tracking_code ?? null
     })) as Order[];
+  },
+
+  /** Grava o código de rastreio (RPC set_order_tracking, restrita a admin). Vazio remove. */
+  async setOrderTracking(orderId: string, trackingCode: string): Promise<void> {
+    const { error } = await supabase.rpc('set_order_tracking', {
+      p_order_id: orderId,
+      p_tracking_code: trackingCode.trim().slice(0, 60)
+    });
+    if (error) throw error;
   },
 
   async updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {

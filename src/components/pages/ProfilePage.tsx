@@ -210,6 +210,25 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                         ))}
                       </ul>
 
+                      {(order.shippingServiceName || order.trackingCode) && (
+                        <div className="text-xs text-gray-400 space-y-1">
+                          {order.shippingServiceName && <p>Entrega: {order.shippingServiceName}</p>}
+                          {order.trackingCode && (
+                            <p className="break-all">
+                              Rastreio:{' '}
+                              <a
+                                href={`https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(order.trackingCode)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-white underline underline-offset-4"
+                              >
+                                {order.trackingCode}
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between pt-2 border-t border-white/10">
                         <span className="text-xs text-gray-500 uppercase tracking-wider">Total</span>
                         <span className="text-base font-extrabold">{formatPrice(Number(order.totalAmount))}</span>

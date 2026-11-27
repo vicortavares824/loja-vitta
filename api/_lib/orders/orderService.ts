@@ -6,12 +6,14 @@ import type {
   CheckoutResponse,
   PixPaymentData,
   PricingBreakdown,
+  ShippingOption,
 } from '../../../src/types/checkout.js';
 import { AppError } from '../errors.js';
 import type { AuthenticatedUser } from '../auth.js';
 import type { Logger } from '../logger.js';
 import type { MercadoPagoClient } from '../payments/mercadoPago.js';
 import { type CatalogProduct, calculatePricing, normalizeCouponCode } from '../pricing/engine.js';
+import { selectShippingOption, type ShippingQuoter } from '../shipping/shippingService.js';
 import { releaseOrderStock, reserveAndCreateOrder } from '../stock/stockService.js';
 
 const DEFAULT_PIX_EXPIRATION_MINUTES = 30;
@@ -24,6 +26,8 @@ export const CANCEL_REASON_EXPIRED = 'expired';
 export interface CheckoutDeps {
   supabase: SupabaseClient;
   mp: MercadoPagoClient;
+  /** Cota o frete no servidor; o preço enviado pelo navegador nunca é usado. */
+  quoteShipping: ShippingQuoter;
   now?: () => Date;
   /** Validade do Pix em minutos. Padrão: 30. */
   pixExpirationMinutes?: number;
@@ -80,6 +84,8 @@ export function computeRequestHash(request: CheckoutRequest): string {
     couponCode: request.couponCode ? normalizeCouponCode(request.couponCode) : '',
     paymentMethod: request.paymentMethod,
     shippingAddress: request.shippingAddress.trim(),
+    shippingCep: request.shippingCep,
+    shippingServiceId: request.shippingServiceId,
   };
   return createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
 }
@@ -184,6 +190,26 @@ interface ChargeContext {
   orderId: string;
   totalCents: number;
   expiresAt: Date;
+  /** Frete escolhido, gravado no pedido antes da cobrança (ausente na repetição). */
+  shipping?: ShippingOption;
+}
+
+/** Grava CEP e serviço de frete no pedido (colunas da migração de frete). */
+async function recordShipping(
+  deps: CheckoutDeps,
+  orderId: string,
+  cep: string,
+  shipping: ShippingOption,
+): Promise<void> {
+  const { error } = await deps.supabase
+    .from('orders')
+    .update({
+      shipping_cep: cep,
+      shipping_service_id: shipping.serviceId,
+      shipping_service_name: [shipping.company, shipping.name].filter(Boolean).join(' '),
+    })
+    .eq('id', orderId);
+  if (error) throw dbError('recordShipping', error);
 }
 
 /**
@@ -198,6 +224,8 @@ async function chargeWithCompensation(ctx: ChargeContext): Promise<PixPaymentDat
   let createdPaymentId: string | null = null;
 
   try {
+    if (ctx.shipping) await recordShipping(deps, orderId, request.shippingCep, ctx.shipping);
+
     let payment: PixPaymentData | CardPaymentData;
     let paymentId: string;
 
@@ -352,9 +380,38 @@ async function replayOrder(
     orderId: order.id,
     totalCents: pricing.totalCents,
     expiresAt,
+    shipping: await shippingForReplay(deps, input.request, pricing.shippingCents),
   });
   const status = payment.kind === 'card' && payment.status === 'approved' ? 'processing' : 'pending_payment';
   return { status: 200, body: buildResponse(order.id, pricing, payment, true, status) };
+}
+
+/**
+ * Frete a gravar quando a repetição cobra um pedido que caiu antes de `recordShipping`.
+ * O valor já está fixado no pedido; a cotação só recupera o nome do serviço e, se falhar,
+ * o pedido fica com o id do serviço e um nome genérico em vez de colunas vazias.
+ */
+async function shippingForReplay(
+  deps: CheckoutDeps,
+  request: CheckoutRequest,
+  shippingCents: number,
+): Promise<ShippingOption> {
+  const fallback: ShippingOption = {
+    serviceId: request.shippingServiceId,
+    name: `Serviço ${request.shippingServiceId}`,
+    company: '',
+    priceCents: shippingCents,
+    deliveryDays: null,
+  };
+  try {
+    const catalog = await loadCatalog(deps.supabase, request.items.map((i) => i.productId));
+    const options = await deps.quoteShipping({ items: request.items, catalog, toCep: request.shippingCep });
+    const found = options.find((o) => o.serviceId === request.shippingServiceId);
+    return found ? { ...found, priceCents: shippingCents } : fallback;
+  } catch (err) {
+    deps.log?.warn('checkout.replay.shipping_quote_failed', { error: err });
+    return fallback;
+  }
 }
 
 /**
@@ -375,12 +432,20 @@ export async function createCheckout(deps: CheckoutDeps, input: CheckoutInput): 
     request.items.map((i) => i.productId),
   );
   const prior = request.couponCode ? await hasPriorOrder(deps.supabase, user.id) : false;
+  const shippingOptions = await deps.quoteShipping({
+    items: request.items,
+    catalog,
+    toCep: request.shippingCep,
+  });
+  // Com serviceId definido, nunca é null: opção ausente lança SHIPPING_OPTION_UNAVAILABLE.
+  const shipping = selectShippingOption(shippingOptions, request.shippingServiceId) as ShippingOption;
   const now = (deps.now ?? (() => new Date()))();
   const pricing = calculatePricing({
     items: request.items,
     catalog,
     ...(request.couponCode !== undefined ? { couponCode: request.couponCode } : {}),
     hasPriorOrder: prior,
+    shippingBaseCents: shipping.priceCents,
     now,
   });
 
@@ -420,6 +485,7 @@ export async function createCheckout(deps: CheckoutDeps, input: CheckoutInput): 
     orderId: reserved.orderId,
     totalCents: pricing.totalCents,
     expiresAt,
+    shipping,
   });
   const status = payment.kind === 'card' && payment.status === 'approved' ? 'processing' : 'pending_payment';
   return { status: 201, body: buildResponse(reserved.orderId, pricing, payment, false, status) };
