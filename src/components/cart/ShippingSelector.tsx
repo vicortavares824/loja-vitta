@@ -1,6 +1,7 @@
 import { Truck } from 'lucide-react';
 import type { ShippingOption } from '../../types/checkout';
 import { cepDigits } from '../../hooks/useShippingQuote';
+import { ShippingJourney } from './ShippingJourney';
 
 export interface ShippingSelectorProps {
   cep: string;
@@ -30,6 +31,7 @@ export function ShippingSelector({
   formatPrice,
 }: ShippingSelectorProps) {
   const complete = cepDigits(cep).length === 8;
+  const selected = options.find(o => o.serviceId === selectedId) ?? null;
 
   return (
     <div className="space-y-2">
@@ -94,6 +96,8 @@ export function ShippingSelector({
           })}
         </div>
       )}
+
+      {!isQuoting && selected && <ShippingJourney option={selected} />}
     </div>
   );
 }
