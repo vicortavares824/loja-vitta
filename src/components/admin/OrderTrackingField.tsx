@@ -29,7 +29,7 @@ export function OrderTrackingField({ orderId, initialCode, onSaved }: OrderTrack
 
   return (
     <div className="space-y-1">
-      <label htmlFor={inputId} className="text-gray-400">
+      <label htmlFor={inputId} className="text-mute">
         Código de rastreio:
       </label>
       <div className="flex gap-2">
@@ -38,13 +38,13 @@ export function OrderTrackingField({ orderId, initialCode, onSaved }: OrderTrack
           value={code}
           onChange={e => setCode(e.target.value.toUpperCase().slice(0, MAX_TRACKING_LENGTH))}
           placeholder="Ex.: AA123456789BR"
-          className="flex-1 min-w-0 min-h-[36px] bg-black border border-white/20 rounded-xl px-3 font-mono text-white"
+          className="flex-1 min-w-0 min-h-[36px] bg-ink border border-line-strong rounded-[2px] px-3 font-mono text-paper"
         />
         <button
           type="button"
           onClick={save}
           disabled={saving || code.trim() === (initialCode ?? '')}
-          className="min-h-[36px] px-3 rounded-xl bg-white text-black font-bold uppercase tracking-wider disabled:opacity-40"
+          className="min-h-[36px] px-3 rounded-[2px] bg-paper text-ink font-bold uppercase tracking-wider disabled:opacity-40"
         >
           {saving ? '...' : 'Salvar'}
         </button>

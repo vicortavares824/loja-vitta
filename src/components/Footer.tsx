@@ -1,136 +1,140 @@
-import React, { useState } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { ArrowRight, ArrowUp } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { LineReveal } from './home/HomeMotion';
 
 interface FooterProps {
   onNavigate?: (tab: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const SHOP_LINKS = [
+  { tab: 'products', label: 'Catálogo' },
+  { tab: 'categories', label: 'Categorias' },
+  { tab: 'search', label: 'Busca' },
+  { tab: 'profile', label: 'Meus pedidos' },
+];
+
+const HELP_ITEMS = ['Guia de medidas', 'Trocas e devoluções', 'Termos e privacidade'];
+
+export function Footer({ onNavigate }: FooterProps) {
   const [email, setEmail] = useState('');
   const { showToast } = useCart();
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = (e: FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
-      showToast('Por favor, informe um e-mail válido.', 'error');
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      showToast('Informe um e-mail válido.', 'error');
       return;
     }
-    showToast('Inscrição confirmada! Você receberá nossos lançamentos exclusivos.', 'success');
+    showToast('Inscrição confirmada. Você vai receber nossos lançamentos.', 'success');
     setEmail('');
   };
 
+  const backToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
   return (
-    <footer className="relative bg-black pt-20 pb-12 border-t border-white/10 text-gray-400 text-sm overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-white/10">
-          {/* Brand Col */}
-          <div className="md:col-span-4 space-y-4">
-            <div className="flex items-center gap-3">
-              <img src="/logo.jpg" alt={STORE_CONFIG.name} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover" />
-              <span className="font-display font-extrabold text-xl tracking-[0.2em] text-white">
-                {STORE_CONFIG.name}
-              </span>
-            </div>
-            <p className="text-gray-300 text-xs leading-relaxed max-w-sm">
-              {STORE_CONFIG.description}
-            </p>
-            <div className="flex items-center gap-3 text-xs text-white font-medium pt-2">
-              <Sparkles className="w-4 h-4 text-white" />
-              <span>Coleção Minimalista 2026</span>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="md:col-span-4 grid grid-cols-2 gap-8 text-xs">
-            <div>
-              <h4 className="font-display font-bold text-white uppercase tracking-widest mb-4">
-                Navegação
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <button 
-                    onClick={() => onNavigate?.('home')} 
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Início
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => onNavigate?.('products')} 
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Catálogo de Produtos
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => onNavigate?.('categories')} 
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Categorias
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => onNavigate?.('search')} 
-                    className="hover:text-white transition-colors text-left"
-                  >
-                    Buscar Peças
-                  </button>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-display font-bold text-white uppercase tracking-widest mb-4">
-                Atendimento
-              </h4>
-              <ul className="space-y-3">
-                <li><span className="hover:text-white transition-colors cursor-pointer">Guia de Medidas</span></li>
-                <li><span className="hover:text-white transition-colors cursor-pointer">Política de Devolução</span></li>
-                <li><span className="hover:text-white transition-colors cursor-pointer">Termos & Privacidade</span></li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Newsletter Col */}
-          <div className="md:col-span-4 space-y-4">
-            <h4 className="font-display font-bold text-white uppercase tracking-widest">
-              Lançamentos Privados
-            </h4>
-            <p className="text-xs text-gray-300 leading-relaxed">
-              Receba convites para pré-vendas de edições limitadas e lançamentos da coleção.
-            </p>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Seu melhor e-mail"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/20 text-xs py-2.5 px-3.5 rounded-full text-white placeholder:text-gray-500 focus:outline-none focus:border-white transition-colors"
+    <footer className="relative overflow-hidden border-t border-line bg-ink pb-[env(safe-area-inset-bottom)] text-paper">
+      <div className="mx-auto max-w-[1600px] px-[var(--gutter)]">
+        {/* Newsletter */}
+        <div className="grid grid-cols-1 gap-10 border-b border-line py-16 md:grid-cols-12 md:py-24">
+          <div className="md:col-span-6">
+            <p className="eyebrow mb-5">Newsletter</p>
+            <h2 className="font-display text-[clamp(2rem,5vw,4rem)] font-semibold uppercase leading-[0.95] tracking-[-0.035em]">
+              <LineReveal
+                lines={['Lançamentos', <>em <span className="font-serif-accent">primeira mão</span></>]}
+                label="Lançamentos em primeira mão"
               />
-              <button type="submit" className="bg-white text-black p-2.5 rounded-full hover:bg-gray-200 transition-colors">
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+            </h2>
           </div>
+          <form onSubmit={handleSubscribe} className="self-end md:col-span-5 md:col-start-8" noValidate>
+            <label htmlFor="footer-email" className="eyebrow mb-3 block">
+              Seu e-mail
+            </label>
+            <div className="group flex items-center border-b border-line-strong transition-colors focus-within:border-paper">
+              <input
+                id="footer-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="nome@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent py-4 text-base text-paper placeholder:text-mute focus:outline-none"
+              />
+              <button type="submit" className="btn-icon shrink-0" aria-label="Inscrever">
+                <ArrowRight className="h-5 w-5" strokeWidth={1.5} />
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-mute">Sem spam. Só novidades e reposições.</p>
+          </form>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between border-t border-white/10 text-[10px] text-gray-500 tracking-wider">
-          <p>
-            &copy; {new Date().getFullYear()} {STORE_CONFIG.name}. Todos os direitos reservados.
-          </p>
-          <button 
-            onClick={() => onNavigate?.('admin')} 
-            className="mt-4 sm:mt-0 hover:text-white transition-colors uppercase tracking-[0.2em]"
-          >
-            Acesso Restrito (Admin)
-          </button>
+        {/* Colunas */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 md:grid-cols-12">
+          <div className="col-span-2 md:col-span-5">
+            <p className="max-w-sm text-sm leading-relaxed text-paper-2">{STORE_CONFIG.description}</p>
+          </div>
+
+          <div className="md:col-span-2 md:col-start-7">
+            <p className="eyebrow mb-4">Loja</p>
+            <ul className="space-y-2.5 text-sm">
+              {SHOP_LINKS.map((link) => (
+                <li key={link.tab}>
+                  <button type="button" onClick={() => onNavigate?.(link.tab)} className="link-line py-0.5 text-left">
+                    {link.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-2">
+            <p className="eyebrow mb-4">Ajuda</p>
+            <ul className="space-y-2.5 text-sm text-paper-2">
+              {HELP_ITEMS.map((item) => (
+                <li key={item} className="py-0.5">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="col-span-2 md:col-span-2">
+            <p className="eyebrow mb-4">Contato</p>
+            <ul className="space-y-2.5 text-sm">
+              <li className="py-0.5">{STORE_CONFIG.social.instagram}</li>
+              <li className="break-all py-0.5">
+                <a href={`mailto:${STORE_CONFIG.contactEmail}`} className="link-line">
+                  {STORE_CONFIG.contactEmail}
+                </a>
+              </li>
+              <li className="py-0.5 text-paper-2">{STORE_CONFIG.social.atelier}, Brasil</li>
+            </ul>
+          </div>
         </div>
+      </div>
+
+      {/* Marca gigante */}
+      <div aria-hidden className="select-none overflow-hidden">
+        <p className="display-xl -mb-[0.1em] whitespace-nowrap text-center text-[15vw] text-paper">Vitta Basics</p>
+      </div>
+
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-x-4 border-t border-line px-[var(--gutter)] py-3">
+        <p className="eyebrow">
+          © {new Date().getFullYear()} {STORE_CONFIG.name}
+        </p>
+        <button type="button" onClick={() => onNavigate?.('admin')} className="eyebrow tap-target transition-colors hover:text-paper">
+          Acesso restrito
+        </button>
+        <button type="button" onClick={backToTop} className="eyebrow tap-target flex items-center gap-2 transition-colors hover:text-paper">
+          Voltar ao topo
+          <ArrowUp className="h-3.5 w-3.5" strokeWidth={1.5} />
+        </button>
       </div>
     </footer>
   );
-};
+}

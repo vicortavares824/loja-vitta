@@ -29,9 +29,9 @@ export function OrderJourney({ order }: OrderJourneyProps) {
   const text = entry.text(carrier);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 space-y-3" role="img" aria-label={text}>
+    <div className="space-y-3 border border-line bg-ink-2 px-4 py-4" role="img" aria-label={text}>
       <JourneyTrack carrierLabel={carrier} currentStep={entry.step} />
-      <p className="text-center text-[11px] text-gray-300">{text}</p>
+      <p className="eyebrow text-center text-paper-2">{text}</p>
     </div>
   );
 }

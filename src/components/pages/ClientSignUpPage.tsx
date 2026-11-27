@@ -1,27 +1,32 @@
-import React, { useState } from 'react';
-import { ArrowRight, UserPlus, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { EmailConfirmationView } from '../auth/EmailConfirmationView';
+import { AuthError, AuthField, AuthLayout } from '../auth/AuthLayout';
+import { COLLECTION_PHOTOS } from '../../config/collectionPhotos';
 
 interface ClientSignUpPageProps {
   onSignUpSuccess: () => void;
   onNavigateToLogin: () => void;
 }
 
-export const ClientSignUpPage: React.FC<ClientSignUpPageProps> = ({ onSignUpSuccess, onNavigateToLogin }) => {
+const MIN_PASSWORD = 6;
+
+export function ClientSignUpPage({ onSignUpSuccess, onNavigateToLogin }: ClientSignUpPageProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
+
   const { login } = useAuth();
   const { showToast } = useCart();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -33,118 +38,77 @@ export const ClientSignUpPage: React.FC<ClientSignUpPageProps> = ({ onSignUpSucc
         showToast('Conta criada com sucesso!', 'success');
         onSignUpSuccess();
       } catch {
-        // Login failed — likely email confirmation required
+        // Login falhou — provavelmente precisa confirmar o e-mail
         setShowConfirmation(true);
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta');
+    } catch (err: unknown) {
+      setError(err instanceof Error && err.message ? err.message : 'Erro ao criar conta');
     } finally {
       setLoading(false);
     }
   };
 
   if (showConfirmation) {
-    return (
-      <EmailConfirmationView
-        email={email}
-        isAdmin={false}
-        onNavigateToLogin={onNavigateToLogin}
-      />
-    );
+    return <EmailConfirmationView email={email} isAdmin={false} onNavigateToLogin={onNavigateToLogin} />;
   }
 
   return (
-    <div className="min-h-screen bg-[#050507] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-gray-600/10 rounded-full blur-[150px] pointer-events-none" />
-      
-      <div className="w-full max-w-md relative z-10">
-        <div className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 sm:p-12 shadow-2xl">
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-              <UserPlus className="w-8 h-8 text-white" />
-            </div>
-          </div>
-          
-          <h2 className="text-3xl font-extrabold uppercase tracking-widest text-center text-white mb-2">
-            Criar Conta
-          </h2>
-          <p className="text-gray-400 text-center mb-8 font-light tracking-wide text-sm">
-            Junte-se à Vitta Basics.
-          </p>
-
-          {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium text-center">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
-                Nome Completo
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all font-light"
-                placeholder="Seu nome"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
-                E-mail
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all font-light"
-                placeholder="nome@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
-                Senha
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all font-light"
-                placeholder="Mínimo 6 caracteres"
-                minLength={6}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 mt-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Processando...' : 'Cadastrar'}
-              {!loading && <ArrowRight className="w-4 h-4" />}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <button 
-              onClick={onNavigateToLogin}
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Já tem uma conta? Fazer Login
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthLayout
+      eyebrow="Nova conta"
+      titleLabel="Criar conta"
+      image={COLLECTION_PHOTOS.signUp.src}
+      titleLines={[
+        'Criar',
+        <span key="accent" className="font-serif-accent">
+          conta
+        </span>,
+      ]}
+      intro="Leva menos de um minuto. Sua sacola e seus pedidos ficam salvos."
+      footer={
+        <button type="button" onClick={onNavigateToLogin} className="group flex items-center gap-3 text-left">
+          <ArrowLeft className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1" strokeWidth={1.5} />
+          <span>
+            <span className="eyebrow block">Já tem uma conta?</span>
+            <span className="mt-1 block font-display text-lg font-semibold uppercase tracking-[-0.01em]">Fazer login</span>
+          </span>
+        </button>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-7">
+        <AuthField
+          label="Nome completo"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Seu nome"
+          autoComplete="name"
+          required
+        />
+        <AuthField
+          label="E-mail"
+          type="email"
+          inputMode="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="nome@email.com"
+          autoComplete="email"
+          required
+        />
+        <AuthField
+          label="Senha"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD}
+          hint={password && password.length < MIN_PASSWORD ? `Faltam ${MIN_PASSWORD - password.length} caracteres.` : undefined}
+          required
+        />
+        <AuthError message={error || null} />
+        <button type="submit" disabled={loading} className="btn-primary w-full">
+          {loading ? 'Processando…' : 'Cadastrar'}
+        </button>
+      </form>
+    </AuthLayout>
   );
-};
+}

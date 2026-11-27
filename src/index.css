@@ -1,6 +1,29 @@
 @import "tailwindcss";
 @import "./styles/global.css";
 
+/* Tokens do design system expostos como utilitários do Tailwind
+   (bg-ink, text-paper, border-line, font-display, font-serif, font-mono...). */
+@theme {
+  --color-ink: #0b0b0a;
+  --color-ink-2: #141412;
+  --color-ink-3: #1d1d1b;
+  --color-paper: #f2f0eb;
+  --color-paper-2: #d9d6d0;
+  --color-mute: #8a8a86;
+  --color-line: rgba(242, 240, 235, 0.12);
+  --color-line-strong: rgba(242, 240, 235, 0.28);
+  --color-danger: #e5484d;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 /* Global horizontal overflow guard (R1.1, R1.4)
    Safety net against positioned blocks (overlays, blur, absolute) that could
    push the document width beyond the viewport. */
@@ -9,185 +32,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Glassmorphism Containers */
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-}
-
-.glass-panel-hover {
-  transition: all 0.4s var(--transition-smooth);
-}
-.glass-panel-hover:hover {
-  background: var(--glass-card);
-  border-color: var(--glass-border-light);
-  box-shadow: var(--shadow-luxury);
-}
-
-.glass-pill {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-full);
-}
-
-/* Luxury Gold Badge */
-.badge-gold {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
-  border: 1px solid var(--glass-border-gold);
-  color: var(--color-accent-gold-light);
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-}
-
-/* Golden Glow Effects */
-.glow-gold {
-  box-shadow: 0 0 30px var(--shadow-gold-glow);
-}
-
-/* Typography Classes */
-.font-display {
-  font-family: var(--font-display);
-}
-
-.text-gradient-gold {
-  background: linear-gradient(135deg, #ffffff 0%, #f3e5ab 50%, #d4af37 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-silver {
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #64748b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Micro Animations & Keyframes */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
+/* Hover discreto em superfícies (apenas com mouse) */
+@layer components {
+  .glass-panel-hover {
+    transition: border-color var(--dur-base) var(--ease-out);
   }
-  100% {
-    background-position: 200% 0;
+  @media (hover: hover) and (pointer: fine) {
+    .glass-panel-hover:hover {
+      border-color: var(--line-strong);
+    }
   }
-}
-
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 3s infinite;
-}
-
-@keyframes floatSlow {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(1deg);
-  }
-}
-
-.animate-float {
-  animation: floatSlow 6s ease-in-out infinite;
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 4s ease-in-out infinite;
-}
-
-/* Button & Interactive Utilities */
-.btn-primary {
-  background: linear-gradient(135deg, #d4af37 0%, #b89228 100%);
-  color: #070709;
-  font-weight: 700;
-  font-family: var(--font-body);
-  letter-spacing: 0.05em;
-  padding: 14px 32px;
-  border-radius: var(--radius-full);
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s var(--transition-smooth);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 12px 35px rgba(212, 175, 55, 0.45);
-  background: linear-gradient(135deg, #f3e5ab 0%, #d4af37 100%);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-main);
-  font-weight: 600;
-  font-family: var(--font-body);
-  padding: 14px 28px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border-light);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: all 0.3s var(--transition-smooth);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s var(--transition-smooth);
-}
-
-.btn-icon:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: var(--color-accent-gold);
-  color: var(--color-accent-gold-light);
-  transform: scale(1.08);
-}
-
-/* Touch target utility (R4.1, R4.4)
-   Guarantees a tappable area of at least 44x44px for interactive controls on
-   mobile, matching the 44x44 reference already used by .btn-icon. */
-.tap-target {
-  min-width: 44px;
-  min-height: 44px;
 }

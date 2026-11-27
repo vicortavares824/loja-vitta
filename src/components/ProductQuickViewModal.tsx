@@ -1,226 +1,324 @@
-import React, { useState } from 'react';
-import { X, Star, ShoppingBag, Heart, ShieldCheck, Truck, Check } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import type { Product, ProductColor } from '../types/ecommerce';
-import { Magnet } from './react-bits/Magnet';
+import { useRef, useState } from "react";
+import { Heart, Minus, Plus } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import type { Product, ProductColor } from "../types/ecommerce";
+import { Sheet } from "./ui/Sheet";
 
-interface ProductQuickViewModalContentProps {
-  product: Product;
+const FALLBACK_COLOR: ProductColor = { name: "Padrão", hex: "#f2f0eb" };
+const MAX_QTY_FALLBACK = 99;
+
+const FACTS = [
+  "Frete calculado na sacola",
+  "Pix ou cartão",
+  "Cancele antes do envio",
+];
+
+/** Visualização rápida: galeria + escolha de cor, tamanho e quantidade. */
+export function ProductQuickViewModal() {
+  const { quickViewProduct, setQuickViewProduct } = useCart();
+  return (
+    <Sheet
+      open={quickViewProduct !== null}
+      onClose={() => setQuickViewProduct(null)}
+      title={quickViewProduct?.name ?? "Produto"}
+      hideTitle
+      desktop="center"
+      widthClassName="md:max-w-5xl"
+    >
+      {quickViewProduct && (
+        <QuickViewContent
+          key={quickViewProduct.id}
+          product={quickViewProduct}
+        />
+      )}
+    </Sheet>
+  );
 }
 
-const ProductQuickViewModalContent: React.FC<ProductQuickViewModalContentProps> = ({ product }) => {
-  const { setQuickViewProduct, addToCart, toggleWishlist, isInWishlist, formatPrice } = useCart();
-
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(
-    product.colors?.[0] || { name: 'Padrão', hex: '#ffffff' }
+function QuickViewContent({ product }: { product: Product }) {
+  const {
+    setQuickViewProduct,
+    addToCart,
+    toggleWishlist,
+    isInWishlist,
+    formatPrice,
+  } = useCart();
+  const colors = product.colors?.length ? product.colors : [FALLBACK_COLOR];
+  const [selectedColor, setSelectedColor] = useState<ProductColor>(colors[0]);
+  const [selectedSize, setSelectedSize] = useState<string>(
+    product.sizes?.[0] ?? "",
   );
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || 'M');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState(1);
 
   const inWish = isInWishlist(product.id);
+  const soldOut = product.inStock === false || product.stockCount === 0;
+  const maxQty = product.stockCount > 0 ? product.stockCount : MAX_QTY_FALLBACK;
+
+  const handleAdd = () => {
+    addToCart(product, selectedColor, selectedSize || undefined, quantity);
+    setQuickViewProduct(null);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-4xl bg-[#121216] rounded-3xl overflow-hidden border border-white/20 shadow-2xl max-h-[90vh] overflow-y-auto">
-     
-        <button
-          onClick={() => setQuickViewProduct(null)}
-          className="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white hover:text-black flex items-center justify-center transition-all"
-          aria-label="Fechar modal"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="grid grid-cols-1 md:grid-cols-2">
+      <Gallery
+        images={product.images ?? []}
+        name={product.name}
+        tag={product.tag}
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 p-6 sm:p-10">
-
-          <div className="md:col-span-6 space-y-4">
-            <div className="relative h-80 sm:h-96 rounded-2xl overflow-hidden bg-black border border-white/10">
-              <img
-                src={product.images?.[activeImageIndex] || product.images?.[0] || ''}
-                alt={product.name}
-                className="w-full h-full object-cover object-center"
-              />
-              {product.tag && (
-                <span className="absolute top-4 left-4 bg-white text-black font-extrabold text-[10px] tracking-widest uppercase px-3 py-1 rounded-full shadow">
-                  {product.tag}
+      <div className="flex flex-col gap-7 px-5 pb-6 pt-5 md:px-8 md:pb-8 md:pt-2">
+        <div>
+          <p className="eyebrow mb-3">{product.category}</p>
+          <h3 className="break-words font-display text-[clamp(1.75rem,3vw,2.5rem)] font-semibold uppercase leading-[0.95] tracking-[-0.035em] [overflow-wrap:anywhere]">
+            {product.name}
+          </h3>
+          <div className="mt-3 flex items-baseline gap-3">
+            <span className="font-mono text-lg tabular-nums">
+              {formatPrice(product.price)}
+            </span>
+            {product.originalPrice !== undefined &&
+              product.originalPrice > product.price && (
+                <span className="font-mono text-sm tabular-nums text-mute line-through">
+                  {formatPrice(product.originalPrice)}
                 </span>
               )}
-            </div>
-
-            {/* Thumbnails */}
-            {product.images && product.images.length > 1 && (
-              <div className="flex gap-3">
-                {product.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
-                      activeImageIndex === idx ? 'border-white scale-105' : 'border-white/10 opacity-50 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={img} alt="Thumb" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
+            {product.reviewsCount > 0 && (
+              <span className="eyebrow ml-auto">
+                ★ {product.rating.toFixed(1)} ({product.reviewsCount})
+              </span>
             )}
           </div>
+          {product.description && (
+            <p className="mt-4 text-[15px] leading-relaxed text-paper-2">
+              {product.description}
+            </p>
+          )}
+        </div>
 
-          {/* Right Column: Product Details */}
-          <div className="md:col-span-6 flex flex-col justify-between space-y-6">
-            <div>
-              {/* Category & Rating */}
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span className="uppercase tracking-widest text-white font-bold">
-                  {product.category}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Star className="w-3.5 h-3.5 fill-white text-white" />
-                  <span className="font-bold text-white">{product.rating}</span>
-                  <span className="text-[11px] text-gray-400">({product.reviewsCount})</span>
-                </div>
-              </div>
-
-              {/* Product Name */}
-              <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white mt-2">
-                {product.name}
-              </h2>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-3 mt-3">
-                <span className="font-display font-extrabold text-2xl sm:text-3xl text-white">
-                  {formatPrice(product.price)}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-sm text-gray-400 line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                )}
-              </div>
-
-              {/* Description */}
-              <p className="text-gray-300 text-xs sm:text-sm mt-4 leading-relaxed font-light">
-                {product.description}
-              </p>
-
-              {/* Color Selector */}
-              {product.colors && product.colors.length > 0 && (
-                <div className="mt-6 space-y-2">
-                  <span className="text-xs text-gray-400 font-medium">
-                    Cor selecionada: <strong className="text-white">{selectedColor.name}</strong>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {product.colors.map(color => (
-                      <button
-                        key={color.name}
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${
-                          selectedColor.name === color.name
-                            ? 'border-white scale-110 ring-2 ring-white/50'
-                            : 'border-white/20 hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: color.hex }}
-                        title={color.name}
-                      >
-                        {selectedColor.name === color.name && (
-                          <Check className="w-3.5 h-3.5 text-white stroke-[3] mix-blend-difference" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Size Selector */}
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="mt-6 space-y-2">
-                  <span className="text-xs text-gray-400 font-medium">Tamanho:</span>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                          selectedSize === size
-                            ? 'bg-white text-black shadow-lg'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity Selector */}
-              <div className="mt-6 flex items-center gap-4">
-                <span className="text-xs text-gray-400 font-medium">Quantidade:</span>
-                <div className="flex items-center gap-2 bg-white/10 rounded-xl border border-white/15 p-1">
-                  <button
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white hover:bg-white/20 font-bold"
-                  >
-                    -
-                  </button>
-                  <span className="w-8 text-center text-sm font-bold text-white">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(q => q + 1)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white hover:bg-white/20 font-bold"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-4 pt-6 border-t border-white/10">
-              <div className="flex items-center gap-3">
-                <Magnet strength={16} className="flex-1">
-                  <button
-                    onClick={() => {
-                      addToCart(product, selectedColor, selectedSize, quantity);
-                      setQuickViewProduct(null);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 bg-white text-black font-extrabold text-xs uppercase tracking-widest py-3.5 px-6 rounded-full hover:bg-gray-200 transition-all shadow-xl"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>Adicionar ao Carrinho</span>
-                  </button>
-                </Magnet>
+        {/* Cor */}
+        <fieldset>
+          <legend className="eyebrow mb-3">
+            Cor — <span className="text-paper">{selectedColor.name}</span>
+          </legend>
+          <div
+            className="-ml-1.5 flex flex-wrap"
+            role="radiogroup"
+            aria-label="Cor"
+          >
+            {colors.map((color) => {
+              const active = selectedColor.name === color.name;
+              return (
                 <button
-                  onClick={() => toggleWishlist(product)}
-                  className={`w-12 h-12 rounded-full border border-white/20 flex items-center justify-center transition-all ${
-                    inWish ? 'bg-red-500/20 text-red-500 border-red-500/50' : 'text-white hover:bg-white/10'
-                  }`}
-                  aria-label="Salvar nos favoritos"
+                  key={color.name}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={color.name}
+                  title={color.name}
+                  onClick={() => setSelectedColor(color)}
+                  className="flex h-11 w-11 items-center justify-center"
                 >
-                  <Heart className={`w-5 h-5 ${inWish ? 'fill-red-500' : ''}`} />
+                  <span
+                    className={`block h-6 w-6 rounded-full ring-1 ring-offset-[3px] ring-offset-ink-2 transition-shadow duration-150 ${
+                      active ? "ring-paper" : "ring-transparent"
+                    }`}
+                    style={{
+                      backgroundColor: color.hex,
+                      boxShadow: "inset 0 0 0 1px rgba(242,240,235,0.25)",
+                    }}
+                  />
                 </button>
-              </div>
+              );
+            })}
+          </div>
+        </fieldset>
 
-              {/* Guarantees */}
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-400 pt-2">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-white" />
-                  <span>Autenticidade Garantida</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-white" />
-                  <span>Frete Expresso Grátis</span>
-                </div>
-              </div>
+        {/* Tamanho */}
+        {product.sizes?.length > 0 && (
+          <fieldset>
+            <legend className="eyebrow mb-3">Tamanho</legend>
+            <div
+              className="grid grid-cols-4 gap-2 sm:grid-cols-5"
+              role="radiogroup"
+              aria-label="Tamanho"
+            >
+              {product.sizes.map((size) => {
+                const active = selectedSize === size;
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setSelectedSize(size)}
+                    className={`press min-h-11 truncate border px-2 font-mono text-[13px] uppercase transition-colors duration-150 ${
+                      active
+                        ? "border-paper bg-paper text-ink"
+                        : "border-line-strong hover:border-paper"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {/* Quantidade + ações */}
+        <div className="mt-auto space-y-4 border-t border-line pt-6">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow">Quantidade</span>
+            <div className="flex items-center border border-line-strong">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+                className="flex h-11 w-11 items-center justify-center disabled:opacity-30"
+                aria-label="Diminuir quantidade"
+              >
+                <Minus className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+              <span
+                className="w-8 text-center font-mono text-sm tabular-nums"
+                aria-live="polite"
+              >
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
+                disabled={quantity >= maxQty}
+                className="flex h-11 w-11 items-center justify-center disabled:opacity-30"
+                aria-label="Aumentar quantidade"
+              >
+                <Plus className="h-4 w-4" strokeWidth={1.5} />
+              </button>
             </div>
           </div>
+        </div>
+
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 md:order-last">
+          {FACTS.map((fact) => (
+            <li key={fact} className="eyebrow">
+              {fact}
+            </li>
+          ))}
+        </ul>
+
+        <div className="sticky bottom-0 z-10 -mx-5 -mb-6 flex gap-2 border-t border-line bg-ink-2 px-5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 md:static md:order-none md:mx-0 md:mb-0 md:border-0 md:p-0">
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={soldOut}
+            className="btn-primary flex-1"
+          >
+            {soldOut
+              ? "Esgotado"
+              : `Adicionar à sacola — ${formatPrice(product.price * quantity)}`}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleWishlist(product)}
+            aria-pressed={inWish}
+            aria-label={
+              inWish ? "Remover dos favoritos" : "Salvar nos favoritos"
+            }
+            className="press flex h-12 w-12 shrink-0 items-center justify-center border border-line-strong transition-colors hover:border-paper"
+          >
+            <Heart
+              className={`h-5 w-5 ${inWish ? "fill-paper" : ""}`}
+              strokeWidth={1.5}
+            />
+          </button>
         </div>
       </div>
     </div>
   );
-};
+}
 
-export const ProductQuickViewModal: React.FC = () => {
-  const { quickViewProduct } = useCart();
-  if (!quickViewProduct) return null;
-  return <ProductQuickViewModalContent product={quickViewProduct} />;
-};
+interface GalleryProps {
+  images: string[];
+  name: string;
+  tag?: string;
+}
+
+/** Carrossel com snap (deslizar no celular) + miniaturas no desktop. */
+function Gallery({ images, name, tag }: GalleryProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const list = images.length > 0 ? images : [""];
+
+  const goTo = (i: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+  };
+
+  const handleScroll = () => {
+    const track = trackRef.current;
+    if (!track || track.clientWidth === 0) return;
+    setIndex(Math.round(track.scrollLeft / track.clientWidth));
+  };
+
+  return (
+    <div className="relative md:pl-8 md:pb-8">
+      <div className="relative">
+        <div
+          ref={trackRef}
+          onScroll={handleScroll}
+          className="scrollbar-none flex aspect-[4/5] snap-x snap-mandatory overflow-x-auto overscroll-x-contain bg-ink-3"
+        >
+          {list.map((src, i) => (
+            <div
+              key={`${src}-${i}`}
+              className="h-full w-full shrink-0 snap-center"
+            >
+              {src && (
+                <img
+                  src={src}
+                  alt={i === 0 ? name : `${name} — foto ${i + 1}`}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  draggable={false}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        {tag && (
+          <span className="eyebrow absolute left-3 top-3 bg-paper px-2 py-1 text-ink">
+            {tag}
+          </span>
+        )}
+        {list.length > 1 && (
+          <span className="eyebrow absolute bottom-3 right-3 bg-ink/80 px-2 py-1 text-paper tabular-nums">
+            {index + 1} / {list.length}
+          </span>
+        )}
+      </div>
+
+      {list.length > 1 && (
+        <div className="mt-2 hidden gap-2 md:flex">
+          {list.map((src, i) => (
+            <button
+              key={`${src}-thumb-${i}`}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Ver foto ${i + 1}`}
+              aria-current={index === i}
+              className={`h-16 w-12 overflow-hidden bg-ink-3 transition-opacity duration-200 ${
+                index === i ? "opacity-100" : "opacity-40 hover:opacity-80"
+              }`}
+            >
+              {src && (
+                <img src={src} alt="" className="h-full w-full object-cover" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

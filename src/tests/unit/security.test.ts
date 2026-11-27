@@ -57,9 +57,10 @@ describe('🔒 Security Audit - Hardcoded Credentials', () => {
     expect(clientLogin).not.toContain("useState('cliente@vittabasics.com')");
   });
 
-  it('should NOT display demo credentials in production build', () => {
+  it('should NOT display demo credentials on the admin login page', () => {
     const adminLogin = readFile('src/components/pages/AdminLoginPage.tsx');
-    expect(adminLogin).toContain('import.meta.env.DEV');
+    expect(adminLogin).not.toContain('admin123');
+    expect(adminLogin).not.toMatch(/Demo:/i);
   });
 });
 

@@ -34,12 +34,9 @@ export function ShippingSelector({
   const selected = options.find(o => o.serviceId === selectedId) ?? null;
 
   return (
-    <div className="space-y-2">
-      <label
-        htmlFor="shipping-cep"
-        className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-gray-300"
-      >
-        <Truck className="w-4 h-4" aria-hidden="true" />
+    <div className="space-y-3">
+      <label htmlFor="shipping-cep" className="eyebrow flex items-center gap-2">
+        <Truck className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
         CEP de entrega
       </label>
       <input
@@ -49,23 +46,23 @@ export function ShippingSelector({
         inputMode="numeric"
         autoComplete="postal-code"
         placeholder="00000-000"
-        className="w-full min-h-[44px] bg-black/60 border border-white/15 rounded-full px-4 text-xs text-white placeholder-gray-500"
+        className="min-h-11 w-full border-b border-line-strong bg-transparent font-mono text-base tracking-[0.06em] text-paper placeholder:text-mute focus:border-paper focus:outline-none"
       />
 
       {isQuoting && (
-        <p className="text-[11px] text-gray-400" aria-live="polite">
+        <p className="eyebrow pt-1" aria-live="polite">
           Calculando frete...
         </p>
       )}
 
       {!isQuoting && complete && options.length === 0 && (
-        <p className="text-[11px] text-red-300" aria-live="polite">
+        <p className="pt-1 text-xs text-danger" aria-live="polite">
           Nenhuma opção de entrega para este CEP. Confira o número.
         </p>
       )}
 
       {!isQuoting && options.length > 0 && (
-        <div role="radiogroup" aria-label="Opções de frete" className="space-y-1.5">
+        <div role="radiogroup" aria-label="Opções de frete" className="border-t border-line">
           {options.map(option => {
             const checked = option.serviceId === selectedId;
             const title = [option.company, option.name].filter(Boolean).join(' ');
@@ -76,20 +73,28 @@ export function ShippingSelector({
                 role="radio"
                 aria-checked={checked}
                 onClick={() => onSelect(option.serviceId)}
-                className={`w-full min-h-[44px] flex items-center justify-between gap-3 rounded-2xl border px-4 py-2 text-left text-xs ${
-                  checked ? 'bg-white text-black border-white' : 'border-white/15 bg-white/5 text-white'
-                }`}
+                className="flex min-h-14 w-full items-center gap-3 border-b border-line py-2 text-left text-sm"
               >
-                <span className="min-w-0">
-                  <span className="block font-bold">{title}</span>
+                <span
+                  aria-hidden
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 ${
+                    checked ? 'border-paper' : 'border-line-strong'
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full bg-paper transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                      checked ? 'scale-100' : 'scale-0'
+                    }`}
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block truncate ${checked ? 'text-paper' : 'text-paper-2'}`}>{title}</span>
                   {option.deliveryDays !== null && (
-                    <span className={checked ? 'text-gray-600' : 'text-gray-400'}>
-                      {deliveryLabel(option.deliveryDays)}
-                    </span>
+                    <span className="eyebrow">{deliveryLabel(option.deliveryDays)}</span>
                   )}
                 </span>
-                <span className="font-extrabold whitespace-nowrap">
-                  {option.priceCents === 0 ? 'GRÁTIS' : formatPrice(option.priceCents / 100)}
+                <span className="whitespace-nowrap font-mono text-[13px] tabular-nums">
+                  {option.priceCents === 0 ? 'Grátis' : formatPrice(option.priceCents / 100)}
                 </span>
               </button>
             );

@@ -1,85 +1,217 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowUpRight, Layers } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion';
+import { ArrowUpRight } from 'lucide-react';
 import type { Category } from '../types/ecommerce';
-import { tomatoApi } from '../services/tomatoApi';
-import { SpotlightCard } from './react-bits/SpotlightCard';
+import { getStoreCategories } from '../services/storeCategories';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { LineReveal, Reveal } from './home/HomeMotion';
+import { EASE_OUT } from './home/motionTokens';
 
 interface CategorySectionProps {
   onSelectCategory: (categorySlug: string) => void;
 }
 
-export const CategorySection: React.FC<CategorySectionProps> = ({ onSelectCategory }) => {
-  const [categories, setCategories] = useState<Category[]>([]);
+const PREVIEW_W = 280;
+const PREVIEW_H = 360;
+
+/**
+ * Índice editorial de categorias.
+ * Desktop: linhas grandes numeradas; ao passar o mouse, uma prévia da foto
+ * segue o cursor e as outras linhas esmaecem.
+ * Celular: carrossel horizontal com snap e fotos 3:4.
+ */
+export function CategorySection({ onSelectCategory }: CategorySectionProps) {
+  const [categories, setCategories] = useState<Category[] | null>(null);
 
   useEffect(() => {
-    tomatoApi.getCategories().then(setCategories);
+    let alive = true;
+    getStoreCategories()
+      .then((cats) => {
+        if (alive) setCategories(cats);
+      })
+      .catch(() => {
+        if (alive) setCategories([]);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
+  if (categories !== null && categories.length === 0) return null;
+
   return (
-    <section id="categorias" className="py-24 relative z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 badge-gold mb-3">
-              <Layers className="w-3.5 h-3.5" />
-              <span>Linhas Exclusivas</span>
-            </div>
-            <h2 className="font-display font-extrabold text-3xl sm:text-5xl text-white">
-              EXPLORE POR CATEGORIA
+    <section id="categorias" aria-labelledby="categorias-title" className="bg-ink py-20 md:py-32">
+      <div className="mx-auto max-w-[1600px] px-[var(--gutter)]">
+        <div className="mb-10 grid grid-cols-1 items-end gap-6 md:mb-16 md:grid-cols-12">
+          <div className="md:col-span-7">
+            <p className="eyebrow mb-5">
+              Índice — {categories ? String(categories.length).padStart(2, '0') : '··'}{' '}
+              {categories?.length === 1 ? 'linha' : 'linhas'}
+            </p>
+            <h2
+              id="categorias-title"
+              className="font-display text-[clamp(2.25rem,6vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]"
+            >
+              <LineReveal
+                label="Comece pelo essencial"
+                lines={['Comece pelo', <span key="accent" className="font-serif-accent">essencial</span>]}
+              />
             </h2>
           </div>
-          <p className="text-gray-400 text-sm max-w-md font-normal leading-relaxed">
-            Cada linha foi curada para traduzir sofisticação, precisão geométrica de cortes e atemporalidade.
-          </p>
+          <Reveal className="md:col-span-4 md:col-start-9">
+            <p className="max-w-sm text-[15px] leading-relaxed text-paper-2">
+              Cada linha foi pensada para formar um guarda-roupa enxuto: poucas peças, muitas combinações.
+            </p>
+          </Reveal>
         </div>
 
-        {/* Categories Grid with Spotlight Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((cat, idx) => (
-            <SpotlightCard
-              key={cat.id || idx}
-              onClick={() => {
-                onSelectCategory(cat.slug);
-                const gridEl = document.getElementById('colecao');
-                gridEl?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              spotlightColor="rgba(212, 175, 55, 0.22)"
-              className="cursor-pointer group h-[320px] flex flex-col justify-between"
-            >
-              {/* Category Image Background */}
-              <div className="absolute inset-0 rounded-2xl overflow-hidden">
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-[#070709]/50 to-transparent" />
-              </div>
-
-              {/* Content Top */}
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="glass-pill px-3 py-1 text-[11px] font-bold text-[#d4af37] tracking-widest uppercase">
-                  {cat.itemCount} PEÇAS
-                </span>
-                <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-[#d4af37] group-hover:text-black text-white flex items-center justify-center transition-all duration-300">
-                  <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </div>
-
-              {/* Content Bottom */}
-              <div className="relative z-10 mt-auto">
-                <h3 className="font-display font-extrabold text-2xl text-white group-hover:text-[#d4af37] transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-gray-300 text-xs mt-2 font-normal line-clamp-2 leading-relaxed">
-                  {cat.description}
-                </p>
-              </div>
-            </SpotlightCard>
-          ))}
-        </div>
+        {categories === null ? (
+          <IndexSkeleton />
+        ) : (
+          <>
+            <DesktopIndex categories={categories} onSelect={onSelectCategory} />
+            <MobileCarousel categories={categories} onSelect={onSelectCategory} />
+          </>
+        )}
       </div>
     </section>
   );
-};
+}
+
+function IndexSkeleton() {
+  return (
+    <ul aria-hidden className="border-t border-line">
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className="flex items-center gap-6 border-b border-line py-7">
+          <span className="h-3 w-6 bg-ink-3" />
+          <span className="h-10 w-1/3 bg-ink-2" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+interface IndexProps {
+  categories: Category[];
+  onSelect: (slug: string) => void;
+}
+
+function DesktopIndex({ categories, onSelect }: IndexProps) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+  const reduced = usePrefersReducedMotion();
+  const [active, setActive] = useState<number | null>(null);
+
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 260, damping: 30, mass: 0.6 });
+  const springY = useSpring(y, { stiffness: 260, damping: 30, mass: 0.6 });
+
+  const showPreview = finePointer && !reduced;
+
+  const handleMove = (e: ReactPointerEvent<HTMLUListElement>) => {
+    const rect = listRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    x.set(e.clientX - rect.left - PREVIEW_W / 2);
+    y.set(e.clientY - rect.top - PREVIEW_H / 2);
+  };
+
+  const current = active !== null ? categories[active] : null;
+
+  return (
+    <ul
+      ref={listRef}
+      onPointerMove={showPreview ? handleMove : undefined}
+      onPointerLeave={() => setActive(null)}
+      className="relative hidden border-t border-line md:block"
+    >
+      {categories.map((cat, i) => {
+        const dimmed = active !== null && active !== i;
+        return (
+          <li key={cat.id || cat.slug} className="border-b border-line">
+            <button
+              type="button"
+              onClick={() => onSelect(cat.slug)}
+              onPointerEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onBlur={() => setActive(null)}
+              className={`group grid w-full grid-cols-12 items-center gap-6 py-6 text-left transition-opacity duration-300 ${
+                dimmed ? 'opacity-35' : 'opacity-100'
+              }`}
+            >
+              <span className="eyebrow col-span-1 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+              <span className="col-span-7 min-w-0 break-words font-display text-[clamp(2.5rem,5.2vw,5rem)] font-semibold uppercase leading-none tracking-[-0.04em] transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-4">
+                {cat.name}
+              </span>
+              <span className="col-span-3 line-clamp-2 text-sm text-mute">{cat.description}</span>
+              <span className="col-span-1 flex items-center justify-end gap-2">
+                <span className="eyebrow tabular-nums">({cat.itemCount})</span>
+                <ArrowUpRight
+                  className="h-5 w-5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  strokeWidth={1.5}
+                />
+              </span>
+            </button>
+          </li>
+        );
+      })}
+
+      {showPreview && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute left-0 top-0 z-10"
+          style={{ x: springX, y: springY, width: PREVIEW_W, height: PREVIEW_H }}
+        >
+          <AnimatePresence>
+            {current?.image && (
+              <motion.div
+                key="preview"
+                className="absolute inset-0 overflow-hidden bg-ink-2"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.18 } }}
+                transition={{ duration: 0.4, ease: EASE_OUT }}
+              >
+                <AnimatePresence initial={false}>
+                  <motion.img
+                    key={current.image}
+                    src={current.image}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    initial={{ opacity: 0, scale: 1.08 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, ease: EASE_OUT }}
+                  />
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </ul>
+  );
+}
+
+function MobileCarousel({ categories, onSelect }: IndexProps) {
+  return (
+    <ul className="scrollbar-none -mx-[var(--gutter)] flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-[var(--gutter)] pb-2 md:hidden">
+      {categories.map((cat, i) => (
+        <li key={cat.id || cat.slug} className="w-[72%] shrink-0 snap-start scroll-ml-[var(--gutter)]">
+          <button type="button" onClick={() => onSelect(cat.slug)} className="press block w-full text-left">
+            <div className="relative aspect-[3/4] overflow-hidden bg-ink-2">
+              {cat.image && <img src={cat.image} alt="" loading="lazy" className="h-full w-full object-cover" />}
+              <span className="eyebrow absolute left-3 top-3 text-paper">{String(i + 1).padStart(2, '0')}</span>
+            </div>
+            <div className="flex items-baseline justify-between gap-3 pt-3">
+              <span className="truncate font-display text-xl font-semibold uppercase tracking-[-0.02em]">{cat.name}</span>
+              <span className="eyebrow shrink-0 tabular-nums">({cat.itemCount})</span>
+            </div>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}

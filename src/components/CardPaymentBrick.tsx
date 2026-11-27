@@ -125,8 +125,8 @@ export const CardPaymentBrick: React.FC<CardPaymentBrickProps> = ({
   }, [publicKey, amount]);
 
   return (
-    <div className="bg-white rounded-2xl p-2 min-h-[80px]">
-      {!ready && <p className="text-xs text-gray-500 p-3">Carregando pagamento seguro...</p>}
+    <div className="min-h-[80px] rounded-[2px] bg-paper p-2">
+      {!ready && <p className="p-3 font-mono text-[11px] uppercase tracking-[0.08em] text-ink/60">Carregando pagamento seguro…</p>}
       <div id={CONTAINER_ID} />
     </div>
   );

@@ -33,14 +33,14 @@ export function ShippingJourney({ option, now }: ShippingJourneyProps) {
 
   return (
     <div
-      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 space-y-3"
+      className="space-y-3 border border-line bg-ink px-4 py-4"
       role="img"
       aria-label={`Seu pedido vai por ${carrier} ${option.name}${etaLabel ? `, previsão de entrega até ${etaLabel}` : ''}.`}
     >
       <JourneyTrack carrierLabel={carrier} />
       {etaLabel && (
-        <p className="text-center text-[11px] text-gray-300">
-          Previsão de entrega: <strong className="text-white">até {etaLabel}</strong>
+        <p className="eyebrow text-center">
+          Previsão de entrega: <strong className="font-normal text-paper">até {etaLabel}</strong>
         </p>
       )}
     </div>

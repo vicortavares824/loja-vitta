@@ -1,143 +1,120 @@
-import React, { useState, useEffect } from 'react';
-import { Search, X, ShoppingBag, Eye } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import type { Product } from '../types/ecommerce';
-import { tomatoApi } from '../services/tomatoApi';
+import { useProductSearch } from '../hooks/useProductSearch';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { EASE_OUT } from './home/motionTokens';
 
-export const SearchModal: React.FC = () => {
-  const { isSearchOpen, setIsSearchOpen, formatPrice, setQuickViewProduct, addToCart } = useCart();
+const MAX_RESULTS = 8;
+
+/** Busca rápida em painel que desce do topo (aberta via `setIsSearchOpen(true)`). */
+export function SearchModal() {
+  const { isSearchOpen, setIsSearchOpen, formatPrice, setQuickViewProduct } = useCart();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { results, loading, term } = useProductSearch(query);
+  const reduced = usePrefersReducedMotion();
+
+  const close = () => {
+    setIsSearchOpen(false);
+    setQuery('');
+  };
 
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
+    if (!isSearchOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSearchOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [isSearchOpen, setIsSearchOpen]);
 
-    setLoading(true);
-    const timeout = setTimeout(() => {
-      tomatoApi.getProducts(undefined, query).then(data => {
-        setResults(data);
-        setLoading(false);
-      });
-    }, 200);
-
-    return () => clearTimeout(timeout);
-  }, [query]);
-
-  if (!isSearchOpen) return null;
+  const hasQuery = query.trim().length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-2xl bg-[#121216] rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
-        {/* Search Header */}
-        <div className="p-4 sm:p-6 border-b border-white/10 flex items-center gap-3">
-          <Search className="w-5 h-5 text-white" />
-          <input
-            type="text"
-            placeholder="Buscar por blazer, vestido, couro, alfaiataria..."
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            autoFocus
-            className="flex-1 bg-transparent border-none text-white text-base focus:outline-none placeholder:text-gray-500 font-medium"
+    <AnimatePresence>
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-[60]" role="presentation">
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 bg-ink/70"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={close}
           />
-          {query && (
-            <button onClick={() => setQuery('')} className="text-gray-400 hover:text-white text-xs">
-              Limpar
-            </button>
-          )}
-          <button
-            onClick={() => setIsSearchOpen(false)}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-            aria-label="Fechar busca"
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Buscar produtos"
+            className="relative border-b border-line bg-ink-2 pt-[env(safe-area-inset-top)]"
+            initial={reduced ? { opacity: 0 } : { y: '-100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduced ? { opacity: 0 } : { y: '-100%', transition: { duration: 0.25, ease: EASE_OUT } }}
+            transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
           >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            <div className="mx-auto max-w-[1600px] px-[var(--gutter)] py-6">
+              <div className="flex items-center gap-4 border-b border-line-strong focus-within:border-paper">
+                <input
+                  type="search"
+                  autoFocus
+                  enterKeyHint="search"
+                  autoComplete="off"
+                  aria-label="Buscar"
+                  placeholder="Buscar peças…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="min-w-0 flex-1 bg-transparent py-3 font-display text-3xl font-semibold uppercase tracking-[-0.03em] text-paper placeholder:text-paper/25 focus:outline-none md:text-5xl [&::-webkit-search-cancel-button]:hidden"
+                />
+                <button type="button" onClick={close} className="btn-icon shrink-0" aria-label="Fechar busca">
+                  <X className="h-5 w-5" strokeWidth={1.5} />
+                </button>
+              </div>
 
-        {/* Results Body */}
-        <div className="max-h-[60vh] overflow-y-auto p-4 sm:p-6">
-          {loading ? (
-            <div className="text-center py-8 text-xs text-gray-400 animate-pulse">
-              Buscando na API TomatoPHP...
-            </div>
-          ) : query && results.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 text-sm">
-              Nenhuma peça encontrada para "<strong className="text-white">{query}</strong>".
-            </div>
-          ) : !query ? (
-            <div className="space-y-4">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                Tendências de Busca
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {['Blazer Alfaiataria', 'Vestido Seda', 'Couro Lambskin', 'Hoodie Oversized', 'Sobretudo Wool'].map(
-                  term => (
-                    <button
-                      key={term}
-                      onClick={() => setQuery(term)}
-                      className="px-4 py-2 rounded-full text-xs text-gray-300 hover:text-black hover:bg-white bg-white/5 border border-white/10 transition-all"
-                    >
-                      {term}
-                    </button>
-                  )
+              <div className="max-h-[60dvh] overflow-y-auto overscroll-contain pt-4" aria-live="polite">
+                {!hasQuery ? (
+                  <p className="eyebrow py-4">Digite o nome de uma peça, cor ou categoria.</p>
+                ) : loading && results.length === 0 ? (
+                  <p className="eyebrow py-4">Buscando…</p>
+                ) : results.length === 0 ? (
+                  <p className="py-4 text-paper-2">Nada encontrado para “{term}”.</p>
+                ) : (
+                  <ul className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                    {results.slice(0, MAX_RESULTS).map((product) => (
+                      <li key={product.id} className="border-b border-line">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuickViewProduct(product);
+                            close();
+                          }}
+                          className="group flex w-full items-center gap-4 py-3 text-left"
+                        >
+                          <span className="h-16 w-12 shrink-0 overflow-hidden bg-ink-3">
+                            {product.images?.[0] && (
+                              <img src={product.images[0]} alt="" loading="lazy" className="h-full w-full object-cover" />
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm group-hover:underline">{product.name}</span>
+                            <span className="eyebrow block truncate">{product.category}</span>
+                          </span>
+                          <span className="shrink-0 font-mono text-[12px] tabular-nums">{formatPrice(product.price)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {results.map(product => (
-                <div
-                  key={product.id}
-                  className="p-3 rounded-2xl border border-white/10 bg-white/5 hover:border-white/30 flex items-center justify-between transition-all group"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-14 h-16 object-cover rounded-xl bg-black border border-white/10"
-                    />
-                    <div>
-                      <h4 className="font-bold text-sm text-white group-hover:underline transition-colors">
-                        {product.name}
-                      </h4>
-                      <span className="text-xs text-gray-400 block">{product.category}</span>
-                      <span className="font-extrabold text-sm text-white mt-0.5 block">
-                        {formatPrice(product.price)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setQuickViewProduct(product);
-                        setIsSearchOpen(false);
-                      }}
-                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
-                      title="Ver detalhes"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        addToCart(product);
-                        setIsSearchOpen(false);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-white text-black font-bold rounded-full text-xs hover:bg-gray-200 transition-colors"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Comprar</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
-};
+}

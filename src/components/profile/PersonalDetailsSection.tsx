@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { IdCard, Pencil, Loader2, Check, X } from 'lucide-react';
+import { Pencil, Loader2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import * as customerService from '../../services/customerService';
 import type { CustomerDetails } from '../../types/customer';
+import { fieldInput, fieldLabel } from './profileStyles';
 
 const { formatPhone, formatCpf, isValidCpf, onlyDigits } = customerService;
 
@@ -13,8 +14,7 @@ const maskCpf = (cpf: string): string => {
   return `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`;
 };
 
-const inputClass =
-  'w-full min-w-0 min-h-[44px] bg-black/60 border border-white/20 rounded-xl px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40';
+const inputClass = fieldInput;
 
 export const PersonalDetailsSection: React.FC = () => {
   const { showToast } = useCart();
@@ -66,28 +66,26 @@ export const PersonalDetailsSection: React.FC = () => {
   };
 
   return (
-    <section className="bg-white/5 rounded-3xl border border-white/10 p-6 space-y-5 h-fit min-w-0">
+    <section className="min-w-0 space-y-6">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-extrabold uppercase tracking-wider text-gray-300 flex items-center gap-2">
-          <IdCard className="w-4 h-4" /> Dados pessoais
-        </h2>
+        <h3 className="eyebrow text-paper">Dados pessoais</h3>
         {!loading && !loadError && !editing && (
-          <button onClick={startEdit} className="tap-target flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white" aria-label="Editar dados pessoais">
-            <Pencil className="w-4 h-4" />
+          <button onClick={startEdit} className="btn-icon -mr-2" aria-label="Editar dados pessoais">
+            <Pencil className="h-4 w-4" strokeWidth={1.5} />
           </button>
         )}
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="h-5 w-5 text-mute motion-safe:animate-spin" />
         </div>
       ) : loadError ? (
-        <p className="text-sm text-red-300">Não foi possível carregar seus dados pessoais.</p>
+        <p className="text-sm text-paper-2">Não foi possível carregar seus dados pessoais.</p>
       ) : editing ? (
         <div className="space-y-4">
-          <label className="block space-y-1.5">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500">Telefone</span>
+          <label className="block">
+            <span className={fieldLabel}>Telefone</span>
             <input
               value={phoneDraft}
               onChange={e => setPhoneDraft(formatPhone(e.target.value))}
@@ -97,8 +95,8 @@ export const PersonalDetailsSection: React.FC = () => {
               className={inputClass}
             />
           </label>
-          <label className="block space-y-1.5">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500">CPF</span>
+          <label className="block">
+            <span className={fieldLabel}>CPF</span>
             <input
               value={cpfDraft}
               onChange={e => setCpfDraft(formatCpf(e.target.value))}
@@ -109,23 +107,23 @@ export const PersonalDetailsSection: React.FC = () => {
             />
           </label>
           <div className="flex gap-2">
-            <button onClick={save} disabled={saving} className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-full bg-white text-black text-xs font-bold uppercase tracking-wider disabled:opacity-50">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Salvar
+            <button onClick={save} disabled={saving} className="btn-primary flex-1">
+              {saving && <Loader2 className="h-4 w-4 motion-safe:animate-spin" />} Salvar
             </button>
-            <button onClick={() => setEditing(false)} disabled={saving} className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-full bg-white/10 text-white text-xs font-bold uppercase tracking-wider">
-              <X className="w-4 h-4" /> Cancelar
+            <button onClick={() => setEditing(false)} disabled={saving} className="btn-secondary flex-1">
+              Cancelar
             </button>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="space-y-1">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500">Telefone</span>
-            <p className="text-sm text-gray-200 break-words">{details.phone ? formatPhone(details.phone) : 'Não informado'}</p>
+          <div>
+            <span className={fieldLabel}>Telefone</span>
+            <p className="flex min-h-12 items-center break-words border-b border-line">{details.phone ? formatPhone(details.phone) : 'Não informado'}</p>
           </div>
-          <div className="space-y-1">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500">CPF</span>
-            <p className="text-sm text-gray-200 break-words">{details.cpf ? maskCpf(details.cpf) : 'Não informado'}</p>
+          <div>
+            <span className={fieldLabel}>CPF</span>
+            <p className="flex min-h-12 items-center break-words border-b border-line font-mono text-sm">{details.cpf ? maskCpf(details.cpf) : 'Não informado'}</p>
           </div>
         </div>
       )}

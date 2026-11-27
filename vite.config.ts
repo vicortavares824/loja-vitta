@@ -8,4 +8,8 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
+  // Permite abrir o servidor local por um túnel do Cloudflare (cloudflared tunnel --url ...).
+  // Só afeta `vite dev` e `vite preview`; o build da Vercel não usa isto.
+  server: { allowedHosts: ['.trycloudflare.com'] },
+  preview: { allowedHosts: ['.trycloudflare.com'] },
 })

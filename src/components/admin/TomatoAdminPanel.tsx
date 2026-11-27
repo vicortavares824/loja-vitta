@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   BarChart3, Package, ShoppingCart, Terminal, Plus, Edit2, Trash2, 
-  RefreshCw, X, Save, DollarSign, TrendingUp, ArrowUpRight, ShieldCheck,
+  RefreshCw, X, Save, ArrowUpRight, ShieldCheck,
   Upload, Loader2, Warehouse, FolderTree, Check, Code2, FileCode
 } from 'lucide-react';
 import type { Product, Category, Order } from '../../types/ecommerce';
@@ -14,6 +14,7 @@ import { useCart } from '../../context/CartContext';
 import { InventoryPanel } from './InventoryPanel';
 import { CategoryAdminPanel } from './CategoryAdminPanel';
 import { OrderTrackingField } from './OrderTrackingField';
+import { ShippingLabelActions } from './ShippingLabelActions';
 
 export const DEFAULT_IMPORT_JSON = JSON.stringify([
   {
@@ -399,40 +400,33 @@ export const TomatoAdminPanel: React.FC = () => {
   const averageTicket = orders.length > 0 ? totalRevenue / orders.length : 0;
 
   return (
-    <div className="pt-28 pb-24 min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Admin Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5 p-6 rounded-3xl border border-white/10">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs uppercase font-extrabold tracking-widest text-gray-300">
-                TomatoPHP E-Commerce Core API
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-white">
-              Painel Administrativo Vitta
+    <div className="min-h-screen bg-ink pb-24 pt-28 text-paper md:pt-32">
+      <div className="mx-auto max-w-[1600px] space-y-10 px-[var(--gutter)]">
+        {/* Cabeçalho */}
+        <header className="grid grid-cols-1 items-end gap-6 border-b border-line pb-8 md:grid-cols-12">
+          <div className="md:col-span-8">
+            <p className="eyebrow mb-4 flex items-center gap-2">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-paper" />
+              Painel administrativo
+            </p>
+            <h1 className="font-display text-[clamp(2.5rem,6vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]">
+              Vitta <span className="font-serif-accent">admin</span>
             </h1>
           </div>
-
-          {/* Quick Info & Refresh */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={loadAllData}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider transition-colors"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Sincronizar</span>
+          <div className="flex items-center gap-3 md:col-span-4 md:justify-end">
+            <span className="eyebrow hidden items-center gap-2 sm:flex">
+              <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Sessão autenticada
+            </span>
+            <button type="button" onClick={loadAllData} className="btn-secondary">
+              <RefreshCw className={`h-4 w-4 ${loading ? 'motion-safe:motion-safe:animate-spin' : ''}`} strokeWidth={1.5} />
+              Sincronizar
             </button>
-            <div className="hidden sm:flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/15 text-xs text-gray-300">
-              <ShieldCheck className="w-4 h-4 text-white" />
-              <span>Sessão Autenticada</span>
-            </div>
           </div>
-        </div>
+        </header>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/10 scrollbar-none">
+        {/* Abas */}
+        <div role="tablist" aria-label="Seções do painel" className="scrollbar-none -mt-4 flex items-center gap-6 overflow-x-auto border-b border-line">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'products', label: `Produtos (${products.length})`, icon: Package },
@@ -446,15 +440,17 @@ export const TomatoAdminPanel: React.FC = () => {
             return (
               <button
                 key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-white text-black shadow-lg'
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                className={`relative flex shrink-0 items-center gap-2 whitespace-nowrap py-4 font-display text-[12px] font-medium uppercase tracking-[0.08em] transition-colors duration-200 ${
+                  isActive ? 'text-paper' : 'text-mute hover:text-paper'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="h-4 w-4" strokeWidth={1.5} />
                 <span>{tab.label}</span>
+                {isActive && <span aria-hidden className="absolute inset-x-0 -bottom-px h-px bg-paper" />}
               </button>
             );
           })}
@@ -464,69 +460,34 @@ export const TomatoAdminPanel: React.FC = () => {
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  <span>Receita Total</span>
-                  <DollarSign className="w-4 h-4 text-white" />
+            <dl className="grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: 'Receita total', value: formatPrice(totalRevenue), note: `${orders.length} ${orders.length === 1 ? 'pedido' : 'pedidos'}` },
+                {
+                  label: 'Pedidos',
+                  value: String(orders.length),
+                  note: `${orders.filter(o => o.status === 'processing').length} em preparação`,
+                },
+                { label: 'Ticket médio', value: formatPrice(averageTicket), note: 'Por pedido' },
+                { label: 'Estoque total', value: `${totalStock} unid.`, note: `Em ${products.length} ${products.length === 1 ? 'modelo' : 'modelos'}` },
+              ].map(kpi => (
+                <div key={kpi.label} className="flex flex-col gap-3 bg-ink p-6">
+                  <dt className="eyebrow">{kpi.label}</dt>
+                  <dd className="font-display text-3xl font-semibold tracking-[-0.03em] tabular-nums">{kpi.value}</dd>
+                  <dd className="eyebrow text-paper-2">{kpi.note}</dd>
                 </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                  {formatPrice(totalRevenue)}
-                </div>
-                <div className="text-xs text-green-400 flex items-center gap-1 font-medium">
-                  <TrendingUp className="w-3.5 h-3.5" /> +18.4% vs mês anterior
-                </div>
-              </div>
-
-              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  <span>Pedidos Realizados</span>
-                  <ShoppingCart className="w-4 h-4 text-white" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                  {orders.length}
-                </div>
-                <div className="text-xs text-gray-400 font-medium">
-                  {orders.filter(o => o.status === 'processing').length} em processamento
-                </div>
-              </div>
-
-              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  <span>Ticket Médio</span>
-                  <BarChart3 className="w-4 h-4 text-white" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                  {formatPrice(averageTicket)}
-                </div>
-                <div className="text-xs text-gray-400 font-medium">
-                  Por pedido finalizado
-                </div>
-              </div>
-
-              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase tracking-wider">
-                  <span>Estoque Total</span>
-                  <Package className="w-4 h-4 text-white" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white">
-                  {totalStock} unid.
-                </div>
-                <div className="text-xs text-gray-400 font-medium">
-                  Em {products.length} modelos ativos
-                </div>
-              </div>
-            </div>
+              ))}
+            </dl>
 
             {/* Recent Orders Overview */}
-            <div className="bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
+            <div className="bg-ink-2 rounded-[2px] p-6 sm:p-8 border border-line space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold uppercase tracking-wider text-white">
+                <h3 className="text-lg font-bold uppercase tracking-wider text-paper">
                   Últimos Pedidos Gerados
                 </h3>
                 <button
                   onClick={() => setActiveTab('orders')}
-                  className="text-xs font-bold text-gray-300 hover:text-white uppercase tracking-wider flex items-center gap-1"
+                  className="text-xs font-bold text-paper-2 hover:text-paper uppercase tracking-wider flex items-center gap-1"
                 >
                   <span>Ver Todos</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
@@ -536,7 +497,7 @@ export const TomatoAdminPanel: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-semibold">
+                    <tr className="border-b border-line text-mute uppercase tracking-wider font-semibold">
                       <th className="py-3 px-4">ID Pedido</th>
                       <th className="py-3 px-4">Cliente</th>
                       <th className="py-3 px-4">Total</th>
@@ -544,16 +505,16 @@ export const TomatoAdminPanel: React.FC = () => {
                       <th className="py-3 px-4">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-line">
                     {orders.slice(0, 5).map(order => (
-                      <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-mono font-bold text-white">#{order.id}</td>
+                      <tr key={order.id} className="hover:bg-ink-2 transition-colors">
+                        <td className="py-4 px-4 font-mono font-bold text-paper">#{order.id}</td>
                         <td className="py-4 px-4">
-                          <div className="font-semibold text-white break-words">{order.customerName}</div>
-                          <div className="text-gray-400 text-[11px] break-words">{order.customerEmail}</div>
+                          <div className="font-semibold text-paper break-words">{order.customerName}</div>
+                          <div className="text-mute text-[11px] break-words">{order.customerEmail}</div>
                         </td>
-                        <td className="py-4 px-4 font-bold text-white">{formatPrice(order.totalAmount)}</td>
-                        <td className="py-4 px-4 text-gray-400">
+                        <td className="py-4 px-4 font-bold text-paper">{formatPrice(order.totalAmount)}</td>
+                        <td className="py-4 px-4 text-mute">
                           {new Date(order.createdAt).toLocaleDateString('pt-BR')}
                         </td>
                         <td className="py-4 px-4">
@@ -561,7 +522,7 @@ export const TomatoAdminPanel: React.FC = () => {
                             order.status === 'delivered' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                             order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
                             order.status === 'processing' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                            'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                            'bg-gray-500/20 text-mute border border-gray-500/30'
                           }`}>
                             {order.status}
                           </span>
@@ -579,23 +540,23 @@ export const TomatoAdminPanel: React.FC = () => {
         {activeTab === 'products' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="text-xl font-bold uppercase tracking-wider text-white">
+              <h2 className="text-xl font-bold uppercase tracking-wider text-paper">
                 Catálogo de Produtos ({products.length})
               </h2>
               <button
                 onClick={() => handleOpenNewProduct()}
-                className="flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors shadow-lg"
+                className="flex items-center gap-2 bg-paper text-ink px-5 py-2.5 rounded-[2px] text-xs font-bold uppercase tracking-wider hover:bg-paper-2 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Adicionar Novo Produto</span>
               </button>
             </div>
 
-            <div className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden">
+            <div className="bg-ink-2 rounded-[2px] border border-line overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-semibold bg-white/5">
+                    <tr className="border-b border-line text-mute uppercase tracking-wider font-semibold bg-ink-2">
                       <th className="py-4 px-4">Produto</th>
                       <th className="py-4 px-4">Categoria</th>
                       <th className="py-4 px-4">Preço</th>
@@ -604,25 +565,25 @@ export const TomatoAdminPanel: React.FC = () => {
                       <th className="py-4 px-4 text-right">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-line">
                     {products.map(prod => (
-                      <tr key={prod.id} className="hover:bg-white/5 transition-colors">
+                      <tr key={prod.id} className="hover:bg-ink-2 transition-colors">
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
                             <img
                               src={prod.images?.[0] || ''}
                               alt={prod.name}
-                              className="w-12 h-14 object-cover rounded-xl bg-black border border-white/10"
+                              className="w-12 h-14 object-cover rounded-[2px] bg-ink border border-line"
                             />
                             <div>
-                              <div className="font-bold text-white text-sm">{prod.name}</div>
-                              <div className="text-gray-400 text-[11px] line-clamp-1 max-w-xs">{prod.description}</div>
+                              <div className="font-bold text-paper text-sm">{prod.name}</div>
+                              <div className="text-mute text-[11px] line-clamp-1 max-w-xs">{prod.description}</div>
                               {prod.sizes && prod.sizes.length > 0 && (
                                 <div className="flex items-center gap-1 mt-1 flex-wrap">
                                   {prod.sizes.map((s) => (
                                     <span
                                       key={s}
-                                      className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-white/10 text-gray-300 border border-white/10"
+                                      className="px-1.5 py-0.2 rounded-[2px] text-[9px] font-black uppercase bg-ink-3 text-paper-2 border border-line"
                                     >
                                       {s}
                                     </span>
@@ -632,11 +593,11 @@ export const TomatoAdminPanel: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4 font-semibold text-gray-300">{prod.category}</td>
-                        <td className="py-4 px-4 font-bold text-white text-sm">{formatPrice(prod.price)}</td>
+                        <td className="py-4 px-4 font-semibold text-paper-2">{prod.category}</td>
+                        <td className="py-4 px-4 font-bold text-paper text-sm">{formatPrice(prod.price)}</td>
                         <td className="py-4 px-4">
                           <div className="flex flex-col">
-                            <span className="font-bold text-white">
+                            <span className="font-bold text-paper">
                               {prod.stockCount} un.
                             </span>
                             <span className={`text-[10px] font-semibold ${prod.stockCount <= 0 ? 'text-red-400' : prod.stockCount <= 5 ? 'text-yellow-400' : 'text-emerald-400'}`}>
@@ -646,7 +607,7 @@ export const TomatoAdminPanel: React.FC = () => {
                         </td>
                         <td className="py-4 px-4">
                           {prod.tag && (
-                            <span className="bg-white/15 text-white px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase">
+                            <span className="bg-ink-3 text-paper px-2.5 py-0.5 rounded-[2px] text-[10px] font-extrabold uppercase">
                               {prod.tag}
                             </span>
                           )}
@@ -655,14 +616,14 @@ export const TomatoAdminPanel: React.FC = () => {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleOpenEditProduct(prod)}
-                              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+                              className="p-2 rounded-[2px] bg-ink-3 hover:bg-ink-3 text-paper transition-colors"
                               title="Editar Produto"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteProduct(prod.id)}
-                              className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                              className="p-2 rounded-[2px] bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
                               title="Excluir Produto"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -686,32 +647,32 @@ export const TomatoAdminPanel: React.FC = () => {
         {/* TAB 4: ORDERS MANAGEMENT */}
         {activeTab === 'orders' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold uppercase tracking-wider text-white">
+            <h2 className="text-xl font-bold uppercase tracking-wider text-paper">
               Gestão de Pedidos ({orders.length})
             </h2>
 
             <div className="space-y-4">
               {orders.map(order => (
-                <div key={order.id} className="bg-white/5 rounded-3xl p-6 border border-white/10 space-y-4">
+                <div key={order.id} className="bg-ink-2 rounded-[2px] p-6 border border-line space-y-4">
                   {/* Order Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line pb-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-extrabold text-white">#{order.id}</span>
-                        <span className="text-xs text-gray-400">• {new Date(order.createdAt).toLocaleString('pt-BR')}</span>
+                        <span className="font-mono text-sm font-extrabold text-paper">#{order.id}</span>
+                        <span className="text-xs text-mute">• {new Date(order.createdAt).toLocaleString('pt-BR')}</span>
                       </div>
-                      <div className="text-xs text-gray-300 mt-1 break-words">
-                        Cliente: <strong className="text-white">{order.customerName}</strong> ({order.customerEmail})
+                      <div className="text-xs text-paper-2 mt-1 break-words">
+                        Cliente: <strong className="text-paper">{order.customerName}</strong> ({order.customerEmail})
                       </div>
                     </div>
 
                     {/* Status Dropdown */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">Status:</span>
+                      <span className="text-xs text-mute">Status:</span>
                       <select
                         value={order.status}
                         onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value as any)}
-                        className="bg-black text-white text-xs font-bold rounded-xl px-3 py-1.5 border border-white/20 focus:outline-none cursor-pointer uppercase"
+                        className="bg-ink text-paper text-xs font-bold rounded-[2px] px-3 py-1.5 border border-line-strong focus:outline-none cursor-pointer uppercase"
                       >
                         <option value="pending">Pendente</option>
                         <option value="processing">Processando</option>
@@ -725,17 +686,17 @@ export const TomatoAdminPanel: React.FC = () => {
                   {/* Order Items */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Itens do Pedido:</span>
+                      <span className="text-[11px] font-bold text-mute uppercase tracking-wider">Itens do Pedido:</span>
                       {order.items.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-black/40 p-2.5 rounded-2xl border border-white/5">
-                          <img src={item.image} alt={item.productName} className="w-10 h-12 object-cover rounded-lg bg-black" />
+                        <div key={i} className="flex items-center gap-3 bg-ink p-2.5 rounded-[2px] border border-line">
+                          <img src={item.image} alt={item.productName} className="w-10 h-12 object-cover rounded-[2px] bg-ink" />
                           <div className="flex-1 text-xs">
-                            <div className="font-bold text-white line-clamp-1">{item.productName}</div>
-                            <div className="text-gray-400 text-[11px]">
+                            <div className="font-bold text-paper line-clamp-1">{item.productName}</div>
+                            <div className="text-mute text-[11px]">
                               {item.quantity}x • Cor: {item.selectedColor} • Tam: {item.selectedSize}
                             </div>
                           </div>
-                          <div className="font-bold text-white text-xs">
+                          <div className="font-bold text-paper text-xs">
                             {formatPrice(item.price * item.quantity)}
                           </div>
                         </div>
@@ -743,19 +704,26 @@ export const TomatoAdminPanel: React.FC = () => {
                     </div>
 
                     {/* Shipping & Payment Summary */}
-                    <div className="bg-black/40 p-4 rounded-2xl border border-white/5 text-xs space-y-2 flex flex-col justify-between">
+                    <div className="bg-ink p-4 rounded-[2px] border border-line text-xs space-y-2 flex flex-col justify-between">
                       <div className="space-y-1">
-                        <div className="text-gray-400">Endereço de Entrega:</div>
-                        <div className="text-white font-medium">{order.shippingAddress}</div>
+                        <div className="text-mute">Endereço de Entrega:</div>
+                        <div className="text-paper font-medium">{order.shippingAddress}</div>
                         {order.shippingServiceName && (
                           <>
-                            <div className="text-gray-400 pt-2">Frete:</div>
-                            <div className="text-white font-medium">{order.shippingServiceName}</div>
+                            <div className="text-mute pt-2">Frete:</div>
+                            <div className="text-paper font-medium">{order.shippingServiceName}</div>
                           </>
                         )}
-                        <div className="text-gray-400 pt-2">Método de Pagamento:</div>
-                        <div className="text-white font-medium">{order.paymentMethod}</div>
-                        <div className="pt-2">
+                        <div className="text-mute pt-2">Método de Pagamento:</div>
+                        <div className="text-paper font-medium">{order.paymentMethod}</div>
+                        <div className="pt-2 space-y-2">
+                          <ShippingLabelActions
+                            order={order}
+                            onDone={(message, type, reload) => {
+                              showToast(message, type);
+                              if (reload) loadAllData();
+                            }}
+                          />
                           <OrderTrackingField
                             key={`${order.id}-${order.trackingCode ?? ''}`}
                             orderId={order.id}
@@ -768,9 +736,9 @@ export const TomatoAdminPanel: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-white/10 font-bold text-sm">
+                      <div className="flex items-center justify-between pt-3 border-t border-line font-bold text-sm">
                         <span>Total Pago:</span>
-                        <span className="text-base text-white">{formatPrice(order.totalAmount)}</span>
+                        <span className="text-base text-paper">{formatPrice(order.totalAmount)}</span>
                       </div>
                     </div>
                   </div>
@@ -794,43 +762,43 @@ export const TomatoAdminPanel: React.FC = () => {
         {/* TAB 6: REST API LIVE CONSOLE */}
         {activeTab === 'api' && (
           <div className="space-y-6">
-            <div className="bg-white/5 rounded-3xl p-6 sm:p-8 border border-white/10 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+            <div className="bg-ink-2 rounded-[2px] p-6 sm:p-8 border border-line space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-[2px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                     <Terminal className="w-5 h-5 text-indigo-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                    <h3 className="text-lg font-bold uppercase tracking-wider text-paper flex items-center gap-2">
                       <span>Console REST API TomatoPHP</span>
-                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-mono">
+                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-[2px] font-mono">
                         POST & GET Engine
                       </span>
                     </h3>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-mute">
                       Execute requisições REST, faça importações sequenciais de inventário em lote e inspecione os payloads JSON retornados.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 self-start sm:self-center">
-                  <span className="text-[11px] font-mono text-gray-400 bg-black/60 px-3 py-1.5 rounded-xl border border-white/10">
-                    Endpoint Ativo: <strong className="text-white">{apiEndpoint.split(' ')[0]}</strong>
+                  <span className="text-[11px] font-mono text-mute bg-ink px-3 py-1.5 rounded-[2px] border border-line">
+                    Endpoint Ativo: <strong className="text-paper">{apiEndpoint.split(' ')[0]}</strong>
                   </span>
                 </div>
               </div>
 
               {/* Endpoint Selector & Run Button */}
               <div className="space-y-3">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
-                  <Code2 className="w-3.5 h-3.5 text-gray-400" />
+                <label className="text-xs font-bold uppercase tracking-wider text-paper-2 flex items-center gap-2">
+                  <Code2 className="w-3.5 h-3.5 text-mute" />
                   <span>Selecione a Rota da REST API:</span>
                 </label>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <select
                     value={apiEndpoint}
                     onChange={(e) => setApiEndpoint(e.target.value)}
-                    className="w-full sm:flex-1 bg-black text-white text-xs font-mono font-bold rounded-2xl px-4 py-3.5 border border-white/20 focus:outline-none focus:border-indigo-400 transition-colors"
+                    className="w-full sm:flex-1 bg-ink text-paper text-xs font-mono font-bold rounded-[2px] px-4 py-3.5 border border-line-strong focus:outline-none focus:border-indigo-400 transition-colors"
                   >
                     <option value="POST /api/inventory/import">
                       POST /api/inventory/import (Importação em Lote / Criar Vários Itens em Sequência)
@@ -852,14 +820,14 @@ export const TomatoAdminPanel: React.FC = () => {
                   <button
                     onClick={handleRunApiTest}
                     disabled={apiLoading}
-                    className={`w-full sm:w-auto px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shrink-0 flex items-center justify-center gap-2 ${
+                    className={`w-full sm:w-auto px-6 py-3.5 font-bold text-xs uppercase tracking-wider rounded-[2px] transition-all shrink-0 flex items-center justify-center gap-2 ${
                       apiEndpoint.startsWith('POST')
-                        ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20'
-                        : 'bg-white hover:bg-gray-200 text-black'
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-ink shadow-emerald-500/20'
+                        : 'bg-paper hover:bg-paper-2 text-ink'
                     }`}
                   >
                     {apiLoading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-4 h-4 motion-safe:animate-spin" />
                     ) : apiEndpoint.startsWith('POST') ? (
                       <Upload className="w-4 h-4" />
                     ) : (
@@ -878,13 +846,13 @@ export const TomatoAdminPanel: React.FC = () => {
 
               {/* POST Request Body Editor (Only when POST is selected) */}
               {apiEndpoint.startsWith('POST') && (
-                <div className="space-y-3 bg-black/50 p-5 rounded-2xl border border-white/10">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-white/10">
+                <div className="space-y-3 bg-ink p-5 rounded-[2px] border border-line">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-line">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-[10px] font-mono">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-ink font-extrabold text-[10px] font-mono">
                         POST
                       </span>
-                      <span className="text-xs font-bold uppercase tracking-wider text-white">
+                      <span className="text-xs font-bold uppercase tracking-wider text-paper">
                         Request Body (JSON Payload):
                       </span>
                       {(() => {
@@ -892,13 +860,13 @@ export const TomatoAdminPanel: React.FC = () => {
                           const parsed = JSON.parse(apiRequestBody);
                           const count = Array.isArray(parsed) ? parsed.length : 1;
                           return (
-                            <span className="text-[11px] font-mono bg-white/10 px-2 py-0.5 rounded-full text-emerald-400">
+                            <span className="text-[11px] font-mono bg-ink-3 px-2 py-0.5 rounded-[2px] text-emerald-400">
                               {count} {count === 1 ? 'item detectado' : 'itens detectados'}
                             </span>
                           );
                         } catch {
                           return (
-                            <span className="text-[11px] font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
+                            <span className="text-[11px] font-mono bg-red-500/20 text-red-400 px-2 py-0.5 rounded-[2px]">
                               JSON com erro de sintaxe
                             </span>
                           );
@@ -910,7 +878,7 @@ export const TomatoAdminPanel: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setApiRequestBody(DEFAULT_IMPORT_JSON)}
-                        className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5"
+                        className="px-3 py-1 bg-ink-3 hover:bg-ink-3 text-paper-2 rounded-[2px] text-[11px] font-semibold transition-colors flex items-center gap-1.5"
                       >
                         <FileCode className="w-3 h-3 text-indigo-400" />
                         <span>Carregar Exemplo JSON</span>
@@ -925,21 +893,21 @@ export const TomatoAdminPanel: React.FC = () => {
                             showToast('Corrija o JSON antes de formatar', 'error');
                           }
                         }}
-                        className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-200 rounded-xl text-[11px] font-semibold transition-colors"
+                        className="px-3 py-1 bg-ink-3 hover:bg-ink-3 text-paper-2 rounded-[2px] text-[11px] font-semibold transition-colors"
                       >
                         Formatar
                       </button>
                       <button
                         type="button"
                         onClick={() => setApiRequestBody('[]')}
-                        className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[11px] font-semibold transition-colors"
+                        className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-[2px] text-[11px] font-semibold transition-colors"
                       >
                         Limpar
                       </button>
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-mute">
                     Insira abaixo um array JSON com os itens do inventário. Cada item receberá SKU, estoque, categoria automática, imagens, grade de tamanhos e sincronização com o TomatoPHP:
                   </p>
 
@@ -948,7 +916,7 @@ export const TomatoAdminPanel: React.FC = () => {
                     value={apiRequestBody}
                     onChange={(e) => setApiRequestBody(e.target.value)}
                     placeholder='[\n  {\n    "name": "Nome da Peça",\n    "sku": "SKU-001",\n    "category": "Camisetas",\n    "price": 129.90,\n    "stock": 30\n  }\n]'
-                    className="w-full bg-black font-mono text-xs text-gray-100 p-4 rounded-xl border border-white/20 focus:outline-none focus:border-emerald-400 leading-relaxed resize-y scrollbar-thin"
+                    className="w-full bg-ink font-mono text-xs text-paper p-4 rounded-[2px] border border-line-strong focus:outline-none focus:border-emerald-400 leading-relaxed resize-y scrollbar-thin"
                     spellCheck={false}
                   />
                 </div>
@@ -957,10 +925,10 @@ export const TomatoAdminPanel: React.FC = () => {
               {/* Response Code Block */}
               {apiResponse && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-gray-400 font-mono">
+                  <div className="flex items-center justify-between text-xs text-mute font-mono">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-300">Response Payload (JSON):</span>
-                      <span className="text-[11px] text-gray-500">Tomato Engine Result</span>
+                      <span className="font-bold text-paper-2">Response Payload (JSON):</span>
+                      <span className="text-[11px] text-mute">Tomato Engine Result</span>
                     </div>
                     <span
                       className={`font-bold px-2 py-0.5 rounded-full text-[11px] border ${
@@ -974,7 +942,7 @@ export const TomatoAdminPanel: React.FC = () => {
                       {apiStatusCode} {apiStatusCode === 201 ? 'Created' : apiStatusCode === 200 ? 'OK' : 'Bad Request'}
                     </span>
                   </div>
-                  <pre className="bg-black/95 p-5 rounded-2xl border border-white/10 text-xs font-mono text-gray-200 overflow-x-auto max-h-96 leading-relaxed">
+                  <pre className="bg-black/95 p-5 rounded-[2px] border border-line text-xs font-mono text-paper-2 overflow-x-auto max-h-96 leading-relaxed">
                     {apiResponse}
                   </pre>
                 </div>
@@ -985,20 +953,20 @@ export const TomatoAdminPanel: React.FC = () => {
 
         {/* MODAL: ADD / EDIT PRODUCT */}
         {isProductModalOpen && editingProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
-            <div className="bg-[#121216] border border-white/20 w-full max-w-2xl rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="text-lg font-bold uppercase tracking-wider text-white">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-ink/80">
+            <div className="bg-ink-2 border border-line-strong w-full max-w-2xl rounded-[2px] p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-line pb-4">
+                <h3 className="text-lg font-bold uppercase tracking-wider text-paper">
                   {editingProduct.id ? 'Editar Produto' : 'Cadastrar Novo Produto'}
                 </h3>
-                <button onClick={() => setIsProductModalOpen(false)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setIsProductModalOpen(false)} className="text-mute hover:text-paper">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
                 {/* VÍNCULO OBRIGATÓRIO: ITEM DO INVENTÁRIO (PUXA TUDO DO INVENTÁRIO) */}
-                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-3" data-testid="inventory-source-selector-box">
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[2px] p-4 space-y-3" data-testid="inventory-source-selector-box">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Warehouse className="w-4 h-4 text-emerald-400" />
@@ -1006,12 +974,12 @@ export const TomatoAdminPanel: React.FC = () => {
                         Item do Inventário de Origem * (Puxar Dados)
                       </label>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-400">
+                    <span className="text-[10px] font-bold text-mute">
                       {inventoryItems.length} peça(s) no inventário
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-gray-300">
+                  <p className="text-[11px] text-paper-2">
                     O anúncio do produto só pode existir vinculado a uma peça do inventário. Selecione abaixo para puxar nome, categoria, saldo em estoque, imagem e tamanhos (P, M, G, GG):
                   </p>
 
@@ -1019,7 +987,7 @@ export const TomatoAdminPanel: React.FC = () => {
                     <select
                       value={selectedInventoryItemId}
                       onChange={(e) => handleSelectInventoryItem(e.target.value)}
-                      className="w-full bg-black text-white text-xs font-bold rounded-xl px-4 py-2.5 border border-white/20 focus:outline-none focus:border-emerald-400 cursor-pointer"
+                      className="w-full bg-ink text-paper text-xs font-bold rounded-[2px] px-4 py-2.5 border border-line-strong focus:outline-none focus:border-emerald-400 cursor-pointer"
                       data-testid="inventory-item-select"
                       required
                     >
@@ -1037,7 +1005,7 @@ export const TomatoAdminPanel: React.FC = () => {
                         setIsProductModalOpen(false);
                         setActiveTab('inventory');
                       }}
-                      className="shrink-0 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors whitespace-nowrap"
+                      className="shrink-0 px-3 py-2 bg-ink-3 hover:bg-ink-3 text-paper rounded-[2px] text-xs font-bold transition-colors whitespace-nowrap"
                       title="Ir para o inventário cadastrar nova peça"
                     >
                       + Novo no Inventário
@@ -1046,30 +1014,30 @@ export const TomatoAdminPanel: React.FC = () => {
 
                   {/* Card de prévia do item do inventário puxado */}
                   {selectedInventoryItemId && (
-                    <div className="bg-black/50 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+                    <div className="bg-ink border border-line rounded-[2px] p-3 flex items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-3">
                         {editingProduct.images?.[0] ? (
                           <img
                             src={editingProduct.images[0]}
                             alt={editingProduct.name}
-                            className="w-12 h-12 rounded-lg object-cover bg-black border border-white/10 shrink-0"
+                            className="w-12 h-12 rounded-[2px] object-cover bg-ink border border-line shrink-0"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 shrink-0">
+                          <div className="w-12 h-12 rounded-[2px] bg-ink-2 border border-line flex items-center justify-center text-mute shrink-0">
                             <Package className="w-5 h-5" />
                           </div>
                         )}
                         <div>
-                          <div className="font-bold text-white text-sm">{editingProduct.name}</div>
-                          <div className="text-[11px] text-gray-400">
-                            Categoria: <strong className="text-gray-200">{editingProduct.category}</strong> • Saldo: <strong className="text-emerald-400">{editingProduct.stockCount} un.</strong>
+                          <div className="font-bold text-paper text-sm">{editingProduct.name}</div>
+                          <div className="text-[11px] text-mute">
+                            Categoria: <strong className="text-paper-2">{editingProduct.category}</strong> • Saldo: <strong className="text-emerald-400">{editingProduct.stockCount} un.</strong>
                           </div>
                           {editingProduct.colors && editingProduct.colors.length > 0 && (
                             <div className="flex items-center gap-1.5 mt-1">
-                              <span className="text-[10px] text-gray-400">Cor puxada:</span>
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white border border-white/20">
+                              <span className="text-[10px] text-mute">Cor puxada:</span>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] text-[10px] font-bold bg-ink-3 text-paper border border-line-strong">
                                 <span
-                                  className="w-2.5 h-2.5 rounded-full border border-white/40 shadow-sm"
+                                  className="w-2.5 h-2.5 rounded-full border border-line-strong"
                                   style={{ backgroundColor: editingProduct.colors[0].hex }}
                                 />
                                 <span>{editingProduct.colors[0].name}</span>
@@ -1078,9 +1046,9 @@ export const TomatoAdminPanel: React.FC = () => {
                           )}
                           {editingProduct.sizes && editingProduct.sizes.length > 0 && (
                             <div className="flex items-center gap-1 mt-1 flex-wrap">
-                              <span className="text-[10px] text-gray-400">Tamanhos puxados:</span>
+                              <span className="text-[10px] text-mute">Tamanhos puxados:</span>
                               {editingProduct.sizes.map((s) => (
-                                <span key={s} className="px-1.5 py-0.2 rounded text-[10px] font-black bg-white/20 text-white">
+                                <span key={s} className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-black bg-ink-3 text-paper">
                                   {s}
                                 </span>
                               ))}
@@ -1088,7 +1056,7 @@ export const TomatoAdminPanel: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/30 shrink-0">
+                      <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-[2px] border border-emerald-500/30 shrink-0">
                         <Check className="w-3 h-3 stroke-[3]" /> Dados Sincronizados
                       </span>
                     </div>
@@ -1096,19 +1064,19 @@ export const TomatoAdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 font-bold mb-1">Nome do Produto (Anúncio)</label>
+                  <label className="block text-paper-2 font-bold mb-1">Nome do Produto (Anúncio)</label>
                   <input
                     type="text"
                     required
                     value={editingProduct.name || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-white"
+                    className="w-full bg-ink border border-line-strong rounded-[2px] px-4 py-2.5 text-paper focus:outline-none focus:border-paper"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-300 font-bold mb-1">Categoria</label>
+                    <label className="block text-paper-2 font-bold mb-1">Categoria</label>
                     <select
                       value={editingProduct.categorySlug || 'tailoring'}
                       onChange={(e) => {
@@ -1119,7 +1087,7 @@ export const TomatoAdminPanel: React.FC = () => {
                           category: cat?.name || 'Alfaiataria'
                         });
                       }}
-                      className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none cursor-pointer"
+                      className="w-full bg-ink border border-line-strong rounded-[2px] px-4 py-2.5 text-paper focus:outline-none cursor-pointer"
                     >
                       {categories.map(c => (
                         <option key={c.id} value={c.slug}>{c.name}</option>
@@ -1128,33 +1096,33 @@ export const TomatoAdminPanel: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-300 font-bold mb-1">Preço (R$)</label>
+                    <label className="block text-paper-2 font-bold mb-1">Preço (R$)</label>
                     <input
                       type="number"
                       required
                       value={editingProduct.price || 0}
                       onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                      className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-ink border border-line-strong rounded-[2px] px-4 py-2.5 text-paper focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-300 font-bold mb-1">Tag / Selo</label>
+                    <label className="block text-paper-2 font-bold mb-1">Tag / Selo</label>
                     <input
                       type="text"
                       value={editingProduct.tag || ''}
                       onChange={(e) => setEditingProduct({ ...editingProduct, tag: e.target.value })}
                       placeholder="Ex: NOVO, BESTSELLER, LIMITED"
-                      className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-ink border border-line-strong rounded-[2px] px-4 py-2.5 text-paper focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-300 font-bold mb-1">Status do Inventário</label>
-                    <div className="py-2.5 px-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
-                      <span className="text-gray-300">
+                    <label className="block text-paper-2 font-bold mb-1">Status do Inventário</label>
+                    <div className="py-2.5 px-3 bg-ink-2 border border-line rounded-[2px] flex items-center justify-between">
+                      <span className="text-paper-2">
                         {(editingProduct.stockCount || 0) <= 0
                           ? 'Esgotado'
                           : (editingProduct.stockCount || 0) <= 5
@@ -1173,22 +1141,22 @@ export const TomatoAdminPanel: React.FC = () => {
                 </div>
 
                 {/* Seção Integrada: Inventário & Tamanhos (Tomato Inventory) */}
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-4" data-testid="product-inventory-section">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div className="bg-ink-2 p-4 rounded-[2px] border border-line space-y-4" data-testid="product-inventory-section">
+                  <div className="flex items-center justify-between border-b border-line pb-2">
                     <div className="flex items-center gap-2">
                       <Warehouse className="w-4 h-4 text-emerald-400" />
-                      <span className="font-bold text-white uppercase tracking-wider text-xs">
+                      <span className="font-bold text-paper uppercase tracking-wider text-xs">
                         Inventário & Tamanhos da Peça
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-[2px] border border-emerald-500/20">
                       Sincronização com Tomato Inventory
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-300 font-bold mb-1">
+                      <label className="block text-paper-2 font-bold mb-1">
                         Saldo de Estoque (Unidades) *
                       </label>
                       <input
@@ -1197,11 +1165,11 @@ export const TomatoAdminPanel: React.FC = () => {
                         required
                         value={editingProduct.stockCount ?? 10}
                         onChange={(e) => setEditingProduct({ ...editingProduct, stockCount: Math.max(0, parseInt(e.target.value) || 0) })}
-                        className="w-full bg-black border border-white/20 rounded-xl px-4 py-2 text-white focus:outline-none"
+                        className="w-full bg-ink border border-line-strong rounded-[2px] px-4 py-2 text-paper focus:outline-none"
                         data-testid="product-stock-input"
                       />
                     </div>
-                    <div className="flex flex-col justify-end text-[11px] text-gray-400">
+                    <div className="flex flex-col justify-end text-[11px] text-mute">
                       <span>Este produto criará e atualizará automaticamente uma ficha no inventário geral com controle de saldo e movimentações.</span>
                     </div>
                   </div>
@@ -1209,10 +1177,10 @@ export const TomatoAdminPanel: React.FC = () => {
                   {/* Seleção de Tamanhos (P, M, G, GG, etc.) */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-gray-300 font-bold">
+                      <label className="block text-paper-2 font-bold">
                         Tamanhos Disponíveis da Peça (ex: P, M, G, GG) *
                       </label>
-                      <span className="text-gray-400 text-[11px]">
+                      <span className="text-mute text-[11px]">
                         {(editingProduct.sizes || []).length} selecionado(s)
                       </span>
                     </div>
@@ -1227,10 +1195,10 @@ export const TomatoAdminPanel: React.FC = () => {
                             type="button"
                             onClick={() => handleToggleProductSize(size)}
                             data-testid={`product-size-toggle-${size}`}
-                            className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 ${
+                            className={`px-3 py-1.5 rounded-[2px] font-black text-xs transition-all flex items-center gap-1.5 ${
                               isSelected
-                                ? 'bg-white text-black shadow-md shadow-white/10'
-                                : 'bg-black/60 hover:bg-white/10 text-gray-300 border border-white/20'
+                                ? 'bg-paper text-ink '
+                                : 'bg-ink hover:bg-ink-3 text-paper-2 border border-line-strong'
                             }`}
                           >
                             {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -1253,13 +1221,13 @@ export const TomatoAdminPanel: React.FC = () => {
                             handleAddCustomProductSize();
                           }
                         }}
-                        className="flex-1 bg-black border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none"
+                        className="flex-1 bg-ink border border-line-strong rounded-[2px] px-3 py-2 text-xs text-paper placeholder:text-mute focus:outline-none"
                         data-testid="product-custom-size-input"
                       />
                       <button
                         type="button"
                         onClick={() => handleAddCustomProductSize()}
-                        className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+                        className="px-4 py-2 bg-ink-3 hover:bg-ink-2 text-paper rounded-[2px] text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
                         data-testid="product-add-custom-size-btn"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -1270,11 +1238,11 @@ export const TomatoAdminPanel: React.FC = () => {
                     {/* Tamanhos ativos */}
                     {(editingProduct.sizes || []).length > 0 && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mr-1">Tamanhos da peça:</span>
+                        <span className="text-[10px] text-mute uppercase font-bold tracking-wider mr-1">Tamanhos da peça:</span>
                         {(editingProduct.sizes || []).map((s) => (
                           <span
                             key={s}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-white/20 text-white border border-white/20"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[2px] text-xs font-black uppercase bg-ink-3 text-paper border border-line-strong"
                             data-testid={`product-active-size-${s}`}
                           >
                             {s}
@@ -1294,7 +1262,7 @@ export const TomatoAdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 font-bold mb-2">Imagens do Produto</label>
+                  <label className="block text-paper-2 font-bold mb-2">Imagens do Produto</label>
                   
                   {/* Image Upload Area */}
                   <div className="space-y-4">
@@ -1306,17 +1274,17 @@ export const TomatoAdminPanel: React.FC = () => {
                             <img
                               src={img}
                               alt={`Imagem ${index + 1}`}
-                              className="w-full h-28 object-cover rounded-xl border border-white/20"
+                              className="w-full h-28 object-cover rounded-[2px] border border-line-strong"
                             />
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(index)}
-                              className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-paper rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-3 h-3" />
                             </button>
                             {index === 0 && (
-                              <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/70 text-white text-[10px] font-bold rounded-full uppercase">
+                              <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-ink/80 text-paper text-[10px] font-bold rounded-[2px] uppercase">
                                 Principal
                               </span>
                             )}
@@ -1328,10 +1296,10 @@ export const TomatoAdminPanel: React.FC = () => {
                     {/* Upload Button */}
                     <div
                       onClick={() => !uploading && fileInputRef.current?.click()}
-                      className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all ${
+                      className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[2px] transition-all ${
                         uploading
-                          ? 'border-white/10 bg-white/5 cursor-wait'
-                          : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 cursor-pointer'
+                          ? 'border-line bg-ink-2 cursor-wait'
+                          : 'border-line-strong bg-ink-2 hover:border-line-strong hover:bg-ink-3 cursor-pointer'
                       }`}
                     >
                       <input
@@ -1345,25 +1313,25 @@ export const TomatoAdminPanel: React.FC = () => {
                       
                       {uploading ? (
                         <div className="flex flex-col items-center gap-3">
-                          <Loader2 className="w-8 h-8 text-white animate-spin" />
-                          <div className="w-full max-w-xs bg-white/10 rounded-full h-2 overflow-hidden">
+                          <Loader2 className="w-8 h-8 text-paper motion-safe:animate-spin" />
+                          <div className="w-full max-w-xs bg-ink-3 rounded-full h-2 overflow-hidden">
                             <div
-                              className="h-full bg-white transition-all duration-300"
+                              className="h-full bg-paper transition-all duration-300"
                               style={{ width: `${uploadProgress}%` }}
                             />
                           </div>
-                          <span className="text-xs text-gray-400">Enviando... {uploadProgress}%</span>
+                          <span className="text-xs text-mute">Enviando... {uploadProgress}%</span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center gap-2">
-                          <div className="p-3 bg-white/10 rounded-2xl">
-                            <Upload className="w-6 h-6 text-white" />
+                          <div className="p-3 bg-ink-3 rounded-[2px]">
+                            <Upload className="w-6 h-6 text-paper" />
                           </div>
                           <div className="text-center">
-                            <p className="text-sm text-white font-semibold">
+                            <p className="text-sm text-paper font-semibold">
                               Clique para enviar imagem
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-mute mt-1">
                               JPEG, PNG, WebP ou GIF (máx. 10MB)
                             </p>
                           </div>
@@ -1373,14 +1341,14 @@ export const TomatoAdminPanel: React.FC = () => {
 
                     {/* Upload Error */}
                     {uploadError && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-[2px] text-red-400 text-xs">
                         {uploadError}
                       </div>
                     )}
 
                     {/* Manual URL Input (fallback) */}
                     <div>
-                      <label className="block text-gray-400 text-[11px] font-bold mb-1">
+                      <label className="block text-mute text-[11px] font-bold mb-1">
                         Ou insira uma URL de imagem
                       </label>
                       <div className="flex gap-2">
@@ -1392,7 +1360,7 @@ export const TomatoAdminPanel: React.FC = () => {
                             images: [e.target.value, ...(editingProduct.images || []).slice(1)].filter(Boolean)
                           })}
                           placeholder="https://exemplo.com/imagem.jpg"
-                          className="flex-1 bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-white"
+                          className="flex-1 bg-ink border border-line-strong rounded-[2px] px-4 py-2.5 text-paper text-xs focus:outline-none focus:border-paper"
                         />
                       </div>
                     </div>
@@ -1400,27 +1368,27 @@ export const TomatoAdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 font-bold mb-1">Descrição Detalhada</label>
+                  <label className="block text-paper-2 font-bold mb-1">Descrição Detalhada</label>
                   <textarea
                     rows={3}
                     required
                     value={editingProduct.description || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                    className="w-full bg-black border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                    className="w-full bg-ink border border-line-strong rounded-[2px] px-4 py-2.5 text-paper focus:outline-none"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                   <button
                     type="button"
                     onClick={() => setIsProductModalOpen(false)}
-                    className="px-5 py-2.5 rounded-full bg-white/10 text-white font-bold hover:bg-white/20 transition-colors"
+                    className="px-5 py-2.5 rounded-[2px] bg-ink-3 text-paper font-bold hover:bg-ink-3 transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-full bg-white text-black font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-[2px] bg-paper text-ink font-bold hover:bg-paper-2 transition-colors flex items-center gap-2"
                   >
                     <Save className="w-4 h-4" />
                     <span>Salvar Produto</span>

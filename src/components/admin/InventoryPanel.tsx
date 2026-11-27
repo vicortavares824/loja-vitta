@@ -309,19 +309,19 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
     switch (status) {
       case 'in_stock':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/20">
             <CheckCircle2 className="w-3.5 h-3.5" /> Em Estoque
           </span>
         );
       case 'low_stock':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
             <AlertTriangle className="w-3.5 h-3.5" /> Estoque Baixo
           </span>
         );
       case 'out_of_stock':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
             <XCircle className="w-3.5 h-3.5" /> Esgotado
           </span>
         );
@@ -336,18 +336,18 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
   return (
     <div className="space-y-8" data-testid="inventory-panel">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-white/10 via-white/5 to-transparent p-6 rounded-3xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-white/10 via-white/5 to-transparent p-6 rounded-[2px] border border-line flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <span className="px-2 py-0.5 rounded-[2px] text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               TomatoPHP Inventory Plugin
             </span>
-            <span className="text-xs text-gray-400 font-medium">Controle de Estoque & Peças</span>
+            <span className="text-xs text-mute font-medium">Controle de Estoque & Peças</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
+          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-paper">
             Inventário de Peças & Estoque
           </h2>
-          <p className="text-xs text-gray-300 mt-1">
+          <p className="text-xs text-paper-2 mt-1">
             Cadastre novos itens, edite parâmetros de estoque (mínimo, máximo, saldo) e gerencie imagens com verificação.
           </p>
         </div>
@@ -355,7 +355,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
         <div className="flex items-center gap-3">
           <button
             onClick={handleOpenNewItem}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white text-black hover:bg-gray-200 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-md"
+            className="flex items-center gap-2 px-5 py-2.5 bg-paper text-ink hover:bg-paper-2 rounded-[2px] text-xs font-black uppercase tracking-wider transition-all"
             data-testid="create-inventory-item-btn"
           >
             <Plus className="w-4 h-4" />
@@ -364,10 +364,10 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
           <button
             onClick={loadData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-ink-3 hover:bg-ink-3 text-paper rounded-[2px] text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
             data-testid="refresh-inventory-btn"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'motion-safe:animate-spin' : ''}`} />
             <span>Atualizar</span>
           </button>
         </div>
@@ -375,36 +375,36 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-          <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Total de Peças</p>
-          <p className="text-2xl sm:text-3xl font-black text-white mt-1">{totalItems}</p>
-          <p className="text-[11px] text-gray-400 mt-1">Peças no inventário</p>
+        <div className="bg-ink-2 p-5 rounded-[2px] border border-line">
+          <p className="text-[11px] text-mute uppercase font-bold tracking-wider">Total de Peças</p>
+          <p className="text-2xl sm:text-3xl font-black text-paper mt-1">{totalItems}</p>
+          <p className="text-[11px] text-mute mt-1">Peças no inventário</p>
         </div>
-        <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-          <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Unidades em Estoque</p>
-          <p className="text-2xl sm:text-3xl font-black text-white mt-1">{totalStock}</p>
+        <div className="bg-ink-2 p-5 rounded-[2px] border border-line">
+          <p className="text-[11px] text-mute uppercase font-bold tracking-wider">Unidades em Estoque</p>
+          <p className="text-2xl sm:text-3xl font-black text-paper mt-1">{totalStock}</p>
           <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1 font-semibold">
             <CheckCircle2 className="w-3 h-3" /> Volume total ativo
           </p>
         </div>
-        <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-          <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Estoque Crítico</p>
+        <div className="bg-ink-2 p-5 rounded-[2px] border border-line">
+          <p className="text-[11px] text-mute uppercase font-bold tracking-wider">Estoque Crítico</p>
           <p className="text-2xl sm:text-3xl font-black text-yellow-400 mt-1">{lowStockCount}</p>
           <p className="text-[11px] text-yellow-400/80 mt-1">Abaixo do limite de segurança</p>
         </div>
-        <div className="bg-white/5 p-5 rounded-2xl border border-white/10">
-          <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Esgotados</p>
+        <div className="bg-ink-2 p-5 rounded-[2px] border border-line">
+          <p className="text-[11px] text-mute uppercase font-bold tracking-wider">Esgotados</p>
           <p className="text-2xl sm:text-3xl font-black text-red-400 mt-1">{outOfStockCount}</p>
           <p className="text-[11px] text-red-400/80 mt-1">Necessitam reposição urgente</p>
         </div>
       </div>
 
       {/* Category Selection Filter Toolbar */}
-      <div className="bg-white/5 p-5 rounded-2xl border border-white/10 space-y-4">
+      <div className="bg-ink-2 p-5 rounded-[2px] border border-line space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Filter className="w-4 h-4 text-gray-300" />
-            <label htmlFor="category-select-dropdown" className="text-xs font-bold uppercase tracking-wider text-gray-300">
+            <Filter className="w-4 h-4 text-paper-2" />
+            <label htmlFor="category-select-dropdown" className="text-xs font-bold uppercase tracking-wider text-paper-2">
               Seleção de Categoria:
             </label>
             <select
@@ -412,7 +412,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
               data-testid="category-select"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-black/60 text-white border border-white/20 rounded-xl px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer"
+              className="bg-ink text-paper border border-line-strong rounded-[2px] px-4 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-line-strong cursor-pointer"
             >
               <option value="all">Todas as Categorias ({items.length})</option>
               {categories.map((cat) => (
@@ -423,8 +423,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
             </select>
           </div>
 
-          <div className="text-xs text-gray-400">
-            Mostrando <strong className="text-white">{items.length}</strong> itens de inventário
+          <div className="text-xs text-mute">
+            Mostrando <strong className="text-paper">{items.length}</strong> itens de inventário
           </div>
         </div>
 
@@ -434,8 +434,8 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
             onClick={() => setSelectedCategory('all')}
             className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
               selectedCategory === 'all'
-                ? 'bg-white text-black'
-                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                ? 'bg-paper text-ink'
+                : 'bg-ink-3 text-paper-2 hover:bg-ink-3'
             }`}
           >
             Todas
@@ -448,13 +448,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                 onClick={() => setSelectedCategory(cat.slug || cat.name)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   isSelected
-                    ? 'bg-white text-black'
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    ? 'bg-paper text-ink'
+                    : 'bg-ink-3 text-paper-2 hover:bg-ink-3'
                 }`}
               >
                 <span>{cat.name}</span>
                 {cat.itemCount > 0 && (
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-black text-white' : 'bg-white/20 text-gray-200'}`}>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-ink text-paper' : 'bg-ink-3 text-paper-2'}`}>
                     {cat.itemCount}
                   </span>
                 )}
@@ -476,25 +476,25 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
       {/* Inventory Table */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-3xl border border-white/10 space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-white" />
-          <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+        <div className="flex flex-col items-center justify-center py-20 bg-ink-2 rounded-[2px] border border-line space-y-3">
+          <Loader2 className="w-8 h-8 motion-safe:animate-spin text-paper" />
+          <p className="text-xs text-mute font-semibold uppercase tracking-wider">
             Consultando Tomato Inventory...
           </p>
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 bg-white/5 rounded-3xl border border-white/10 text-gray-400 space-y-3">
+        <div className="text-center py-16 bg-ink-2 rounded-[2px] border border-line text-mute space-y-3">
           <Package className="w-12 h-12 mx-auto opacity-30" />
-          <p className="text-base font-bold text-white">Nenhum item no inventário</p>
-          <p className="text-xs text-gray-400 max-w-md mx-auto">
+          <p className="text-base font-bold text-paper">Nenhum item no inventário</p>
+          <p className="text-xs text-mute max-w-md mx-auto">
             Clique em "Criar Item no Inventário" para cadastrar sua primeira peça de estoque.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white/5 rounded-3xl border border-white/10">
+        <div className="overflow-x-auto bg-ink-2 rounded-[2px] border border-line">
           <table className="w-full text-left" data-testid="inventory-table">
             <thead>
-              <tr className="border-b border-white/10 text-[11px] text-gray-400 uppercase tracking-widest font-black">
+              <tr className="border-b border-line text-[11px] text-mute uppercase tracking-widest font-black">
                 <th className="py-4 px-5">Imagem & Verificação</th>
                 <th className="py-4 px-5">Produto</th>
                 <th className="py-4 px-5">SKU</th>
@@ -506,11 +506,11 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                 <th className="py-4 px-5 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-line">
               {items.map((item) => (
                 <tr
                   key={item.id}
-                  className="hover:bg-white/[0.03] transition-colors"
+                  className="hover:bg-ink-2 transition-colors"
                   data-testid={`inventory-row-${item.id}`}
                 >
                   {/* Image & Verification Trigger */}
@@ -518,14 +518,14 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleTriggerImageSelect(item)}
-                        className="relative w-14 h-14 rounded-xl overflow-hidden bg-black/60 border border-white/20 hover:border-white/60 transition-all group flex-shrink-0"
+                        className="relative w-14 h-14 rounded-[2px] overflow-hidden bg-ink border border-line-strong hover:border-paper transition-all group flex-shrink-0"
                         title="Clique para verificar e trocar a imagem"
                         data-testid={`upload-image-btn-${item.id}`}
                       >
                         {uploadingId === item.id ? (
-                          <div className="flex flex-col items-center justify-center w-full h-full bg-black/80">
-                            <Loader2 className="w-5 h-5 animate-spin text-white" />
-                            <span className="text-[9px] text-white mt-1">{uploadProgress}%</span>
+                          <div className="flex flex-col items-center justify-center w-full h-full bg-ink/80">
+                            <Loader2 className="w-5 h-5 motion-safe:animate-spin text-paper" />
+                            <span className="text-[9px] text-paper mt-1">{uploadProgress}%</span>
                           </div>
                         ) : item.imageUrl ? (
                           <img
@@ -535,17 +535,17 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                           />
                         ) : (
                           <div className="flex items-center justify-center w-full h-full">
-                            <ImageIcon className="w-6 h-6 text-gray-500" />
+                            <ImageIcon className="w-6 h-6 text-mute" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                        <div className="absolute inset-0 bg-ink opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-paper">
                           <Upload className="w-4 h-4" />
                           <span className="text-[9px] font-bold mt-0.5">Trocar</span>
                         </div>
                       </button>
 
                       {verifiedUploads[String(item.id)] && (
-                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-[2px] border border-emerald-500/20">
                           <ShieldCheck className="w-3 h-3" /> Verificada
                         </span>
                       )}
@@ -554,13 +554,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
                   {/* Product Details */}
                   <td className="py-3 px-5">
-                    <p className="text-sm font-bold text-white line-clamp-1">{item.productName}</p>
+                    <p className="text-sm font-bold text-paper line-clamp-1">{item.productName}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[11px] text-gray-400">ID: {String(item.id).slice(0, 8)}</span>
+                      <span className="text-[11px] text-mute">ID: {String(item.id).slice(0, 8)}</span>
                       {item.color && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white border border-white/15" title={`Cor: ${item.color}`} data-testid={`item-color-${item.id}`}>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] text-[10px] font-bold bg-ink-3 text-paper border border-line" title={`Cor: ${item.color}`} data-testid={`item-color-${item.id}`}>
                           <span
-                            className="w-2.5 h-2.5 rounded-full border border-white/40 shadow-sm shrink-0"
+                            className="w-2.5 h-2.5 rounded-full border border-line-strong shrink-0"
                             style={{ backgroundColor: item.colorHex || '#000000' }}
                           />
                           <span>{item.color}</span>
@@ -571,7 +571,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                           {item.sizes.map((s) => (
                             <span
                               key={s}
-                              className="px-1.5 py-0.2 rounded text-[10px] font-black uppercase bg-white/10 text-gray-200 border border-white/10 tracking-tight"
+                              className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-black uppercase bg-ink-3 text-paper-2 border border-line tracking-tight"
                             >
                               {s}
                             </span>
@@ -583,15 +583,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
                   {/* SKU */}
                   <td className="py-3 px-5">
-                    <code className="text-xs font-mono text-gray-300 bg-black/40 px-2 py-1 rounded border border-white/10 break-all">
+                    <code className="inline-block max-w-[14rem] truncate whitespace-nowrap rounded-[2px] border border-line bg-ink px-2 py-1 align-middle font-mono text-xs text-paper-2" title={item.sku}>
                       {item.sku}
                     </code>
                   </td>
 
                   {/* Category */}
                   <td className="py-3 px-5">
-                    <span className="inline-flex items-center gap-1 text-xs text-gray-300 bg-white/10 px-2.5 py-1 rounded-full">
-                      <Tag className="w-3 h-3 text-gray-400" />
+                    <span className="inline-flex items-center gap-1 text-xs text-paper-2 bg-ink-3 px-2.5 py-1 rounded-[2px]">
+                      <Tag className="w-3 h-3 text-mute" />
                       {item.categoryName}
                     </span>
                   </td>
@@ -599,15 +599,15 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                   {/* Current Stock */}
                   <td className="py-3 px-5">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-extrabold text-white">{item.currentStock}</span>
-                      <span className="text-xs text-gray-500">{item.unit || 'un'}</span>
+                      <span className="text-xl font-extrabold text-paper">{item.currentStock}</span>
+                      <span className="text-xs text-mute">{item.unit || 'un'}</span>
                     </div>
                   </td>
 
                   {/* Min / Max */}
-                  <td className="py-3 px-5 text-xs text-gray-400">
-                    <div>Min: <strong className="text-gray-200">{item.minStock}</strong></div>
-                    <div>Max: <strong className="text-gray-200">{item.maxStock}</strong></div>
+                  <td className="py-3 px-5 text-xs text-mute">
+                    <div>Min: <strong className="text-paper-2">{item.minStock}</strong></div>
+                    <div>Max: <strong className="text-paper-2">{item.maxStock}</strong></div>
                   </td>
 
                   {/* Status Badge */}
@@ -617,16 +617,16 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
                   {/* Quick Stock Actions (+ / -) */}
                   <td className="py-3 px-5 text-center">
-                    <div className="inline-flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/10">
+                    <div className="inline-flex items-center gap-2 bg-ink p-1 rounded-[2px] border border-line">
                       <button
                         data-testid={`stock-out-${item.id}`}
                         onClick={() => handleStockUpdate(item.id, 'out')}
                         disabled={updatingId === item.id || item.currentStock <= 0}
-                        className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-2 rounded-[2px] bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Subtrair 1 unidade do estoque"
                       >
                         {updatingId === item.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                         ) : (
                           <Minus className="w-4 h-4" />
                         )}
@@ -635,11 +635,11 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                         data-testid={`stock-in-${item.id}`}
                         onClick={() => handleStockUpdate(item.id, 'in')}
                         disabled={updatingId === item.id}
-                        className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-30"
+                        className="p-2 rounded-[2px] bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all disabled:opacity-30"
                         title="Adicionar 1 unidade ao estoque"
                       >
                         {updatingId === item.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                         ) : (
                           <Plus className="w-4 h-4" />
                         )}
@@ -653,7 +653,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                       {onCreateProductFromItem && (
                         <button
                           onClick={() => onCreateProductFromItem(item)}
-                          className="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors flex items-center gap-1.5 text-[11px] font-bold"
+                          className="px-2.5 py-1.5 rounded-[2px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors flex items-center gap-1.5 text-[11px] font-bold"
                           title="Criar anúncio de produto na loja a partir desta peça do inventário"
                           data-testid={`create-product-from-inventory-${item.id}`}
                         >
@@ -663,7 +663,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                       )}
                       <button
                         onClick={() => handleOpenEditItem(item)}
-                        className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+                        className="p-2 rounded-[2px] bg-ink-3 hover:bg-ink-3 text-paper transition-colors"
                         title="Editar detalhes do item no inventário"
                         data-testid={`edit-inventory-item-${item.id}`}
                       >
@@ -671,7 +671,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                       </button>
                       <button
                         onClick={() => handleDeleteItem(item.id, item.productName)}
-                        className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                        className="p-2 rounded-[2px] bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
                         title="Excluir item do inventário"
                         data-testid={`delete-inventory-item-${item.id}`}
                       >
@@ -688,12 +688,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
       {/* MODAL: CRIAR OU EDITAR ITEM DE INVENTÁRIO */}
       {isItemModalOpen && editingItem && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-white/20 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="fixed inset-0 z-50 bg-ink/80 flex items-center justify-center p-4">
+          <div className="bg-ink-2 border border-line-strong rounded-[2px] p-6 sm:p-8 max-w-lg w-full space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-line pb-4">
               <div className="flex items-center gap-2">
-                <Package className="w-5 h-5 text-white" />
-                <h3 className="text-lg font-black uppercase text-white">
+                <Package className="w-5 h-5 text-paper" />
+                <h3 className="text-lg font-black uppercase text-paper">
                   {editingItem.id ? 'Editar Item do Inventário' : 'Novo Item no Inventário'}
                 </h3>
               </div>
@@ -702,7 +702,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                   setIsItemModalOpen(false);
                   setEditingItem(null);
                 }}
-                className="text-gray-400 hover:text-white p-1"
+                className="text-mute hover:text-paper p-1"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -710,7 +710,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
             <form onSubmit={handleSaveItem} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                   Nome do Produto *
                 </label>
                 <input
@@ -719,14 +719,14 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                   placeholder="Ex: Blazer Minimalista Preto"
                   value={editingItem.productName || ''}
                   onChange={(e) => setEditingItem({ ...editingItem, productName: e.target.value })}
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2.5 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-paper"
                   data-testid="item-modal-name-input"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                     Código SKU
                   </label>
                   <input
@@ -734,18 +734,18 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     placeholder="Ex: BLAZER-01"
                     value={editingItem.sku || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, sku: e.target.value.toUpperCase() })}
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                    className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2.5 text-sm font-mono text-paper placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-paper"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                     Categoria *
                   </label>
                   <select
                     value={editingItem.categoryId || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, categoryId: e.target.value })}
-                    className="w-full bg-zinc-900 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
+                    className="w-full bg-zinc-900 border border-line-strong rounded-[2px] px-4 py-2.5 text-sm text-paper focus:outline-none focus:ring-2 focus:ring-paper cursor-pointer"
                     data-testid="item-modal-category-select"
                   >
                     {categories.map((c) => (
@@ -759,7 +759,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                     Estoque Atual *
                   </label>
                   <input
@@ -768,12 +768,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     required
                     value={editingItem.currentStock ?? 10}
                     onChange={(e) => setEditingItem({ ...editingItem, currentStock: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white"
+                    className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2 text-sm text-paper focus:outline-none focus:ring-2 focus:ring-paper"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                     Mínimo (Alerta)
                   </label>
                   <input
@@ -781,12 +781,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     min="0"
                     value={editingItem.minStock ?? 5}
                     onChange={(e) => setEditingItem({ ...editingItem, minStock: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white"
+                    className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2 text-sm text-paper focus:outline-none focus:ring-2 focus:ring-paper"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                     Máximo
                   </label>
                   <input
@@ -794,23 +794,23 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                     min="1"
                     value={editingItem.maxStock ?? 50}
                     onChange={(e) => setEditingItem({ ...editingItem, maxStock: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white"
+                    className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2 text-sm text-paper focus:outline-none focus:ring-2 focus:ring-paper"
                   />
                 </div>
               </div>
 
               {/* Tamanhos do Item (P, M, G, GG, etc.) */}
-              <div className="space-y-2.5 bg-white/[0.03] p-3.5 rounded-2xl border border-white/10" data-testid="item-modal-sizes-section">
+              <div className="space-y-2.5 bg-ink-2 p-3.5 rounded-[2px] border border-line" data-testid="item-modal-sizes-section">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-paper">
                       Tamanhos Disponíveis do Item *
                     </label>
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-[11px] text-mute">
                       Selecione os tamanhos da peça (ex: P, M, G, GG) ou adicione tamanhos específicos
                     </p>
                   </div>
-                  <span className="text-[11px] font-bold text-gray-300 bg-white/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[11px] font-bold text-paper-2 bg-ink-3 px-2 py-0.5 rounded-[2px]">
                     {(editingItem.sizes || []).length} selecionado(s)
                   </span>
                 </div>
@@ -825,10 +825,10 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                         type="button"
                         onClick={() => handleToggleSize(size)}
                         data-testid={`size-toggle-${size}`}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-[2px] text-xs font-black transition-all flex items-center gap-1.5 ${
                           isSelected
-                            ? 'bg-white text-black shadow-md shadow-white/10 scale-105'
-                            : 'bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white border border-white/10'
+                            ? 'bg-paper text-ink scale-105'
+                            : 'bg-ink-2 hover:bg-ink-3 text-mute hover:text-paper border border-line'
                         }`}
                       >
                         {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
@@ -851,13 +851,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                         handleAddCustomSize();
                       }
                     }}
-                    className="flex-1 bg-black/40 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-white"
+                    className="flex-1 bg-ink border border-line-strong rounded-[2px] px-3 py-2 text-xs text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-paper"
                     data-testid="item-modal-custom-size-input"
                   />
                   <button
                     type="button"
                     onClick={() => handleAddCustomSize()}
-                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+                    className="px-4 py-2 bg-ink-3 hover:bg-ink-3 text-paper rounded-[2px] text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
                     data-testid="item-modal-add-custom-size-btn"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -867,12 +867,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
 
                 {/* Lista de tamanhos ativos com botão de remoção */}
                 {(editingItem.sizes || []).length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-white/5">
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mr-1">Tamanhos da peça:</span>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-line">
+                    <span className="text-[10px] text-mute uppercase font-bold tracking-wider mr-1">Tamanhos da peça:</span>
                     {(editingItem.sizes || []).map((s) => (
                       <span
                         key={s}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-white/20 text-white border border-white/20 shadow-sm"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[2px] text-xs font-black uppercase bg-ink-3 text-paper border border-line-strong"
                         data-testid={`active-size-tag-${s}`}
                       >
                         {s}
@@ -892,26 +892,26 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
               </div>
 
               {/* Cor da Peça no Inventário */}
-              <div className="space-y-2.5 bg-white/[0.03] p-3.5 rounded-2xl border border-white/10" data-testid="item-modal-color-section">
+              <div className="space-y-2.5 bg-ink-2 p-3.5 rounded-[2px] border border-line" data-testid="item-modal-color-section">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Palette className="w-4 h-4 text-emerald-400" />
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-paper">
                       Cor da Peça *
                     </label>
                   </div>
-                  <div className="flex items-center gap-2 bg-black/60 px-2.5 py-1 rounded-full border border-white/15">
+                  <div className="flex items-center gap-2 bg-ink px-2.5 py-1 rounded-[2px] border border-line">
                     <span
-                      className="w-3 h-3 rounded-full border border-white/40 shadow-sm"
+                      className="w-3 h-3 rounded-full border border-line-strong"
                       style={{ backgroundColor: editingItem.colorHex || '#000000' }}
                     />
-                    <span className="text-[11px] font-bold text-white">
+                    <span className="text-[11px] font-bold text-paper">
                       {editingItem.color || 'Preto'}
                     </span>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-gray-400">
+                <p className="text-[11px] text-mute">
                   Selecione a cor da peça para o controle de estoque ou personalize o tom:
                 </p>
 
@@ -930,14 +930,14 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                           colors: [{ name: c.name, hex: c.hex }]
                         })}
                         data-testid={`color-select-${c.name}`}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        className={`px-2.5 py-1 rounded-[2px] text-xs font-bold transition-all flex items-center gap-1.5 ${
                           isSelected
-                            ? 'bg-white text-black shadow-md shadow-white/10 scale-105'
-                            : 'bg-white/5 hover:bg-white/15 text-gray-300 border border-white/10'
+                            ? 'bg-paper text-ink scale-105'
+                            : 'bg-ink-2 hover:bg-ink-3 text-paper-2 border border-line'
                         }`}
                       >
                         <span
-                          className="w-3 h-3 rounded-full border border-white/30 shrink-0 shadow-sm"
+                          className="w-3 h-3 rounded-full border border-line-strong shrink-0"
                           style={{ backgroundColor: c.hex }}
                         />
                         <span>{c.name}</span>
@@ -949,7 +949,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                 {/* Personalizar Nome da Cor & Seletor Hex */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Nome da Cor</label>
+                    <label className="block text-[10px] uppercase font-bold text-mute mb-1">Nome da Cor</label>
                     <input
                       type="text"
                       placeholder="Ex: Preto Noir, Off-White, Verde Musgo"
@@ -959,12 +959,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                         color: e.target.value,
                         colors: [{ name: e.target.value, hex: editingItem.colorHex || '#000000' }]
                       })}
-                      className="w-full bg-black/40 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-white"
+                      className="w-full bg-ink border border-line-strong rounded-[2px] px-3 py-1.5 text-xs text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-paper"
                       data-testid="item-modal-color-name-input"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Amostra / Tom Hex</label>
+                    <label className="block text-[10px] uppercase font-bold text-mute mb-1">Amostra / Tom Hex</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
@@ -974,7 +974,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                           colorHex: e.target.value,
                           colors: [{ name: editingItem.color || 'Custom', hex: e.target.value }]
                         })}
-                        className="w-9 h-8 rounded-lg bg-transparent border border-white/20 cursor-pointer p-0.5"
+                        className="w-9 h-8 rounded-[2px] bg-transparent border border-line-strong cursor-pointer p-0.5"
                         data-testid="item-modal-color-picker"
                       />
                       <input
@@ -985,7 +985,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                           colorHex: e.target.value,
                           colors: [{ name: editingItem.color || 'Custom', hex: e.target.value }]
                         })}
-                        className="flex-1 bg-black/40 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs font-mono text-gray-300 focus:outline-none"
+                        className="flex-1 bg-ink border border-line-strong rounded-[2px] px-2.5 py-1.5 text-xs font-mono text-paper-2 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -995,7 +995,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
               {/* Product Image & Cloudinary Upload */}
               <div className="space-y-3" data-testid="item-modal-image-section">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-paper-2">
                     Imagem do Produto (Cloudinary)
                   </label>
                   {editingItem.imageUrl && (
@@ -1011,9 +1011,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3.5 bg-white/5 border border-white/10 rounded-2xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3.5 bg-ink-2 border border-line rounded-[2px]">
                   {/* Thumbnail Preview */}
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-black/60 border border-white/20 flex-shrink-0 flex items-center justify-center">
+                  <div className="relative w-20 h-20 rounded-[2px] overflow-hidden bg-ink border border-line-strong flex-shrink-0 flex items-center justify-center">
                     {editingItem.imageUrl ? (
                       <>
                         <img
@@ -1023,13 +1023,13 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                           data-testid="item-modal-image-preview"
                         />
                         {editingItem.imageUrl.includes('cloudinary.com') && (
-                          <div className="absolute bottom-1 right-1 bg-emerald-500/90 text-black text-[8px] font-black uppercase px-1 py-0.5 rounded shadow">
+                          <div className="absolute bottom-1 right-1 bg-emerald-500/90 text-ink text-[8px] font-black uppercase px-1 py-0.5 rounded-[2px]">
                             Cloudinary
                           </div>
                         )}
                       </>
                     ) : (
-                      <div className="flex flex-col items-center justify-center text-gray-500 gap-1">
+                      <div className="flex flex-col items-center justify-center text-mute gap-1">
                         <ImageIcon className="w-6 h-6" />
                         <span className="text-[9px]">Sem imagem</span>
                       </div>
@@ -1052,17 +1052,17 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                         type="button"
                         onClick={() => itemModalFileInputRef.current?.click()}
                         disabled={itemModalUploading}
-                        className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all disabled:opacity-50"
+                        className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2 bg-ink-3 hover:bg-ink-3 border border-line-strong rounded-[2px] text-xs font-bold text-paper transition-all disabled:opacity-50"
                         data-testid="item-modal-upload-btn"
                       >
                         {itemModalUploading ? (
                           <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                            <Loader2 className="w-3.5 h-3.5 motion-safe:animate-spin text-paper" />
                             <span>Enviando para Cloudinary ({itemModalUploadProgress}%)...</span>
                           </>
                         ) : (
                           <>
-                            <Upload className="w-3.5 h-3.5 text-white" />
+                            <Upload className="w-3.5 h-3.5 text-paper" />
                             <span>{editingItem.imageUrl ? 'Trocar Imagem (Cloudinary)' : 'Enviar Imagem (Cloudinary)'}</span>
                           </>
                         )}
@@ -1075,7 +1075,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                         placeholder="https://res.cloudinary.com/... ou URL externa"
                         value={editingItem.imageUrl || ''}
                         onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                        className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-white font-mono"
+                        className="w-full bg-ink border border-line rounded-[2px] px-3 py-1.5 text-xs text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-paper font-mono"
                         data-testid="item-modal-image-url-input"
                       />
                     </div>
@@ -1083,25 +1083,25 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                 <button
                   type="button"
                   onClick={() => {
                     setIsItemModalOpen(false);
                     setEditingItem(null);
                   }}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white"
+                  className="px-4 py-2.5 rounded-[2px] text-xs font-bold uppercase tracking-wider text-mute hover:text-paper"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingItem}
-                  className="px-6 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all disabled:opacity-50 shadow-md"
+                  className="px-6 py-2.5 rounded-[2px] bg-paper text-ink hover:bg-paper-2 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all disabled:opacity-50"
                   data-testid="item-modal-save-btn"
                 >
                   {savingItem ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                   ) : (
                     <Check className="w-4 h-4" />
                   )}
@@ -1116,62 +1116,62 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
       {/* MODAL: VERIFICAR ENVIO DA IMAGEM */}
       {pendingImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-ink/80 flex items-center justify-center p-4"
           data-testid="image-verification-modal"
         >
-          <div className="bg-zinc-950 border border-white/20 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="bg-ink-2 border border-line-strong rounded-[2px] p-6 sm:p-8 max-w-lg w-full space-y-6">
+            <div className="flex items-center justify-between border-b border-line pb-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-lg font-black uppercase text-white">Verificar Envio de Imagem</h3>
+                <h3 className="text-lg font-black uppercase text-paper">Verificar Envio de Imagem</h3>
               </div>
               <button
                 onClick={cancelImageVerification}
-                className="text-gray-400 hover:text-white p-1"
+                className="text-mute hover:text-paper p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Image Preview Box */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/80 border border-white/15 flex items-center justify-center">
+            <div className="relative aspect-video rounded-[2px] overflow-hidden bg-ink/80 border border-line flex items-center justify-center">
               <img
                 src={pendingImage.previewUrl}
                 alt="Prévia de verificação"
                 className="w-full h-full object-contain"
               />
-              <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-bold text-white border border-white/20">
+              <div className="absolute top-3 left-3 bg-ink/80 px-2.5 py-1 rounded-[2px] text-[10px] font-bold text-paper border border-line-strong">
                 Prévia da Imagem
               </div>
             </div>
 
             {/* Verification Checklist Details */}
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-2.5 text-xs">
-              <div className="flex items-center justify-between text-gray-300">
-                <span className="text-gray-400">Produto Destino:</span>
-                <span className="font-bold text-white">{pendingImage.itemName}</span>
+            <div className="bg-ink-2 p-4 rounded-[2px] border border-line space-y-2.5 text-xs">
+              <div className="flex items-center justify-between text-paper-2">
+                <span className="text-mute">Produto Destino:</span>
+                <span className="font-bold text-paper">{pendingImage.itemName}</span>
               </div>
-              <div className="flex items-center justify-between text-gray-300">
-                <span className="text-gray-400">Nome do Arquivo:</span>
-                <span className="font-mono text-gray-200">{pendingImage.file.name}</span>
+              <div className="flex items-center justify-between text-paper-2">
+                <span className="text-mute">Nome do Arquivo:</span>
+                <span className="font-mono text-paper-2">{pendingImage.file.name}</span>
               </div>
-              <div className="flex items-center justify-between text-gray-300">
-                <span className="text-gray-400">Tamanho Verificado:</span>
+              <div className="flex items-center justify-between text-paper-2">
+                <span className="text-mute">Tamanho Verificado:</span>
                 <span className="font-semibold text-emerald-400">{pendingImage.sizeKb} KB (Limite: 10 MB)</span>
               </div>
-              <div className="flex items-center justify-between text-gray-300">
-                <span className="text-gray-400">Tipo MIME:</span>
-                <span className="font-mono text-gray-200">{pendingImage.file.type}</span>
+              <div className="flex items-center justify-between text-paper-2">
+                <span className="text-mute">Tipo MIME:</span>
+                <span className="font-mono text-paper-2">{pendingImage.file.type}</span>
               </div>
               {pendingImage.dimensions && (
-                <div className="flex items-center justify-between text-gray-300">
-                  <span className="text-gray-400">Resolução:</span>
-                  <span className="font-semibold text-white">
+                <div className="flex items-center justify-between text-paper-2">
+                  <span className="text-mute">Resolução:</span>
+                  <span className="font-semibold text-paper">
                     {pendingImage.dimensions.width} x {pendingImage.dimensions.height} px
                   </span>
                 </div>
               )}
-              <div className="pt-2 border-t border-white/10 flex items-center gap-2 text-emerald-400 font-bold">
+              <div className="pt-2 border-t border-line flex items-center gap-2 text-emerald-400 font-bold">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Arquivo validado e apto para sincronização</span>
               </div>
@@ -1182,7 +1182,7 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
               <button
                 type="button"
                 onClick={cancelImageVerification}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white"
+                className="px-4 py-2.5 rounded-[2px] text-xs font-bold uppercase tracking-wider text-mute hover:text-paper"
               >
                 Cancelar
               </button>
@@ -1190,12 +1190,12 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ formatPrice: _fo
                 type="button"
                 onClick={handleConfirmImageUpload}
                 disabled={uploadingId !== null}
-                className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50"
+                className="px-6 py-2.5 rounded-[2px] bg-emerald-500 hover:bg-emerald-400 text-ink font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-emerald-500/20 transition-all disabled:opacity-50"
                 data-testid="confirm-upload-btn"
               >
                 {uploadingId !== null ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                     <span>Enviando... ({uploadProgress}%)</span>
                   </>
                 ) : (

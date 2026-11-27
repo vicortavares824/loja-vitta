@@ -316,19 +316,19 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
   return (
     <div className="space-y-6" data-testid="bulk-inventory-panel">
       {/* HEADER / INTRODUÇÃO */}
-      <div className="bg-zinc-950/80 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/[0.02] rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-ink-2 border border-line rounded-[2px] p-6 sm:p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-ink-2 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold text-gray-300 tracking-wider uppercase">
-              <Layers className="w-3.5 h-3.5 text-white" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[2px] bg-ink-2 border border-line text-[11px] font-bold text-paper-2 tracking-wider uppercase">
+              <Layers className="w-3.5 h-3.5 text-paper" />
               <span>Entrada em Massa & Transação Atômica</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+            <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-paper">
               Folha de Cálculo de Inventário
             </h2>
-            <p className="text-xs sm:text-sm text-gray-400 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-mute max-w-2xl leading-relaxed">
               Atualize dezenas de itens simultaneamente em uma única transação atômica protegida por rollback.
               Cole dados do Excel ou preencha a grade abaixo.
             </p>
@@ -339,7 +339,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
             <button
               type="button"
               onClick={() => setIsPasteModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 bg-ink-3 hover:bg-ink-3 border border-line-strong rounded-[2px] text-xs font-bold text-paper transition-all"
               data-testid="bulk-paste-btn"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
@@ -350,7 +350,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
               type="button"
               onClick={handleAddRow}
               disabled={loadingItems}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white text-black hover:bg-gray-200 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2.5 bg-paper text-ink hover:bg-paper-2 rounded-[2px] text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50"
               data-testid="bulk-add-row-btn"
             >
               <Plus className="w-4 h-4" />
@@ -361,7 +361,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
               type="button"
               onClick={handleClearAll}
               disabled={rows.length === 0}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 transition-colors disabled:opacity-30"
+              className="p-2.5 rounded-[2px] bg-ink-2 hover:bg-red-500/20 text-mute hover:text-red-400 border border-line transition-colors disabled:opacity-30"
               title="Limpar todas as linhas"
             >
               <Trash2 className="w-4 h-4" />
@@ -370,19 +370,19 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
         </div>
 
         {/* BARRA DE APLICAÇÃO GLOBAL */}
-        <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div className="mt-6 pt-6 border-t border-line grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div>
-            <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+            <label className="block text-[10px] uppercase font-bold text-mute mb-1.5">
               Tipo Padrão do Lote
             </label>
-            <div className="flex rounded-xl bg-black/40 border border-white/10 p-1">
+            <div className="flex rounded-[2px] bg-ink border border-line p-1">
               <button
                 type="button"
                 onClick={() => handleApplyGlobalType('in')}
-                className={`flex-1 py-1.5 rounded-lg font-bold text-center transition-all ${
+                className={`flex-1 py-1.5 rounded-[2px] font-bold text-center transition-all ${
                   globalType === 'in'
-                    ? 'bg-emerald-500 text-black shadow'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-emerald-500 text-ink '
+                    : 'text-mute hover:text-paper'
                 }`}
               >
                 + Entrada
@@ -390,10 +390,10 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
               <button
                 type="button"
                 onClick={() => handleApplyGlobalType('out')}
-                className={`flex-1 py-1.5 rounded-lg font-bold text-center transition-all ${
+                className={`flex-1 py-1.5 rounded-[2px] font-bold text-center transition-all ${
                   globalType === 'out'
-                    ? 'bg-amber-500 text-black shadow'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-amber-500 text-ink '
+                    : 'text-mute hover:text-paper'
                 }`}
               >
                 - Saída
@@ -401,10 +401,10 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
               <button
                 type="button"
                 onClick={() => handleApplyGlobalType('adjustment')}
-                className={`flex-1 py-1.5 rounded-lg font-bold text-center transition-all ${
+                className={`flex-1 py-1.5 rounded-[2px] font-bold text-center transition-all ${
                   globalType === 'adjustment'
-                    ? 'bg-blue-500 text-black shadow'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-blue-500 text-ink '
+                    : 'text-mute hover:text-paper'
                 }`}
               >
                 = Ajuste
@@ -414,7 +414,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
 
           <div className="md:col-span-2 flex items-end gap-2">
             <div className="flex-1">
-              <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+              <label className="block text-[10px] uppercase font-bold text-mute mb-1.5">
                 Motivo / Justificativa Padrão
               </label>
               <input
@@ -422,13 +422,13 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                 value={globalReason}
                 onChange={(e) => setGlobalReason(e.target.value)}
                 placeholder="Ex: Compra NF-e #8812, Ajuste Balanço..."
-                className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-white/40"
+                className="w-full bg-ink border border-line rounded-[2px] px-3 py-2 text-xs text-paper placeholder:text-mute focus:outline-none focus:border-line-strong"
               />
             </div>
             <button
               type="button"
               onClick={handleApplyGlobalReason}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors border border-white/10 flex-shrink-0"
+              className="px-3.5 py-2 rounded-[2px] bg-ink-3 hover:bg-ink-3 text-paper font-bold text-xs transition-colors border border-line flex-shrink-0"
               title="Aplica este motivo em todas as linhas da tabela"
             >
               Replicar Motivo
@@ -440,7 +440,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
       {/* FEEDBACK BANNER */}
       {feedback && (
         <div
-          className={`p-4 rounded-2xl border text-xs flex items-start gap-3 backdrop-blur-md transition-all ${
+          className={`p-4 rounded-[2px] border text-xs flex items-start gap-3 transition-all ${
             feedback.type === 'success'
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
               : 'bg-red-500/10 border-red-500/30 text-red-300'
@@ -461,11 +461,11 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
 
       {/* TABELA DATAGRID */}
       <form onSubmit={handleSubmitBatch} className="space-y-4">
-        <div className="bg-zinc-950/70 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md shadow-2xl">
+        <div className="bg-ink-2 border border-line rounded-[2px] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-white/[0.04] border-b border-white/10 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
+                <tr className="bg-ink-2 border-b border-line text-mute font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4 w-12 text-center">#</th>
                   <th className="py-3 px-4 min-w-[240px]">Produto / SKU *</th>
                   <th className="py-3 px-3 min-w-[100px]">Grade (Tam/Cor)</th>
@@ -477,14 +477,14 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                   <th className="py-3 px-3 w-12 text-center">Remover</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-line">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-500">
+                    <td colSpan={9} className="py-12 text-center text-mute">
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <FileSpreadsheet className="w-8 h-8 text-gray-600" />
+                        <FileSpreadsheet className="w-8 h-8 text-mute" />
                         <p className="text-sm font-semibold">Nenhuma movimentação inserida.</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-mute">
                           Clique em &quot;Nova Linha&quot; ou use &quot;Colar da Planilha&quot; para iniciar.
                         </p>
                       </div>
@@ -499,7 +499,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                     return (
                       <tr
                         key={row.id}
-                        className={`transition-colors hover:bg-white/[0.02] ${
+                        className={`transition-colors hover:bg-ink-2 ${
                           isDangerousOut
                             ? 'bg-red-500/[0.06] border-red-500/20'
                             : isInvalid
@@ -509,7 +509,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                         data-testid={`bulk-row-${index}`}
                       >
                         {/* Índice */}
-                        <td className="py-3 px-4 text-center font-mono text-gray-500 text-[11px]">
+                        <td className="py-3 px-4 text-center font-mono text-mute text-[11px]">
                           {index + 1}
                         </td>
 
@@ -518,7 +518,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                           <select
                             value={row.inventoryItemId}
                             onChange={(e) => handleItemSelect(row.id, e.target.value)}
-                            className="w-full bg-black/50 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-white font-medium"
+                            className="w-full bg-ink border border-line rounded-[2px] px-2.5 py-1.5 text-xs text-paper focus:outline-none focus:border-paper font-medium"
                             data-testid={`bulk-item-select-${index}`}
                           >
                             <option value="" disabled>
@@ -534,18 +534,18 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
 
                         {/* Tamanho e Cor */}
                         <td className="py-3 px-3">
-                          <div className="flex items-center gap-1.5 text-gray-300">
-                            <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-[10px] font-bold">
+                          <div className="flex items-center gap-1.5 text-paper-2">
+                            <span className="px-2 py-0.5 rounded-[2px] bg-ink-3 font-mono text-[10px] font-bold">
                               {row.size}
                             </span>
-                            <span className="text-[11px] text-gray-400 truncate max-w-[80px]">
+                            <span className="text-[11px] text-mute truncate max-w-[80px]">
                               {row.color}
                             </span>
                           </div>
                         </td>
 
                         {/* Saldo Atual */}
-                        <td className="py-3 px-3 text-center font-mono text-gray-300 text-xs">
+                        <td className="py-3 px-3 text-center font-mono text-paper-2 text-xs">
                           {row.currentStock}
                         </td>
 
@@ -556,7 +556,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                             onChange={(e) =>
                               handleRowChange(row.id, 'type', e.target.value as any)
                             }
-                            className={`w-full rounded-xl px-2 py-1.5 text-xs font-bold border focus:outline-none ${
+                            className={`w-full rounded-[2px] px-2 py-1.5 text-xs font-bold border focus:outline-none ${
                               row.type === 'in'
                                 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400'
                                 : row.type === 'out'
@@ -580,7 +580,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                             onChange={(e) =>
                               handleRowChange(row.id, 'quantity', parseInt(e.target.value, 10) || 0)
                             }
-                            className="w-full bg-black/50 border border-white/15 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-white text-center focus:outline-none focus:border-white"
+                            className="w-full bg-ink border border-line rounded-[2px] px-2.5 py-1.5 text-xs font-mono font-bold text-paper text-center focus:outline-none focus:border-paper"
                             data-testid={`bulk-qty-input-${index}`}
                           />
                         </td>
@@ -589,7 +589,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                         <td className="py-3 px-3 text-center">
                           <div className="flex items-center justify-center gap-1 font-mono font-bold">
                             <span
-                              className={`px-2 py-0.5 rounded-lg text-xs ${
+                              className={`px-2 py-0.5 rounded-[2px] text-xs ${
                                 isDangerousOut
                                   ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                                   : projected <= 5
@@ -615,7 +615,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                             value={row.reason}
                             onChange={(e) => handleRowChange(row.id, 'reason', e.target.value)}
                             placeholder="Motivo da movimentação..."
-                            className="w-full bg-black/40 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-white/30"
+                            className="w-full bg-ink border border-line rounded-[2px] px-2.5 py-1.5 text-xs text-paper-2 placeholder:text-mute focus:outline-none focus:border-line-strong"
                             data-testid={`bulk-reason-input-${index}`}
                           />
                         </td>
@@ -625,7 +625,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                           <button
                             type="button"
                             onClick={() => handleRemoveRow(row.id)}
-                            className="text-gray-500 hover:text-red-400 p-1 rounded-lg transition-colors"
+                            className="text-mute hover:text-red-400 p-1 rounded-[2px] transition-colors"
                             data-testid={`bulk-remove-row-${index}`}
                             title="Remover linha"
                           >
@@ -641,15 +641,15 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
           </div>
 
           {/* RODAPÉ DA FOLHA / RESUMO & SUBMISSÃO */}
-          <div className="p-4 sm:p-6 bg-white/[0.02] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-6 text-xs text-gray-400">
+          <div className="p-4 sm:p-6 bg-ink-2 border-t border-line flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-6 text-xs text-mute">
               <div>
                 <span>Total de Linhas: </span>
-                <strong className="text-white font-mono">{rows.length}</strong>
+                <strong className="text-paper font-mono">{rows.length}</strong>
               </div>
               <div>
                 <span>Unidades a Movimentar: </span>
-                <strong className="text-white font-mono">
+                <strong className="text-paper font-mono">
                   {rows.reduce((acc, curr) => acc + (Number(curr.quantity) || 0), 0)}
                 </strong>
               </div>
@@ -659,12 +659,12 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
               <button
                 type="submit"
                 disabled={submitting || rows.length === 0}
-                className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-white hover:bg-gray-200 text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-8 py-3 rounded-[2px] bg-paper hover:bg-paper-2 text-ink font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="bulk-submit-btn"
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                     <span>Processando Transação Atômica...</span>
                   </>
                 ) : (
@@ -682,36 +682,36 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
       {/* MODAL: COLAR DA PLANILHA (TSV / CSV) */}
       {isPasteModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-ink/80 flex items-center justify-center p-4"
           data-testid="bulk-paste-modal"
         >
-          <div className="bg-zinc-950 border border-white/20 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="bg-ink-2 border border-line-strong rounded-[2px] p-6 sm:p-8 max-w-2xl w-full space-y-6">
+            <div className="flex items-center justify-between border-b border-line pb-4">
               <div className="flex items-center gap-2.5">
                 <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-lg font-black uppercase text-white">
+                <h3 className="text-lg font-black uppercase text-paper">
                   Colar da Planilha (Excel / Google Sheets)
                 </h3>
               </div>
               <button
                 onClick={() => setIsPasteModalOpen(false)}
-                className="text-gray-400 hover:text-white p-1"
+                className="text-mute hover:text-paper p-1"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs text-gray-300">
+              <p className="text-xs text-paper-2">
                 Copie as linhas da sua folha de cálculo e cole diretamente abaixo. O sistema aceita dados separados por <strong>Tabulação</strong> (padrão de Ctrl+C do Excel) ou <strong>Vírgula</strong>:
               </p>
-              <div className="bg-black/60 border border-white/10 p-3 rounded-xl font-mono text-[11px] text-gray-400">
+              <div className="bg-ink border border-line p-3 rounded-[2px] font-mono text-[11px] text-mute">
                 <code>SKU [Tab] Quantidade [Tab] Tipo (in/out/adjustment) [Tab] Motivo</code>
-                <div className="text-gray-500 mt-1">Exemplo: BLAZER-NOIR &nbsp;&nbsp;&nbsp;&nbsp; 15 &nbsp;&nbsp;&nbsp;&nbsp; in &nbsp;&nbsp;&nbsp;&nbsp; Reposição Semanal</div>
+                <div className="text-mute mt-1">Exemplo: BLAZER-NOIR &nbsp;&nbsp;&nbsp;&nbsp; 15 &nbsp;&nbsp;&nbsp;&nbsp; in &nbsp;&nbsp;&nbsp;&nbsp; Reposição Semanal</div>
               </div>
 
               {pasteError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-semibold">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-[2px] text-red-400 text-xs font-semibold">
                   {pasteError}
                 </div>
               )}
@@ -721,7 +721,7 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
                 placeholder="Cole os dados aqui..."
-                className="w-full bg-black/50 border border-white/20 rounded-2xl p-4 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-white resize-none"
+                className="w-full bg-ink border border-line-strong rounded-[2px] p-4 text-xs font-mono text-paper placeholder:text-mute focus:outline-none focus:border-paper resize-none"
                 data-testid="bulk-paste-textarea"
               />
             </div>
@@ -730,14 +730,14 @@ export const BulkInventoryPanel: React.FC<BulkInventoryPanelProps> = ({ onSucces
               <button
                 type="button"
                 onClick={() => setIsPasteModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white"
+                className="px-4 py-2.5 rounded-[2px] text-xs font-bold uppercase tracking-wider text-mute hover:text-paper"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleProcessPastedData}
-                className="px-6 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all shadow-md"
+                className="px-6 py-2.5 rounded-[2px] bg-paper text-ink hover:bg-paper-2 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all"
                 data-testid="bulk-paste-confirm-btn"
               >
                 <Clipboard className="w-4 h-4" />

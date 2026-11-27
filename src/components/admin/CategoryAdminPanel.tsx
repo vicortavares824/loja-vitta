@@ -121,18 +121,18 @@ export const CategoryAdminPanel: React.FC = () => {
   return (
     <div className="space-y-8" data-testid="category-admin-panel">
       {/* Header */}
-      <div className="bg-gradient-to-r from-white/10 via-white/5 to-transparent p-6 rounded-3xl border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-white/10 via-white/5 to-transparent p-6 rounded-[2px] border border-line flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/20 text-white border border-white/30">
+            <span className="px-2 py-0.5 rounded-[2px] text-[10px] font-black uppercase tracking-widest bg-ink-3 text-paper border border-line-strong">
               Gestão de Categorias
             </span>
-            <span className="text-xs text-gray-400 font-medium">Classificação e Catálogo</span>
+            <span className="text-xs text-mute font-medium">Classificação e Catálogo</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
+          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-paper">
             Categorias de Produtos
           </h2>
-          <p className="text-xs text-gray-300 mt-1">
+          <p className="text-xs text-paper-2 mt-1">
             Crie, edite e organize as categorias do e-commerce de forma independente do inventário.
           </p>
         </div>
@@ -140,7 +140,7 @@ export const CategoryAdminPanel: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleOpenNew}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white text-black hover:bg-gray-200 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-md"
+            className="flex items-center gap-2 px-5 py-2.5 bg-paper text-ink hover:bg-paper-2 rounded-[2px] text-xs font-black uppercase tracking-wider transition-all"
             data-testid="create-new-category-btn"
           >
             <Plus className="w-4 h-4" />
@@ -149,9 +149,9 @@ export const CategoryAdminPanel: React.FC = () => {
           <button
             onClick={loadCategories}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-ink-3 hover:bg-ink-3 text-paper rounded-[2px] text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'motion-safe:animate-spin' : ''}`} />
             <span>Atualizar</span>
           </button>
         </div>
@@ -159,17 +159,17 @@ export const CategoryAdminPanel: React.FC = () => {
 
       {/* Grid of Categories */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-3xl border border-white/10 space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-white" />
-          <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+        <div className="flex flex-col items-center justify-center py-20 bg-ink-2 rounded-[2px] border border-line space-y-3">
+          <Loader2 className="w-8 h-8 motion-safe:animate-spin text-paper" />
+          <p className="text-xs text-mute font-semibold uppercase tracking-wider">
             Carregando categorias...
           </p>
         </div>
       ) : categories.length === 0 ? (
-        <div className="text-center py-16 bg-white/5 rounded-3xl border border-white/10 text-gray-400 space-y-3">
+        <div className="text-center py-16 bg-ink-2 rounded-[2px] border border-line text-mute space-y-3">
           <Layers className="w-12 h-12 mx-auto opacity-30" />
-          <p className="text-base font-bold text-white">Nenhuma categoria cadastrada</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-base font-bold text-paper">Nenhuma categoria cadastrada</p>
+          <p className="text-xs text-mute">
             Clique no botão acima para criar sua primeira categoria.
           </p>
         </div>
@@ -178,10 +178,10 @@ export const CategoryAdminPanel: React.FC = () => {
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className="bg-white/5 border border-white/10 hover:border-white/20 rounded-3xl overflow-hidden transition-all flex flex-col justify-between"
+              className="bg-ink-2 border border-line hover:border-line-strong rounded-[2px] overflow-hidden transition-all flex flex-col justify-between"
               data-testid={`category-card-${cat.id}`}
             >
-              <div className="relative aspect-[16/9] w-full bg-black/50 overflow-hidden">
+              <div className="relative aspect-[16/9] w-full bg-ink overflow-hidden">
                 {cat.image ? (
                   <img
                     src={cat.image}
@@ -189,34 +189,34 @@ export const CategoryAdminPanel: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="flex items-center justify-center w-full h-full text-gray-600">
+                  <div className="flex items-center justify-center w-full h-full text-mute">
                     <ImageIcon className="w-8 h-8" />
                   </div>
                 )}
-                <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold text-white border border-white/20">
+                <div className="absolute top-3 right-3 bg-ink/80 px-3 py-1 rounded-[2px] text-[11px] font-bold text-paper border border-line-strong">
                   {cat.itemCount || 0} peças
                 </div>
               </div>
 
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div>
-                  <h3 className="text-lg font-bold text-white uppercase tracking-wide">
+                  <h3 className="text-lg font-bold text-paper uppercase tracking-wide">
                     {cat.name}
                   </h3>
-                  <code className="text-[11px] font-mono text-gray-400 bg-white/5 px-2 py-0.5 rounded">
+                  <code className="text-[11px] font-mono text-mute bg-ink-2 px-2 py-0.5 rounded-[2px]">
                     slug: {cat.slug}
                   </code>
                   {cat.description && (
-                    <p className="text-xs text-gray-300 mt-2 line-clamp-2">
+                    <p className="text-xs text-paper-2 mt-2 line-clamp-2">
                       {cat.description}
                     </p>
                   )}
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-line">
                   <button
                     onClick={() => handleOpenEdit(cat)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] bg-ink-3 hover:bg-ink-3 text-paper text-xs font-semibold transition-colors"
                     data-testid={`edit-category-btn-${cat.id}`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -224,7 +224,7 @@ export const CategoryAdminPanel: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleDelete(cat.id, cat.name)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-semibold transition-colors"
                     data-testid={`delete-category-btn-${cat.id}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -239,12 +239,12 @@ export const CategoryAdminPanel: React.FC = () => {
 
       {/* MODAL: CRIAR OU EDITAR CATEGORIA */}
       {isModalOpen && editingCategory && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-white/20 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="fixed inset-0 z-50 bg-ink/80 flex items-center justify-center p-4">
+          <div className="bg-ink-2 border border-line-strong rounded-[2px] p-6 sm:p-8 max-w-lg w-full space-y-6">
+            <div className="flex items-center justify-between border-b border-line pb-4">
               <div className="flex items-center gap-2">
-                <FolderTree className="w-5 h-5 text-white" />
-                <h3 className="text-lg font-black uppercase text-white">
+                <FolderTree className="w-5 h-5 text-paper" />
+                <h3 className="text-lg font-black uppercase text-paper">
                   {editingCategory.id ? 'Editar Categoria' : 'Criar Nova Categoria'}
                 </h3>
               </div>
@@ -253,7 +253,7 @@ export const CategoryAdminPanel: React.FC = () => {
                   setIsModalOpen(false);
                   setEditingCategory(null);
                 }}
-                className="text-gray-400 hover:text-white p-1"
+                className="text-mute hover:text-paper p-1"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -261,7 +261,7 @@ export const CategoryAdminPanel: React.FC = () => {
 
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                   Nome da Categoria *
                 </label>
                 <input
@@ -276,13 +276,13 @@ export const CategoryAdminPanel: React.FC = () => {
                       slug: editingCategory.id ? editingCategory.slug : e.target.value.toLowerCase().trim().replace(/[\s_]+/g, '-').replace(/[^\w-]/g, '')
                     })
                   }
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2.5 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-paper"
                   data-testid="category-modal-name-input"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                   Slug (Identificador URL)
                 </label>
                 <input
@@ -290,13 +290,13 @@ export const CategoryAdminPanel: React.FC = () => {
                   placeholder="Ex: alfaiataria-minimalista"
                   value={editingCategory.slug || ''}
                   onChange={(e) => setEditingCategory({ ...editingCategory, slug: e.target.value })}
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2.5 text-sm font-mono text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2.5 text-sm font-mono text-paper-2 placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-paper"
                   data-testid="category-modal-slug-input"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                   Descrição
                 </label>
                 <textarea
@@ -304,17 +304,17 @@ export const CategoryAdminPanel: React.FC = () => {
                   placeholder="Descrição da categoria para clientes e catálogo..."
                   value={editingCategory.description || ''}
                   onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
-                  className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-4 py-2.5 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-paper"
                 />
               </div>
 
               {/* Category Image & Upload */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-paper-2 mb-1">
                   Imagem de Capa da Categoria
                 </label>
                 <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-black/60 border border-white/20 flex-shrink-0">
+                  <div className="relative w-16 h-16 rounded-[2px] overflow-hidden bg-ink border border-line-strong flex-shrink-0">
                     {editingCategory.image ? (
                       <img
                         src={editingCategory.image}
@@ -323,7 +323,7 @@ export const CategoryAdminPanel: React.FC = () => {
                       />
                     ) : (
                       <div className="flex items-center justify-center w-full h-full">
-                        <ImageIcon className="w-5 h-5 text-gray-500" />
+                        <ImageIcon className="w-5 h-5 text-mute" />
                       </div>
                     )}
                   </div>
@@ -334,7 +334,7 @@ export const CategoryAdminPanel: React.FC = () => {
                       placeholder="URL da imagem da categoria..."
                       value={editingCategory.image || ''}
                       onChange={(e) => setEditingCategory({ ...editingCategory, image: e.target.value })}
-                      className="w-full bg-white/5 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white mb-2"
+                      className="w-full bg-ink-2 border border-line-strong rounded-[2px] px-3 py-1.5 text-xs text-paper placeholder:text-mute focus:outline-none focus:ring-2 focus:ring-paper mb-2"
                     />
 
                     <input
@@ -349,12 +349,12 @@ export const CategoryAdminPanel: React.FC = () => {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-ink-3 hover:bg-ink-3 text-paper rounded-[2px] text-xs font-semibold transition-colors disabled:opacity-50"
                       data-testid="category-upload-image-btn"
                     >
                       {uploading ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 motion-safe:animate-spin" />
                           <span>Enviando ({uploadProgress}%)...</span>
                         </>
                       ) : (
@@ -368,25 +368,25 @@ export const CategoryAdminPanel: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     setEditingCategory(null);
                   }}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white"
+                  className="px-4 py-2.5 rounded-[2px] text-xs font-bold uppercase tracking-wider text-mute hover:text-paper"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || uploading}
-                  className="px-6 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all disabled:opacity-50 shadow-md"
+                  className="px-6 py-2.5 rounded-[2px] bg-paper text-ink hover:bg-paper-2 text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all disabled:opacity-50"
                   data-testid="category-modal-save-btn"
                 >
                   {submitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 motion-safe:animate-spin" />
                   ) : (
                     <Check className="w-4 h-4" />
                   )}

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { User, Mail, Package, LogOut, Pencil, Check, X, Loader2, ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowUpRight, Check, Loader2, LogOut, Pencil, X } from 'lucide-react';
 import type { Order } from '../../types/ecommerce';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -9,20 +9,38 @@ import { PersonalDetailsSection } from '../profile/PersonalDetailsSection';
 import { AddressesSection } from '../profile/AddressesSection';
 import { OrderJourney } from '../profile/OrderJourney';
 import { CancelOrderButton } from '../profile/CancelOrderButton';
+import { fieldInput, fieldLabel, sectionTitle } from '../profile/profileStyles';
+import { LineReveal } from '../home/HomeMotion';
 
 interface ProfilePageProps {
   onNavigate: (tab: string) => void;
 }
 
-const STATUS_LABELS: Record<Order['status'], { label: string; className: string }> = {
-  pending_payment: { label: 'Aguardando pagamento', className: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' },
-  pending: { label: 'Pendente', className: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' },
-  processing: { label: 'Pago, em preparação', className: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
-  shipped: { label: 'Enviado', className: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' },
-  delivered: { label: 'Entregue', className: 'bg-green-500/15 text-green-300 border-green-500/30' },
-  cancelled: { label: 'Cancelado', className: 'bg-gray-500/15 text-gray-300 border-gray-500/30' },
+/** Rótulo de cada status; `done` marca pedidos encerrados (bolinha vazada). */
+const STATUS_LABELS: Record<Order['status'], { label: string; done: boolean }> = {
+  pending_payment: { label: 'Aguardando pagamento', done: false },
+  pending: { label: 'Pendente', done: false },
+  processing: { label: 'Pago, em preparação', done: false },
+  shipped: { label: 'Enviado', done: false },
+  delivered: { label: 'Entregue', done: true },
+  cancelled: { label: 'Cancelado', done: true },
 };
-export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
+
+const SECTIONS = [
+  { id: 'pedidos', label: 'Pedidos' },
+  { id: 'enderecos', label: 'Endereços' },
+  { id: 'dados', label: 'Dados' },
+];
+
+interface OrderItemView {
+  id?: string | number;
+  quantity: number;
+  productName: string;
+  selectedColor?: string;
+  selectedSize?: string;
+}
+
+export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { formatPrice, showToast } = useCart();
 
@@ -41,45 +59,53 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     setOrdersError(false);
     tomatoApi
       .getMyOrders()
-      .then(data => { if (active) setOrders(data); })
-      .catch(() => { if (active) setOrdersError(true); })
-      .finally(() => { if (active) setOrdersLoading(false); });
-    return () => { active = false; };
+      .then((data) => {
+        if (active) setOrders(data);
+      })
+      .catch(() => {
+        if (active) setOrdersError(true);
+      })
+      .finally(() => {
+        if (active) setOrdersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [isAuthenticated]);
 
   // Atualiza só o pedido cancelado (imutável), sem recarregar a lista.
   const handleOrderCancelled = (orderId: string, refunded: boolean) => {
-    setOrders(prev => prev.map(o => (o.id === orderId ? { ...o, status: 'cancelled' } : o)));
-    showToast(
-      refunded ? 'Pedido cancelado. O estorno foi solicitado ao Mercado Pago.' : 'Pedido cancelado.',
-      'success'
-    );
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'cancelled' } : o)));
+    showToast(refunded ? 'Pedido cancelado. O estorno foi solicitado ao Mercado Pago.' : 'Pedido cancelado.', 'success');
   };
+
   if (isLoading) {
     return (
-      <div className="pt-28 pb-24 min-h-screen bg-black text-white flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <div className="flex min-h-screen items-center justify-center bg-ink pt-28 text-paper">
+        <Loader2 className="h-5 w-5 text-mute motion-safe:animate-spin" aria-label="Carregando" />
       </div>
     );
   }
 
   if (!isAuthenticated || !user) {
     return (
-      <div className="pt-28 pb-24 min-h-screen bg-black text-white flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center bg-white/5 border border-white/10 rounded-3xl p-8 space-y-4">
-          <User className="w-10 h-10 mx-auto text-gray-400" />
-          <h1 className="text-xl font-extrabold uppercase tracking-wider">Entre para ver seu perfil</h1>
-          <p className="text-sm text-gray-400">Faça login para acompanhar seus pedidos e dados da conta.</p>
-          <button
-            onClick={() => onNavigate('login-client')}
-            className="w-full min-h-[44px] bg-white text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-gray-200 transition-colors"
-          >
+      <div className="flex min-h-screen items-center bg-ink px-[var(--gutter)] pb-24 pt-28 text-paper">
+        <div className="mx-auto w-full max-w-md">
+          <p className="eyebrow mb-5">Minha conta</p>
+          <h1 className="font-display text-5xl font-semibold uppercase leading-[0.9] tracking-[-0.045em]">
+            Entre para ver seu <span className="font-serif-accent">perfil</span>
+          </h1>
+          <p className="mt-5 text-[15px] text-paper-2">Faça login para acompanhar seus pedidos e dados da conta.</p>
+          <button type="button" onClick={() => onNavigate('login-client')} className="btn-primary mt-10 w-full">
             Entrar
           </button>
         </div>
       </div>
     );
   }
+
+  const firstName = user.name.split(' ')[0] || user.name;
+
   const startEdit = () => {
     setNameDraft(user.name);
     setEditingName(true);
@@ -96,8 +122,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       await authService.updateName(trimmed);
       showToast('Nome atualizado.', 'success');
       setEditingName(false);
-    } catch (e: any) {
-      showToast(e?.message || 'Não foi possível atualizar o nome.', 'error');
+    } catch (e: unknown) {
+      showToast(e instanceof Error && e.message ? e.message : 'Não foi possível atualizar o nome.', 'error');
     } finally {
       setSavingName(false);
     }
@@ -107,160 +133,239 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
     logout();
     onNavigate('home');
   };
+
+  const activeOrders = orders.filter((o) => !STATUS_LABELS[o.status]?.done).length;
+
   return (
-    <div className="pt-28 pb-24 min-h-screen bg-black text-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5 p-6 rounded-3xl border border-white/10">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-14 h-14 shrink-0 rounded-full bg-white text-black flex items-center justify-center text-xl font-extrabold uppercase">
-              {user.name.charAt(0)}
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight break-words">Meu Perfil</h1>
-              <p className="text-sm text-gray-400 break-words">Gerencie sua conta e acompanhe seus pedidos.</p>
-            </div>
+    <div className="min-h-screen bg-ink pb-24 pt-28 text-paper md:pt-36">
+      <div className="mx-auto max-w-[1600px] px-[var(--gutter)]">
+        {/* Cabeçalho */}
+        <header className="mb-14 grid grid-cols-1 items-end gap-6 border-b border-line pb-10 md:grid-cols-12">
+          <div className="min-w-0 md:col-span-9">
+            <p className="eyebrow mb-5">Minha conta</p>
+            <h1 className="font-display text-[clamp(2.75rem,8vw,7.5rem)] font-semibold uppercase leading-[0.88] tracking-[-0.05em]">
+              <LineReveal
+                onMount
+                label={`Olá, ${firstName}`}
+                lines={[
+                  'Olá,',
+                  <span key="name" className="font-serif-accent break-words">
+                    {firstName}
+                  </span>,
+                ]}
+              />
+            </h1>
           </div>
-          <button
-            onClick={handleLogout}
-            className="min-h-[44px] flex items-center justify-center gap-2 px-5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider border border-white/15 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sair</span>
-          </button>
-        </div>
+          <div className="flex items-center justify-between gap-4 md:col-span-3 md:flex-col md:items-end">
+            <p className="eyebrow md:text-right">
+              {ordersLoading ? '··' : orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}
+              {activeOrders > 0 && ` · ${activeOrders} em andamento`}
+            </p>
+            <button type="button" onClick={handleLogout} className="btn-secondary">
+              <LogOut className="h-4 w-4" strokeWidth={1.5} />
+              Sair
+            </button>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">          <section className="lg:col-span-1 bg-white/5 rounded-3xl border border-white/10 p-6 space-y-5 h-fit">
-            <h2 className="text-sm font-extrabold uppercase tracking-wider text-gray-300">Dados da conta</h2>
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-12">
+          {/* Navegação lateral */}
+          <nav aria-label="Seções da conta" className="hidden md:col-span-3 md:block">
+            <ul className="sticky top-24 border-t border-line">
+              {SECTIONS.map((s, i) => (
+                <li key={s.id} className="border-b border-line">
+                  <a href={`#${s.id}`} className="group flex items-baseline gap-4 py-3">
+                    <span className="eyebrow tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="font-display text-sm font-medium uppercase tracking-[0.06em] transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-1">
+                      {s.label}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-            <div className="space-y-1.5">
-              <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5" /> Nome
-              </span>
-              {editingName ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    value={nameDraft}
-                    onChange={e => setNameDraft(e.target.value)}
-                    maxLength={80}
-                    autoFocus
-                    className="flex-1 min-w-0 min-h-[44px] bg-black/60 border border-white/20 rounded-xl px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/40"
-                    aria-label="Novo nome"
-                  />                  <button onClick={saveName} disabled={savingName} className="tap-target flex items-center justify-center rounded-xl bg-white text-black disabled:opacity-50" aria-label="Salvar nome">
-                    {savingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button onClick={() => setEditingName(false)} disabled={savingName} className="tap-target flex items-center justify-center rounded-xl bg-white/10 text-white" aria-label="Cancelar edição">
-                    <X className="w-4 h-4" />
+          <div className="min-w-0 space-y-20 md:col-span-9">
+            {/* Pedidos */}
+            <section id="pedidos" aria-labelledby="pedidos-title" className="scroll-mt-24">
+              <h2 id="pedidos-title" className={sectionTitle}>
+                Meus pedidos
+              </h2>
+
+              {ordersLoading ? (
+                <div className="space-y-3" aria-hidden>
+                  {[0, 1].map((n) => (
+                    <div key={n} className="h-40 bg-ink-2 motion-safe:animate-pulse" />
+                  ))}
+                </div>
+              ) : ordersError ? (
+                <p className="border-y border-line py-10 text-center text-sm text-paper-2">
+                  Não foi possível carregar seus pedidos. Tente novamente mais tarde.
+                </p>
+              ) : orders.length === 0 ? (
+                <div className="border-y border-line py-16 text-center">
+                  <p className="eyebrow mb-3">Nenhum pedido ainda</p>
+                  <p className="mb-8 text-paper-2">Quando você comprar, o acompanhamento aparece aqui.</p>
+                  <button type="button" onClick={() => onNavigate('products')} className="btn-secondary">
+                    Ver catálogo
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-base font-semibold break-words min-w-0">{user.name}</span>
-                  <button onClick={startEdit} className="tap-target flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white" aria-label="Editar nome">
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </div>
+                <ul className="border-t border-line">
+                  {orders.map((order) => (
+                    <OrderRow
+                      key={order.id}
+                      order={order}
+                      formatPrice={formatPrice}
+                      onCancelled={handleOrderCancelled}
+                      onError={(message) => showToast(message, 'error')}
+                    />
+                  ))}
+                </ul>
               )}
-            </div>
-            <div className="space-y-1.5">
-              <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5" /> E-mail
-              </span>
-              <span className="text-sm text-gray-200 break-all">{user.email}</span>
-            </div>
+            </section>
 
-            <div className="space-y-1.5">
-              <span className="text-[11px] uppercase font-bold tracking-wider text-gray-500 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" /> Tipo de conta
-              </span>
-              <span className="text-sm text-gray-200">{user.role === 'admin' ? 'Administrador' : 'Cliente'}</span>
-            </div>
-          </section>
-          <div className="lg:col-span-2 space-y-8 min-w-0">
-          <PersonalDetailsSection />
-          <AddressesSection userName={user.name} />
-          <section className="bg-white/5 rounded-3xl border border-white/10 p-6 space-y-5">
-            <h2 className="text-sm font-extrabold uppercase tracking-wider text-gray-300 flex items-center gap-2">
-              <Package className="w-4 h-4" /> Meus pedidos
-            </h2>
+            {/* Endereços */}
+            <section id="enderecos" className="scroll-mt-24">
+              <AddressesSection userName={user.name} />
+            </section>
 
-            {ordersLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              </div>
-            ) : ordersError ? (
-              <p className="text-sm text-red-300 py-8 text-center">Não foi possível carregar seus pedidos. Tente novamente mais tarde.</p>
-            ) : orders.length === 0 ? (
-              <div className="text-center py-12 space-y-4">
-                <p className="text-sm text-gray-400">Você ainda não fez nenhum pedido.</p>
-                <button onClick={() => onNavigate('products')} className="min-h-[44px] px-6 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-gray-200 transition-colors">
-                  Ver catálogo
-                </button>
-              </div>
-            ) : (              <ul className="space-y-4">
-                {orders.map(order => {
-                  const status = STATUS_LABELS[order.status] ?? STATUS_LABELS.pending;
-                  return (
-                    <li key={order.id} className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-xs font-mono text-gray-400 break-all">Pedido #{String(order.id).slice(0, 8)}</p>
-                          <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('pt-BR')}</p>
-                        </div>
-                        <span className={`self-start sm:self-auto inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${status.className}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                      <ul className="space-y-1.5">
-                        {order.items.map((item: any, i: number) => (
-                          <li key={item.id ?? i} className="text-sm text-gray-200 break-words">
-                            {item.quantity}× {item.productName}
-                            {(item.selectedColor || item.selectedSize) && (
-                              <span className="text-gray-500"> · {[item.selectedColor, item.selectedSize].filter(Boolean).join(' / ')}</span>
+            {/* Dados */}
+            <section id="dados" aria-labelledby="dados-title" className="scroll-mt-24">
+              <h2 id="dados-title" className={sectionTitle}>
+                Dados da conta
+              </h2>
+              <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+                <dl className="space-y-6">
+                  <div>
+                    <dt className={fieldLabel}>Nome</dt>
+                    <dd>
+                      {editingName ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={nameDraft}
+                            onChange={(e) => setNameDraft(e.target.value)}
+                            maxLength={80}
+                            autoFocus
+                            className={fieldInput}
+                            aria-label="Novo nome"
+                          />
+                          <button type="button" onClick={saveName} disabled={savingName} className="btn-icon" aria-label="Salvar nome">
+                            {savingName ? (
+                              <Loader2 className="h-4 w-4 motion-safe:animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" strokeWidth={1.75} />
                             )}
-                          </li>
-                        ))}
-                      </ul>
-
-                      <OrderJourney order={order} />
-
-                      <CancelOrderButton
-                        order={order}
-                        onCancelled={handleOrderCancelled}
-                        onError={message => showToast(message, 'error')}
-                      />
-
-                      {(order.shippingServiceName || order.trackingCode) && (
-                        <div className="text-xs text-gray-400 space-y-1">
-                          {order.shippingServiceName && <p>Entrega: {order.shippingServiceName}</p>}
-                          {order.trackingCode && (
-                            <p className="break-all">
-                              Rastreio:{' '}
-                              <a
-                                href={`https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(order.trackingCode)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-mono text-white underline underline-offset-4"
-                              >
-                                {order.trackingCode}
-                              </a>
-                            </p>
-                          )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingName(false)}
+                            disabled={savingName}
+                            className="btn-icon"
+                            aria-label="Cancelar edição"
+                          >
+                            <X className="h-4 w-4" strokeWidth={1.5} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex min-h-12 items-center justify-between gap-2 border-b border-line">
+                          <span className="min-w-0 break-words">{user.name}</span>
+                          <button type="button" onClick={startEdit} className="btn-icon -mr-2" aria-label="Editar nome">
+                            <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                          </button>
                         </div>
                       )}
-
-                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                        <span className="text-xs text-gray-500 uppercase tracking-wider">Total</span>
-                        <span className="text-base font-extrabold">{formatPrice(Number(order.totalAmount))}</span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className={fieldLabel}>E-mail</dt>
+                    <dd className="flex min-h-12 items-center break-all border-b border-line">{user.email}</dd>
+                  </div>
+                  <div>
+                    <dt className={fieldLabel}>Tipo de conta</dt>
+                    <dd className="flex min-h-12 items-center border-b border-line">
+                      {user.role === 'admin' ? 'Administrador' : 'Cliente'}
+                    </dd>
+                  </div>
+                </dl>
+                <PersonalDetailsSection />
+              </div>
+            </section>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
+
+interface OrderRowProps {
+  order: Order;
+  formatPrice: (value: number) => string;
+  onCancelled: (orderId: string, refunded: boolean) => void;
+  onError: (message: string) => void;
+}
+
+function OrderRow({ order, formatPrice, onCancelled, onError }: OrderRowProps) {
+  const status = STATUS_LABELS[order.status] ?? STATUS_LABELS.pending;
+  const items = order.items as unknown as OrderItemView[];
+
+  return (
+    <li className="grid grid-cols-1 gap-6 border-b border-line py-8 lg:grid-cols-12">
+      <div className="space-y-4 lg:col-span-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="eyebrow break-all">
+            #{String(order.id).slice(0, 8)} — {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+          </p>
+          <span className="flex items-center gap-2 font-display text-[12px] font-medium uppercase tracking-[0.06em]">
+            <span
+              aria-hidden
+              className={`h-2 w-2 rounded-full ${
+                order.status === 'cancelled' ? 'border border-mute' : status.done ? 'border border-paper' : 'bg-paper'
+              }`}
+            />
+            <span className={order.status === 'cancelled' ? 'text-mute' : ''}>{status.label}</span>
+          </span>
+        </div>
+
+        <ul className="space-y-1.5">
+          {items.map((item, i) => (
+            <li key={item.id ?? i} className="break-words text-sm">
+              <span className="font-mono text-mute">{item.quantity}×</span> {item.productName}
+              {(item.selectedColor || item.selectedSize) && (
+                <span className="text-mute"> · {[item.selectedColor, item.selectedSize].filter(Boolean).join(' / ')}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex items-baseline justify-between border-t border-line pt-3">
+          <span className="eyebrow">Total</span>
+          <span className="font-mono text-base tabular-nums">{formatPrice(Number(order.totalAmount))}</span>
+        </div>
+      </div>
+
+      <div className="space-y-3 lg:col-span-7">
+        <OrderJourney order={order} />
+
+        {(order.shippingServiceName || order.trackingCode) && (
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-sm">
+            {order.shippingServiceName && <span className="text-paper-2">Entrega: {order.shippingServiceName}</span>}
+            {order.trackingCode && (
+              <a
+                href={`https://www.melhorrastreio.com.br/rastreio/${encodeURIComponent(order.trackingCode)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-line flex items-center gap-1.5 break-all font-mono text-[13px]"
+              >
+                Rastrear {order.trackingCode}
+                <ArrowUpRight className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+              </a>
+            )}
+          </div>
+        )}
+
+        <CancelOrderButton order={order} onCancelled={onCancelled} onError={onError} />
+      </div>
+    </li>
+  );
+}

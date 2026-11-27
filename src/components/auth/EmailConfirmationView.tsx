@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, CheckCircle2, ArrowRight, RefreshCw, ExternalLink, ShieldCheck, Copy, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Check, Copy, ExternalLink, RefreshCw } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useCart } from '../../context/CartContext';
+import { AuthLayout } from './AuthLayout';
 
 interface EmailConfirmationViewProps {
   email: string;
@@ -9,41 +10,52 @@ interface EmailConfirmationViewProps {
   onNavigateToLogin: () => void;
 }
 
-export const EmailConfirmationView: React.FC<EmailConfirmationViewProps> = ({
-  email,
-  isAdmin = false,
-  onNavigateToLogin
-}) => {
+const RESEND_COOLDOWN_S = 60;
+const COPIED_RESET_MS = 2500;
+
+const STEPS = [
+  'Abra a caixa de entrada do seu e-mail.',
+  'Clique no link de confirmação enviado pela Vitta Basics.',
+  'Não encontrou? Veja as pastas de spam ou lixo eletrônico.',
+];
+
+function getWebmailUrl(emailAddress: string): string {
+  const domain = emailAddress.split('@')[1]?.toLowerCase() || '';
+  if (domain.includes('gmail')) return 'https://mail.google.com/';
+  if (domain.includes('outlook') || domain.includes('hotmail') || domain.includes('live')) return 'https://outlook.live.com/';
+  if (domain.includes('yahoo')) return 'https://mail.yahoo.com/';
+  if (domain.includes('icloud')) return 'https://www.icloud.com/mail';
+  if (domain.includes('proton')) return 'https://mail.proton.me/';
+  return `mailto:${emailAddress}`;
+}
+
+export function EmailConfirmationView({ email, isAdmin = false, onNavigateToLogin }: EmailConfirmationViewProps) {
   const { showToast } = useCart();
   const [resending, setResending] = useState(false);
-  const [cooldown, setCooldown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
+  const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_S);
   const [copied, setCopied] = useState(false);
+  const canResend = cooldown === 0;
 
   useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
-    }
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(email);
-    setCopied(true);
-    showToast('E-mail copiado para a área de transferência!', 'info');
-    setTimeout(() => setCopied(false), 2500);
-  };
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), COPIED_RESET_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
-  const getWebmailUrl = (emailAddress: string): string => {
-    const domain = emailAddress.split('@')[1]?.toLowerCase() || '';
-    if (domain.includes('gmail')) return 'https://mail.google.com/';
-    if (domain.includes('outlook') || domain.includes('hotmail') || domain.includes('live')) return 'https://outlook.live.com/';
-    if (domain.includes('yahoo')) return 'https://mail.yahoo.com/';
-    if (domain.includes('icloud')) return 'https://www.icloud.com/mail';
-    if (domain.includes('proton')) return 'https://mail.proton.me/';
-    return `mailto:${emailAddress}`;
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      showToast('E-mail copiado.', 'info');
+    } catch {
+      showToast('Não foi possível copiar o e-mail.', 'error');
+    }
   };
 
   const handleResend = async () => {
@@ -51,126 +63,64 @@ export const EmailConfirmationView: React.FC<EmailConfirmationViewProps> = ({
     setResending(true);
     try {
       await authService.resendConfirmation(email);
-      showToast('E-mail de confirmação reenviado com sucesso!', 'success');
-      setCooldown(60);
-      setCanResend(false);
-    } catch (err: any) {
-      showToast(err.message || 'Falha ao reenviar e-mail.', 'error');
+      showToast('E-mail de confirmação reenviado.', 'success');
+      setCooldown(RESEND_COOLDOWN_S);
+    } catch (err: unknown) {
+      showToast(err instanceof Error && err.message ? err.message : 'Falha ao reenviar e-mail.', 'error');
     } finally {
       setResending(false);
     }
   };
 
-  const webmailUrl = getWebmailUrl(email);
-
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden animate-fadeIn">
-      {/* Dynamic Background Glows */}
-      <div className="absolute top-1/4 left-1/3 w-[30rem] h-[30rem] bg-white/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-[26rem] h-[26rem] bg-gray-500/10 rounded-full blur-[160px] pointer-events-none" />
+    <AuthLayout
+      eyebrow={isAdmin ? 'Conta de administrador' : 'Quase lá'}
+      titleLabel="Confirme seu e-mail"
+      titleLines={[
+        'Confirme',
+        <>
+          seu <span className="font-serif-accent">e-mail</span>
+        </>,
+      ]}
+      intro="Sua conta foi registrada. Enviamos um link de ativação para:"
+      footer={
+        <button type="button" onClick={onNavigateToLogin} className="group flex w-full items-center justify-between text-left">
+          <span>
+            <span className="eyebrow block">Já confirmou?</span>
+            <span className="mt-1 block font-display text-lg font-semibold uppercase tracking-[-0.01em]">Fazer login</span>
+          </span>
+          <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" strokeWidth={1.5} />
+        </button>
+      }
+    >
+      <div className="space-y-8">
+        <div className="flex items-center justify-between gap-3 border-b border-line-strong pb-3">
+          <span className="min-w-0 select-all break-all font-mono text-sm">{email}</span>
+          <button type="button" onClick={handleCopyEmail} className="btn-icon shrink-0" aria-label="Copiar e-mail">
+            {copied ? <Check className="h-4 w-4" strokeWidth={1.75} /> : <Copy className="h-4 w-4" strokeWidth={1.5} />}
+          </button>
+        </div>
 
-      <div className="w-full max-w-lg relative z-10">
-        <div className="bg-[#0c0c0e]/80 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 sm:p-12 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] text-center">
-          
-          {/* Animated Mail Icon Badge */}
-          <div className="relative flex justify-center mb-8">
-            <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/20 flex items-center justify-center relative shadow-2xl">
-              <Mail className="w-10 h-10 text-white animate-pulse" />
-              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-emerald-500 text-black flex items-center justify-center font-bold shadow-lg">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </div>
-          </div>
+        <ol className="border-t border-line">
+          {STEPS.map((step, i) => (
+            <li key={step} className="flex gap-4 border-b border-line py-3 text-sm text-paper-2">
+              <span className="eyebrow tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+              {step}
+            </li>
+          ))}
+        </ol>
 
-          {/* Header Title */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-widest text-white mb-3">
-            Confirme seu E-mail
-          </h2>
-
-          <p className="text-gray-400 font-light text-sm sm:text-base leading-relaxed mb-6">
-            Sua conta {isAdmin ? 'de Administrador ' : ''}foi registrada. Enviamos um link de ativação para:
-          </p>
-
-          {/* Email Address Highlight Pill */}
-          <div className="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 mb-8 max-w-md mx-auto">
-            <span className="font-mono text-sm text-white font-semibold truncate select-all">
-              {email}
-            </span>
-            <button
-              onClick={handleCopyEmail}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white text-gray-300 hover:text-black transition-all"
-              title="Copiar e-mail"
-              aria-label="Copiar e-mail"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {/* Instructions List */}
-          <div className="space-y-3.5 text-left bg-white/[0.03] border border-white/10 rounded-2xl p-5 mb-8 text-xs sm:text-sm text-gray-300">
-            <div className="flex items-start gap-3">
-              <span className="w-5 h-5 rounded-full bg-white/10 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
-                1
-              </span>
-              <span>Abra a caixa de entrada do seu provedor de e-mail.</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="w-5 h-5 rounded-full bg-white/10 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
-                2
-              </span>
-              <span>Clique no link de confirmação enviado pelo <strong>Supabase / Vitta</strong>.</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="w-5 h-5 rounded-full bg-white/10 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
-                3
-              </span>
-              <span className="text-gray-400">
-                Não encontrou? Verifique a pasta de <em>Spam</em> ou <em>Lixo Eletrônico</em>.
-              </span>
-            </div>
-          </div>
-
-          {/* Main Action Buttons */}
-          <div className="space-y-3">
-            <a
-              href={webmailUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-4 bg-white text-black rounded-xl font-bold uppercase tracking-widest text-xs sm:text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2 shadow-xl hover:scale-[1.01] active:scale-[0.99]"
-            >
-              <span>Abrir Provedor de E-mail</span>
-              <ExternalLink className="w-4 h-4" />
-            </a>
-
-            <button
-              onClick={handleResend}
-              disabled={!canResend || resending}
-              className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white rounded-xl font-semibold tracking-wider text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${resending ? 'animate-spin' : ''}`} />
-              {canResend
-                ? 'Reenviar E-mail de Confirmação'
-                : `Reenviar disponível em ${cooldown}s`}
-            </button>
-          </div>
-
-          {/* Return to Login */}
-          <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Autenticação Segura</span>
-            </div>
-            <button
-              onClick={onNavigateToLogin}
-              className="inline-flex items-center gap-1.5 text-white font-semibold hover:underline uppercase tracking-wider text-[11px]"
-            >
-              <span>Já confirmei, Fazer Login</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
+        <div className="space-y-2">
+          <a href={getWebmailUrl(email)} target="_blank" rel="noopener noreferrer" className="btn-primary w-full">
+            Abrir meu e-mail
+            <ExternalLink className="h-4 w-4" strokeWidth={1.5} />
+          </a>
+          <button type="button" onClick={handleResend} disabled={!canResend || resending} className="btn-secondary w-full">
+            <RefreshCw className={`h-4 w-4 ${resending ? 'motion-safe:animate-spin' : ''}`} strokeWidth={1.5} />
+            {canResend ? 'Reenviar e-mail' : `Reenviar em ${cooldown}s`}
+          </button>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
-};
+}

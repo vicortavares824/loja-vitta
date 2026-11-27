@@ -1,32 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { SlidersHorizontal, Filter, X, ArrowUpDown, Sparkles, RefreshCw } from 'lucide-react';
-import type { Product, Category } from '../../types/ecommerce';
+import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { motion } from 'framer-motion';
+import { SlidersHorizontal, X } from 'lucide-react';
+import type { Category, Product } from '../../types/ecommerce';
 import { tomatoApi } from '../../services/tomatoApi';
+import { getStoreCategories } from '../../services/storeCategories';
+import { useCart } from '../../context/CartContext';
 import { ProductCardModern } from '../ProductCardModern';
 import { CardSkeleton } from '../ui/Skeleton';
+import { Sheet } from '../ui/Sheet';
+import { LineReveal } from '../home/HomeMotion';
+import { EASE_OUT } from '../home/motionTokens';
 
 interface ProductsPageProps {
   initialCategory?: string;
   onSelectCategory?: (slug: string) => void;
 }
 
-export const ProductsPage: React.FC<ProductsPageProps> = ({
-  initialCategory = 'all',
-  onSelectCategory
-}) => {
+type Density = 2 | 3 | 4;
+
+const SORT_OPTIONS = [
+  { value: 'default', label: 'Destaques' },
+  { value: 'price-asc', label: 'Menor preço' },
+  { value: 'price-desc', label: 'Maior preço' },
+  { value: 'rating', label: 'Mais bem avaliados' },
+];
+
+const SIZE_ORDER = ['PP', 'XS', 'P', 'S', 'M', 'G', 'L', 'GG', 'XL', 'XG', 'XXL', 'EG', 'EGG'];
+
+const DENSITY_GRID: Record<Density, string> = {
+  2: 'lg:grid-cols-2',
+  3: 'lg:grid-cols-3',
+  4: 'lg:grid-cols-4',
+};
+
+function sortSizes(sizes: string[]): string[] {
+  const rank = (s: string) => {
+    const known = SIZE_ORDER.indexOf(s.toUpperCase());
+    if (known !== -1) return known;
+    const numeric = Number.parseInt(s, 10);
+    return Number.isNaN(numeric) ? 999 : SIZE_ORDER.length + numeric;
+  };
+  return [...sizes].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
+export function ProductsPage({ initialCategory = 'all', onSelectCategory }: ProductsPageProps) {
+  const { formatPrice } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [selectedSize, setSelectedSize] = useState<string>('all');
-  const [selectedColor, setSelectedColor] = useState<string>('all');
-  const [priceRange, setPriceRange] = useState<number>(5000);
-  const [sortOption, setSortOption] = useState<string>('default');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState('all');
+  const [selectedColor, setSelectedColor] = useState('all');
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [sortOption, setSortOption] = useState('default');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [density, setDensity] = useState<Density>(3);
 
   useEffect(() => {
-    tomatoApi.getCategories().then(setCategories);
+    let alive = true;
+    getStoreCategories()
+      .then((cats) => {
+        if (alive) setCategories(cats);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -34,295 +74,362 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
   }, [initialCategory]);
 
   useEffect(() => {
+    let alive = true;
     setLoading(true);
-    tomatoApi.getProducts(selectedCategory, searchQuery, sortOption).then(data => {
-      let filtered = data.filter(p => p.price <= priceRange);
-      
-      if (selectedSize !== 'all') {
-        filtered = filtered.filter(p => p.sizes && p.sizes.includes(selectedSize));
-      }
+    tomatoApi
+      .getProducts(selectedCategory, undefined, sortOption)
+      .then((data) => {
+        if (alive) setProducts(data);
+      })
+      .catch(() => {
+        if (alive) setProducts([]);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [selectedCategory, sortOption]);
 
-      if (selectedColor !== 'all') {
-        filtered = filtered.filter(p => p.colors && p.colors.some(c => c.name.toLowerCase().includes(selectedColor.toLowerCase())));
-      }
+  // Opções de filtro derivadas dos produtos reais da categoria atual
+  const sizeOptions = useMemo(() => sortSizes([...new Set(products.flatMap((p) => p.sizes ?? []))]), [products]);
+  const colorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    products.forEach((p) => p.colors?.forEach((c) => map.set(c.name, c.hex)));
+    return [...map].map(([name, hex]) => ({ name, hex }));
+  }, [products]);
+  const priceCeiling = useMemo(
+    () => Math.max(0, ...products.map((p) => p.price)),
+    [products],
+  );
 
-      setProducts(filtered);
-      setLoading(false);
-    });
-  }, [selectedCategory, searchQuery, sortOption, priceRange, selectedSize, selectedColor]);
+  const visible = useMemo(
+    () =>
+      products.filter(
+        (p) =>
+          (maxPrice === null || p.price <= maxPrice) &&
+          (selectedSize === 'all' || p.sizes?.includes(selectedSize)) &&
+          (selectedColor === 'all' || p.colors?.some((c) => c.name === selectedColor)),
+      ),
+    [products, maxPrice, selectedSize, selectedColor],
+  );
 
-  const allSizes = ['S', 'M', 'L', 'XL'];
-  const allColorPresets = [
-    { name: 'Preto', hex: '#000000' },
-    { name: 'Branco', hex: '#ffffff' },
-    { name: 'Cinza', hex: '#808080' },
-    { name: 'Grafite', hex: '#333333' }
-  ];
-
-  const handleResetFilters = () => {
-    setSelectedCategory('all');
+  const selectCategory = (slug: string) => {
+    setSelectedCategory(slug);
     setSelectedSize('all');
     setSelectedColor('all');
-    setPriceRange(5000);
-    setSearchQuery('');
-    setSortOption('default');
-    if (onSelectCategory) onSelectCategory('all');
+    setMaxPrice(null);
+    onSelectCategory?.(slug);
   };
 
-  const hasActiveFilters = selectedCategory !== 'all' || selectedSize !== 'all' || selectedColor !== 'all' || priceRange < 5000 || searchQuery !== '';
+  const clearRefinements = () => {
+    setSelectedSize('all');
+    setSelectedColor('all');
+    setMaxPrice(null);
+  };
+
+  const refinementCount = Number(selectedSize !== 'all') + Number(selectedColor !== 'all') + Number(maxPrice !== null);
+  const activeCategory = categories.find((c) => c.slug === selectedCategory);
+
+  const chips = [
+    selectedSize !== 'all' && { key: 'size', label: `Tamanho ${selectedSize}`, clear: () => setSelectedSize('all') },
+    selectedColor !== 'all' && { key: 'color', label: selectedColor, clear: () => setSelectedColor('all') },
+    maxPrice !== null && { key: 'price', label: `Até ${formatPrice(maxPrice)}`, clear: () => setMaxPrice(null) },
+  ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
 
   return (
-    <div className="pt-28 pb-24 min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Breadcrumbs / Title */}
-        <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-8">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold uppercase tracking-widest mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Coleção Completa</span>
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight uppercase">
-              Catálogo de Peças
-            </h1>
-            <p className="text-gray-400 text-sm mt-2 max-w-xl">
-              Navegue por nossa linha de alfaiataria, vestidos, jaquetas e streetwear de alta precisão.
+    <div className="min-h-screen bg-ink pb-24 pt-28 text-paper md:pt-36">
+      <div className="mx-auto max-w-[1600px] px-[var(--gutter)]">
+        {/* Cabeçalho */}
+        <header className="mb-10 grid grid-cols-1 items-end gap-6 md:mb-14 md:grid-cols-12">
+          <div className="md:col-span-8">
+            <p className="eyebrow mb-5">
+              Catálogo — {loading ? '··' : String(visible.length).padStart(2, '0')} {visible.length === 1 ? 'peça' : 'peças'}
             </p>
+            <h1 className="font-display text-[clamp(2.75rem,8vw,8rem)] font-semibold uppercase leading-[0.88] tracking-[-0.05em]">
+              <LineReveal
+                onMount
+                key={activeCategory?.slug ?? 'all'}
+                label={activeCategory?.name ?? 'Todas as peças'}
+                lines={
+                  activeCategory
+                    ? [<span key="name" className="break-words">{activeCategory.name}</span>]
+                    : [
+                        'Todas as',
+                        <span key="accent" className="font-serif-accent">
+                          peças
+                        </span>,
+                      ]
+                }
+              />
+            </h1>
           </div>
+          <p className="max-w-sm text-[15px] leading-relaxed text-paper-2 md:col-span-4">
+            {activeCategory?.description || 'Básicos atemporais em cortes limpos. Filtre por tamanho, cor ou preço.'}
+          </p>
+        </header>
 
-          {/* Quick Stats & Mobile Toggle */}
-          <div className="flex items-center justify-between sm:justify-end gap-4">
-            <span className="text-xs font-medium text-gray-400">
-              <strong className="text-white text-base">{products.length}</strong> produtos encontrados
-            </span>
-
-            <button
-              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-full text-xs font-bold uppercase tracking-wider"
-            >
-              <Filter className="w-4 h-4" />
-              <span>Filtros</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Sidebar Filters */}
-          <aside className={`w-full lg:col-span-3 space-y-8 ${mobileFilterOpen ? 'block' : 'hidden lg:block'}`}>
-            <div className="w-full bg-white/5 rounded-3xl p-6 border border-white/10 space-y-6">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-white" />
-                  <h3 className="text-sm font-extrabold uppercase tracking-wider text-white">
-                    Filtros
-                  </h3>
-                </div>
-                {hasActiveFilters && (
+        {/* Barra de ferramentas */}
+        <div className="sticky top-0 z-20 -mx-[var(--gutter)] mb-8 border-b border-line bg-ink/95 px-[var(--gutter)]">
+          <div className="flex items-center gap-4">
+            <div role="tablist" aria-label="Categorias" className="scrollbar-none flex min-w-0 flex-1 gap-6 overflow-x-auto">
+              {[{ slug: 'all', name: 'Tudo', itemCount: undefined as number | undefined }, ...categories].map((cat) => {
+                const active = selectedCategory === cat.slug;
+                return (
                   <button
-                    onClick={handleResetFilters}
-                    className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 font-medium transition-colors"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Limpar
-                  </button>
-                )}
-              </div>
-
-              {/* Categorias */}
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-300 block mb-3">
-                  Categorias
-                </label>
-                <div className="space-y-1.5">
-                  <button
-                    onClick={() => {
-                      setSelectedCategory('all');
-                      if (onSelectCategory) onSelectCategory('all');
-                    }}
-                    className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between ${
-                      selectedCategory === 'all'
-                        ? 'bg-white text-black font-bold'
-                        : 'text-gray-300 hover:bg-white/10'
+                    key={cat.slug}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => selectCategory(cat.slug)}
+                    className={`relative shrink-0 whitespace-nowrap py-4 font-display text-[12px] font-medium uppercase tracking-[0.08em] transition-colors duration-200 ${
+                      active ? 'text-paper' : 'text-mute hover:text-paper'
                     }`}
                   >
-                    <span>Todas as Peças</span>
+                    {cat.name}
+                    {cat.itemCount !== undefined && <sup className="ml-1 font-mono text-[9px] text-mute">{cat.itemCount}</sup>}
+                    {active && (
+                      <motion.span
+                        layoutId="catalog-tab"
+                        className="absolute inset-x-0 -bottom-px h-px bg-paper"
+                        transition={{ duration: 0.35, ease: EASE_OUT }}
+                      />
+                    )}
                   </button>
-                  {categories.map(cat => (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setSelectedCategory(cat.slug);
-                        if (onSelectCategory) onSelectCategory(cat.slug);
-                      }}
-                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between ${
-                        selectedCategory === cat.slug
-                          ? 'bg-white text-black font-bold'
-                          : 'text-gray-300 hover:bg-white/10'
-                      }`}
-                    >
-                      <span>{cat.name}</span>
-                      <span className="text-[10px] opacity-70">({cat.itemCount || 10})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Faixa de Preço */}
-              <div className="border-t border-white/10 pt-5">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                    Preço Máximo
-                  </label>
-                  <span className="text-xs font-bold text-white">
-                    R$ {priceRange.toLocaleString('pt-BR')}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="500"
-                  max="5000"
-                  step="100"
-                  value={priceRange}
-                  onChange={(e) => setPriceRange(Number(e.target.value))}
-                  className="w-full accent-white cursor-pointer bg-white/20 h-1.5 rounded-lg"
-                />
-              </div>
-
-              {/* Tamanho */}
-              <div className="border-t border-white/10 pt-5">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-300 block mb-3">
-                  Tamanho
-                </label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => setSelectedSize('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      selectedSize === 'all' ? 'bg-white text-black' : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                    }`}
-                  >
-                    Todos
-                  </button>
-                  {allSizes.map(size => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`min-w-[36px] h-8 px-2.5 rounded-lg text-xs font-bold transition-all ${
-                        selectedSize === size ? 'bg-white text-black shadow-md' : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Cores */}
-              <div className="border-t border-white/10 pt-5">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-300 block mb-3">
-                  Cor Predominante
-                </label>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <button
-                    onClick={() => setSelectedColor('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      selectedColor === 'all' ? 'bg-white text-black' : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                    }`}
-                  >
-                    Todas
-                  </button>
-                  {allColorPresets.map(color => (
-                    <button
-                      key={color.name}
-                      onClick={() => setSelectedColor(color.name)}
-                      className={`w-6 h-6 rounded-full border-2 transition-all ${
-                        selectedColor === color.name
-                          ? 'border-white scale-125 ring-2 ring-white/50'
-                          : 'border-white/30 hover:scale-110'
-                      }`}
-                      style={{ backgroundColor: color.hex }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
+                );
+              })}
             </div>
-          </aside>
 
-          {/* Main Products Grid Column */}
-          <main className="lg:col-span-9 space-y-6">
-            {/* Top Toolbar (Sort & Active filter chips) */}
-            <div className="flex flex-col sm:flex-row sm:items-center flex-wrap justify-between gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
-              {/* Active Badges */}
-              <div className="flex items-center gap-2 flex-wrap text-xs">
-                <span className="text-gray-400">Ativos:</span>
-                {selectedCategory !== 'all' && (
-                  <span className="inline-flex items-center gap-1.5 bg-white text-black font-bold px-3 py-1 rounded-full text-[11px]">
-                    {selectedCategory}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory('all')} />
-                  </span>
-                )}
-                {selectedSize !== 'all' && (
-                  <span className="inline-flex items-center gap-1.5 bg-white text-black font-bold px-3 py-1 rounded-full text-[11px]">
-                    Tam: {selectedSize}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedSize('all')} />
-                  </span>
-                )}
-                {selectedColor !== 'all' && (
-                  <span className="inline-flex items-center gap-1.5 bg-white text-black font-bold px-3 py-1 rounded-full text-[11px]">
-                    Cor: {selectedColor}
-                    <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedColor('all')} />
-                  </span>
-                )}
-                {!hasActiveFilters && (
-                  <span className="text-gray-500 italic text-[11px]">Nenhum filtro restritivo aplicado</span>
-                )}
+            <div className="flex shrink-0 items-center gap-1 sm:gap-4">
+              <div className="hidden items-center gap-1 lg:flex" role="group" aria-label="Colunas">
+                {([2, 3, 4] as Density[]).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDensity(d)}
+                    aria-pressed={density === d}
+                    aria-label={`${d} colunas`}
+                    className={`flex h-8 w-8 items-center justify-center font-mono text-[11px] transition-colors ${
+                      density === d ? 'text-paper' : 'text-mute hover:text-paper'
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
               </div>
 
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-2 sm:justify-end min-w-0">
-                <ArrowUpDown className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+              <label className="hidden items-center gap-2 sm:flex">
+                <span className="sr-only">Ordenar</span>
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="min-w-0 max-w-full bg-black text-white text-xs font-semibold rounded-xl px-3 py-2 border border-white/20 focus:outline-none cursor-pointer"
+                  className="cursor-pointer bg-transparent py-2 font-display text-[12px] font-medium uppercase tracking-[0.06em] text-paper focus:outline-none"
                 >
-                  <option value="default">Relevância / Lançamentos</option>
-                  <option value="price-asc">Menor Preço</option>
-                  <option value="price-desc">Maior Preço</option>
-                  <option value="rating">Mais Bem Avaliados</option>
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} className="bg-ink text-paper">
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
-              </div>
-            </div>
+              </label>
 
-            {/* Grid with Skeletons */}
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map(n => (
-                  <CardSkeleton key={n} />
-                ))}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center py-24 bg-white/5 rounded-3xl border border-white/10 p-8 space-y-4">
-                <h3 className="text-xl font-bold text-white">Nenhum produto encontrado</h3>
-                <p className="text-gray-400 text-sm max-w-md mx-auto">
-                  Tente ajustar ou limpar seus filtros de categoria, tamanho ou faixa de preço.
-                </p>
-                <button
-                  onClick={handleResetFilters}
-                  className="px-6 py-2.5 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-full hover:bg-gray-200 transition-colors"
-                >
-                  Limpar Todos os Filtros
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map(product => (
-                  <ProductCardModern key={product.id} product={product} />
-                ))}
-              </div>
-            )}
-          </main>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(true)}
+                className="press tap-target flex items-center gap-2 font-display text-[12px] font-semibold uppercase tracking-[0.08em]"
+              >
+                <SlidersHorizontal className="h-4 w-4" strokeWidth={1.5} />
+                Filtros
+                {refinementCount > 0 && <span className="font-mono text-[11px] text-mute">({refinementCount})</span>}
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Filtros ativos */}
+        {chips.length > 0 && (
+          <div className="mb-8 flex flex-wrap items-center gap-2">
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={chip.clear}
+                className="press flex items-center gap-2 border border-line-strong px-3 py-2 font-mono text-[11px] uppercase tracking-[0.06em] transition-colors hover:border-paper"
+                aria-label={`Remover filtro ${chip.label}`}
+              >
+                {chip.label}
+                <X className="h-3 w-3" strokeWidth={1.75} />
+              </button>
+            ))}
+            <button type="button" onClick={clearRefinements} className="eyebrow link-line ml-2 py-2 hover:text-paper">
+              Limpar tudo
+            </button>
+          </div>
+        )}
+
+        {/* Grade */}
+        {loading ? (
+          <div className={`grid grid-cols-2 gap-x-3 gap-y-10 md:gap-x-6 ${DENSITY_GRID[density]}`}>
+            {Array.from({ length: density * 2 }, (_, n) => (
+              <CardSkeleton key={n} />
+            ))}
+          </div>
+        ) : visible.length === 0 ? (
+          <div className="border-y border-line py-24 text-center">
+            <p className="eyebrow mb-3">Nada encontrado</p>
+            <p className="mx-auto mb-8 max-w-sm text-paper-2">Nenhuma peça com esses filtros. Tente remover algum deles.</p>
+            <button
+              type="button"
+              onClick={() => (refinementCount > 0 ? clearRefinements() : selectCategory('all'))}
+              className="btn-secondary"
+            >
+              {refinementCount > 0 ? 'Limpar filtros' : 'Ver todas as peças'}
+            </button>
+          </div>
+        ) : (
+          <motion.div
+            key={`${selectedCategory}-${sortOption}-${density}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25 }}
+            className={`grid grid-cols-2 gap-x-3 gap-y-10 md:gap-x-6 ${DENSITY_GRID[density]}`}
+          >
+            {visible.map((product) => (
+              <ProductCardModern key={product.id} product={product} />
+            ))}
+          </motion.div>
+        )}
       </div>
+
+      <Sheet
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filtros"
+        footer={
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={clearRefinements} disabled={refinementCount === 0} className="btn-secondary flex-1">
+              Limpar
+            </button>
+            <button type="button" onClick={() => setFiltersOpen(false)} className="btn-primary flex-[2]">
+              Ver {visible.length} {visible.length === 1 ? 'peça' : 'peças'}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-8 px-5 pb-6 md:px-6">
+          {/* Ordenar (no celular fica aqui) */}
+          <fieldset className="sm:hidden">
+            <legend className="eyebrow mb-3">Ordenar</legend>
+            <div className="flex flex-wrap gap-2">
+              {SORT_OPTIONS.map((o) => (
+                <OptionChip key={o.value} active={sortOption === o.value} onClick={() => setSortOption(o.value)}>
+                  {o.label}
+                </OptionChip>
+              ))}
+            </div>
+          </fieldset>
+
+          {sizeOptions.length > 0 && (
+            <fieldset>
+              <legend className="eyebrow mb-3">Tamanho</legend>
+              <div className="grid grid-cols-4 gap-2">
+                <OptionChip active={selectedSize === 'all'} onClick={() => setSelectedSize('all')}>
+                  Todos
+                </OptionChip>
+                {sizeOptions.map((size) => (
+                  <OptionChip key={size} active={selectedSize === size} onClick={() => setSelectedSize(size)}>
+                    {size}
+                  </OptionChip>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
+          {colorOptions.length > 0 && (
+            <fieldset>
+              <legend className="eyebrow mb-3">Cor</legend>
+              <div className="flex flex-col">
+                {[{ name: 'all', hex: '' }, ...colorOptions].map((color) => {
+                  const active = selectedColor === color.name;
+                  return (
+                    <button
+                      key={color.name}
+                      type="button"
+                      onClick={() => setSelectedColor(color.name)}
+                      aria-pressed={active}
+                      className="flex items-center gap-3 border-b border-line py-3 text-left text-sm"
+                    >
+                      <span
+                        className="h-4 w-4 shrink-0 rounded-full"
+                        style={
+                          color.hex
+                            ? { backgroundColor: color.hex, boxShadow: 'inset 0 0 0 1px rgba(242,240,235,0.25)' }
+                            : { boxShadow: 'inset 0 0 0 1px rgba(242,240,235,0.4)' }
+                        }
+                      />
+                      <span className={`flex-1 truncate ${active ? 'text-paper' : 'text-paper-2'}`}>
+                        {color.name === 'all' ? 'Todas as cores' : color.name}
+                      </span>
+                      {active && <span className="h-1.5 w-1.5 rounded-full bg-paper" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
+
+          {priceCeiling > 0 && (
+            <fieldset>
+              <legend className="eyebrow mb-3 flex w-full justify-between">
+                <span>Preço máximo</span>
+              </legend>
+              <div className="mb-3 flex items-baseline justify-between">
+                <span className="font-mono text-sm tabular-nums">{formatPrice(maxPrice ?? priceCeiling)}</span>
+                {maxPrice !== null && (
+                  <button type="button" onClick={() => setMaxPrice(null)} className="eyebrow link-line hover:text-paper">
+                    Sem limite
+                  </button>
+                )}
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={Math.ceil(priceCeiling)}
+                step={1}
+                value={maxPrice ?? Math.ceil(priceCeiling)}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setMaxPrice(value >= Math.ceil(priceCeiling) ? null : value);
+                }}
+                aria-label="Preço máximo"
+                className="w-full cursor-pointer accent-paper"
+              />
+            </fieldset>
+          )}
+        </div>
+      </Sheet>
     </div>
   );
-};
+}
+
+interface OptionChipProps {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}
+
+function OptionChip({ active, onClick, children }: OptionChipProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`press min-h-11 border px-3 font-mono text-[12px] uppercase tracking-[0.04em] transition-colors duration-150 ${
+        active ? 'border-paper bg-paper text-ink' : 'border-line-strong text-paper hover:border-paper'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}

@@ -9,7 +9,7 @@ const CANCELLABLE: ReadonlySet<Order['status']> = new Set(['pending', 'pending_p
 export const isCancellable = (status: Order['status']): boolean => CANCELLABLE.has(status);
 
 export interface CancelOrderButtonProps {
-  order: Pick<Order, 'id' | 'status'>;
+  order: Pick<Order, 'id' | 'status' | 'labelUrl'>;
   onCancelled: (orderId: string, refunded: boolean) => void;
   onError: (message: string) => void;
 }
@@ -19,7 +19,8 @@ export function CancelOrderButton({ order, onCancelled, onError }: CancelOrderBu
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  if (!isCancellable(order.status)) return null;
+  // Com etiqueta comprada, o cancelamento passa pelo atendimento (o servidor também recusa).
+  if (!isCancellable(order.status) || order.labelUrl) return null;
 
   const paid = order.status === 'processing';
   const warning = paid
@@ -44,7 +45,7 @@ export function CancelOrderButton({ order, onCancelled, onError }: CancelOrderBu
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="min-h-[44px] px-2 text-[11px] font-bold uppercase tracking-widest text-red-300 hover:text-red-200 underline underline-offset-4"
+        className="eyebrow link-line tap-target text-danger"
       >
         Cancelar pedido
       </button>
@@ -52,23 +53,23 @@ export function CancelOrderButton({ order, onCancelled, onError }: CancelOrderBu
   }
 
   return (
-    <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3 space-y-2" role="alertdialog" aria-live="polite">
-      <p className="text-xs text-red-100">{warning} Deseja continuar?</p>
+    <div className="space-y-3 border-l-2 border-danger bg-ink-2 p-4" role="alertdialog" aria-live="polite">
+      <p className="text-sm text-paper">{warning} Deseja continuar?</p>
       <div className="flex gap-2">
         <button
           type="button"
           onClick={confirm}
           disabled={busy}
-          className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-red-500 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+          className="btn-primary flex-1 !border-danger !bg-danger !text-paper"
         >
-          {busy && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
+          {busy && <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />}
           {busy ? 'Cancelando...' : 'Sim, cancelar'}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
           disabled={busy}
-          className="min-h-[44px] flex-1 rounded-full border border-white/20 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-60"
+          className="btn-secondary flex-1"
         >
           Voltar
         </button>

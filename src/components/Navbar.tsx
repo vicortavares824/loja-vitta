@@ -1,322 +1,347 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Search, Globe, Menu, X, Server, Layers, Package, Home, User, LogOut } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Heart, LogOut, Search, Server } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import type { Currency } from '../types/ecommerce';
-import { Magnet } from './react-bits/Magnet';
 import { STORE_CONFIG } from '../config/storeConfig';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { EASE_OUT } from './home/motionTokens';
 
 interface NavbarProps {
   currentTab?: string;
   onNavigate?: (tab: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentTab = 'home', onNavigate }) => {
-  const { itemsCount, wishlist, currency, setCurrency, toggleCartDrawer } = useCart();
-  const { isAuthenticated, user, isAdmin, logout } = useAuth();
+interface NavLink {
+  tab: string;
+  label: string;
+}
+
+const PRIMARY_LINKS: NavLink[] = [
+  { tab: 'home', label: 'Início' },
+  { tab: 'products', label: 'Catálogo' },
+  { tab: 'categories', label: 'Categorias' },
+  { tab: 'search', label: 'Busca' },
+];
+
+const CURRENCIES: Currency[] = ['BRL', 'USD', 'EUR'];
+const SCROLLED_AT = 24;
+const HIDE_AFTER = 160;
+
+/** Estado do cabeçalho: com fundo depois de rolar, escondido ao descer. */
+function useHeaderScroll(locked: boolean) {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 30) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const y = window.scrollY;
+      setScrolled(y > SCROLLED_AT);
+      const delta = y - lastY.current;
+      if (Math.abs(delta) > 6) {
+        setHidden(delta > 0 && y > HIDE_AFTER);
+        lastY.current = y;
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
-  const currencies: Currency[] = ['BRL', 'USD', 'EUR'];
+  return { scrolled, hidden: hidden && !locked };
+}
 
-  const handleNavClick = (tab: string) => {
+export function Navbar({ currentTab = 'home', onNavigate }: NavbarProps) {
+  const { itemsCount, wishlist, currency, setCurrency, toggleCartDrawer } = useCart();
+  const { isAuthenticated, user, isAdmin, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { scrolled, hidden } = useHeaderScroll(menuOpen);
+
+  const firstName = user?.name.split(' ')[0] ?? '';
+  const bagCount = isAuthenticated && itemsCount > 0 ? itemsCount : 0;
+
+  const go = (tab: string) => {
     onNavigate?.(tab);
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    go('home');
   };
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
-          scrolled
-            ? 'bg-black/90 backdrop-blur-xl border-b border-white/10 py-3.5 shadow-2xl'
-            : 'bg-transparent py-5'
+        className={`fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)] transition-[transform,background-color,border-color] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none ${
+          hidden ? '-translate-y-full' : 'translate-y-0'
+        } ${
+          scrolled || menuOpen
+            ? 'border-b border-line bg-ink/85 backdrop-blur-md'
+            : 'border-b border-transparent bg-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          {/* Brand Logo */}
-          <button 
-            onClick={() => handleNavClick('home')}
-            className="flex items-center gap-3 group text-left focus:outline-none"
+        <div className="mx-auto grid h-16 max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center px-[var(--gutter)]">
+          {/* Esquerda: links (desktop) / botão de menu (mobile) */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="tap-target -ml-2 flex items-center gap-3 px-2 lg:hidden"
+              aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+            >
+              <span aria-hidden className="relative block h-3 w-5">
+                <span
+                  className={`absolute left-0 top-0 h-px w-5 bg-paper transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                    menuOpen ? 'translate-y-[6px] rotate-45' : ''
+                  }`}
+                />
+                <span
+                  className={`absolute bottom-0 left-0 h-px w-5 bg-paper transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                    menuOpen ? '-translate-y-[5px] -rotate-45' : ''
+                  }`}
+                />
+              </span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.08em]">{menuOpen ? 'Fechar' : 'Menu'}</span>
+            </button>
+
+            <nav aria-label="Principal" className="hidden items-center gap-7 lg:flex">
+              {PRIMARY_LINKS.map((link) => {
+                const active = currentTab === link.tab;
+                return (
+                  <button
+                    key={link.tab}
+                    type="button"
+                    onClick={() => go(link.tab)}
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative py-2 font-display text-[12px] font-medium uppercase tracking-[0.08em] transition-colors duration-200 ${
+                      active ? 'text-paper' : 'text-mute hover:text-paper'
+                    }`}
+                  >
+                    {link.label}
+                    {active && (
+                      <motion.span
+                        layoutId="nav-active"
+                        className="absolute inset-x-0 -bottom-px h-px bg-paper"
+                        transition={{ duration: 0.35, ease: EASE_OUT }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Centro: marca */}
+          <button
+            type="button"
+            onClick={() => go('home')}
+            className="flex items-center gap-2.5 justify-self-center"
+            aria-label={`${STORE_CONFIG.name} — início`}
           >
-            <img src="/logo.jpg" alt={STORE_CONFIG.name} className="w-18 h-18 rounded-full object-cover shadow-lg group-hover:scale-105 transition-transform" />
-            <div className="flex flex-col">
-              <span className="font-display font-extrabold text-lg sm:text-xl tracking-[0.18em] text-white transition-colors">
-                {STORE_CONFIG.name}
-              </span>
-              <span className="text-[9px] tracking-[0.25em] text-gray-400 uppercase -mt-1 font-semibold">
-                {STORE_CONFIG.subtitle}
-              </span>
-            </div>
+            <img src="/logo.jpg" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <span className="font-display text-[15px] font-bold uppercase tracking-[0.22em] sm:text-base">
+              Vitta<span className="hidden sm:inline"> Basics</span>
+            </span>
           </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 bg-white/10 backdrop-blur-md px-3 py-1.5 border border-white/15 rounded-full">
-            <button
-              onClick={() => handleNavClick('home')}
-              className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.15em] font-semibold transition-all ${
-                currentTab === 'home' ? 'bg-white text-black font-bold shadow' : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              Início
-            </button>
-            <button
-              onClick={() => handleNavClick('products')}
-              className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.15em] font-semibold transition-all ${
-                currentTab === 'products' ? 'bg-white text-black font-bold shadow' : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              Catálogo
-            </button>
-            <button
-              onClick={() => handleNavClick('categories')}
-              className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.15em] font-semibold transition-all ${
-                currentTab === 'categories' ? 'bg-white text-black font-bold shadow' : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              Categorias
-            </button>
-            <button
-              onClick={() => handleNavClick('search')}
-              className={`px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.15em] font-semibold transition-all flex items-center gap-1.5 ${
-                currentTab === 'search' ? 'bg-white text-black font-bold shadow' : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span>Busca</span>
-            </button>
-          </nav>
-
-      
-          <div className="flex items-center gap-2.5 sm:gap-3">
-  
-            <div className="relative group hidden md:flex items-center gap-1 bg-white/10 px-3 py-1.5 text-xs text-gray-300 border border-white/15 rounded-full">
-              <Globe className="w-3.5 h-3.5 text-white" />
+          {/* Direita: ações */}
+          <div className="flex items-center justify-end gap-1 sm:gap-2">
+            <label className="hidden items-center md:flex">
+              <span className="sr-only">Moeda</span>
               <select
                 value={currency}
-                onChange={e => setCurrency(e.target.value as Currency)}
-                className="bg-transparent text-xs text-gray-200 font-semibold focus:outline-none cursor-pointer border-none p-0 pr-1"
+                onChange={(e) => setCurrency(e.target.value as Currency)}
+                className="cursor-pointer appearance-none bg-transparent px-2 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-mute transition-colors hover:text-paper focus:outline-none"
               >
-                {currencies.map(c => (
-                  <option key={c} value={c} className="bg-black text-white">
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c} className="bg-ink text-paper">
                     {c}
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
 
-         
-            <Magnet strength={10}>
-              <button
-                onClick={() => handleNavClick('search')}
-                className="tap-target w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10"
-                aria-label="Buscar produtos"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </Magnet>
+            <button type="button" onClick={() => go('search')} className="btn-icon hidden sm:inline-flex" aria-label="Buscar produtos">
+              <Search className="h-[18px] w-[18px]" strokeWidth={1.5} />
+            </button>
 
-      
-            <Magnet strength={10}>
-              <button
-                onClick={() => handleNavClick('products')}
-                className="tap-target w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all border border-white/10 relative"
-                aria-label="Lista de desejos"
-                title="Favoritos"
-              >
-                <Heart className={`w-4 h-4 ${wishlist.length > 0 ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                    {wishlist.length}
-                  </span>
-                )}
-              </button>
-            </Magnet>
+            <button
+              type="button"
+              onClick={() => go('products')}
+              className="btn-icon relative hidden sm:inline-flex"
+              aria-label={`Favoritos${wishlist.length ? ` (${wishlist.length})` : ''}`}
+            >
+              <Heart className={`h-[18px] w-[18px] ${wishlist.length > 0 ? 'fill-paper' : ''}`} strokeWidth={1.5} />
+              {wishlist.length > 0 && (
+                <span className="absolute right-1.5 top-1.5 font-mono text-[9px] leading-none">{wishlist.length}</span>
+              )}
+            </button>
 
-  
-            <Magnet strength={14}>
-              <button
-                onClick={() => toggleCartDrawer(true)}
-                className="flex items-center gap-2 bg-white text-black text-xs font-bold uppercase tracking-wider py-2.5 px-4 sm:px-5 rounded-full hover:bg-gray-200 transition-all duration-300 shadow-lg shadow-white/10"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span className="hidden sm:inline">Carrinho</span>
-                {isAuthenticated && itemsCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-black text-white text-[11px] font-extrabold flex items-center justify-center ml-0.5">
-                    {itemsCount}
-                  </span>
-                )}
-              </button>
-            </Magnet>
-
-      
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-2">
+              <>
                 <button
-                  onClick={() => handleNavClick('profile')}
-                  className="hidden sm:inline min-h-[44px] text-xs font-semibold text-gray-300 hover:text-white tracking-wide max-w-[100px] truncate"
-                  aria-label="Meu perfil"
+                  type="button"
+                  onClick={() => go('profile')}
+                  className="link-line hidden max-w-[110px] truncate py-1 font-display text-[12px] font-medium uppercase tracking-[0.08em] sm:block"
                   title="Meu perfil"
                 >
-                  {user.name.split(' ')[0]}
+                  {firstName}
                 </button>
                 {isAdmin && (
-                  <Magnet strength={10}>
-                    <button
-                      onClick={() => handleNavClick('admin')}
-                      className="tap-target hidden sm:flex w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white items-center justify-center transition-all border border-white/10"
-                      aria-label="Painel Admin"
-                      title="Painel Admin"
-                    >
-                      <Server className="w-4 h-4" />
-                    </button>
-                  </Magnet>
-                )}
-                <Magnet strength={10}>
-                  <button
-                    onClick={() => { logout(); handleNavClick('home'); }}
-                    className="tap-target w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-all border border-white/10"
-                    aria-label="Sair"
-                    title="Sair"
-                  >
-                    <LogOut className="w-4 h-4" />
+                  <button type="button" onClick={() => go('admin')} className="btn-icon hidden sm:inline-flex" aria-label="Painel admin">
+                    <Server className="h-[18px] w-[18px]" strokeWidth={1.5} />
                   </button>
-                </Magnet>
-              </div>
-            ) : (
-              <Magnet strength={10}>
-                <button
-                  onClick={() => handleNavClick('login-client')}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-wider py-2 px-4 rounded-full border border-white/15 transition-all"
-                  aria-label="Entrar"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Entrar</span>
+                )}
+                <button type="button" onClick={handleLogout} className="btn-icon hidden sm:inline-flex" aria-label="Sair">
+                  <LogOut className="h-[18px] w-[18px]" strokeWidth={1.5} />
                 </button>
-              </Magnet>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => go('login-client')}
+                className="link-line hidden py-1 font-display text-[12px] font-medium uppercase tracking-[0.08em] sm:block"
+              >
+                Entrar
+              </button>
             )}
 
-        
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="tap-target lg:hidden flex items-center justify-center p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
-              aria-label="Abrir menu"
+              type="button"
+              onClick={() => toggleCartDrawer(true)}
+              className="press tap-target -mr-2 flex items-center gap-1.5 px-2 font-display text-[12px] font-semibold uppercase tracking-[0.08em]"
+              aria-label={`Abrir sacola${bagCount ? `, ${bagCount} ${bagCount === 1 ? 'item' : 'itens'}` : ''}`}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <span>Sacola</span>
+              <span className="font-mono text-[11px] tabular-nums text-mute">({bagCount})</span>
             </button>
           </div>
         </div>
       </header>
 
-      
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-30 bg-black/95 backdrop-blur-xl pt-28 px-6 pb-10 flex flex-col justify-between lg:hidden animate-fadeIn">
-          <div className="space-y-4">
-            <span className="text-xs uppercase font-extrabold tracking-widest text-gray-500">Navegação</span>
-            <div className="flex flex-col space-y-2">
-              <button
-                onClick={() => handleNavClick('home')}
-                className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                  currentTab === 'home' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
-                }`}
-              >
-                <Home className="w-5 h-5" />
-                <span>Início</span>
-              </button>
-
-              <button
-                onClick={() => handleNavClick('products')}
-                className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                  currentTab === 'products' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
-                }`}
-              >
-                <Package className="w-5 h-5" />
-                <span>Catálogo de Produtos</span>
-              </button>
-
-              <button
-                onClick={() => handleNavClick('categories')}
-                className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                  currentTab === 'categories' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
-                }`}
-              >
-                <Layers className="w-5 h-5" />
-                <span>Categorias</span>
-              </button>
-
-              <button
-                onClick={() => handleNavClick('search')}
-                className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                  currentTab === 'search' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
-                }`}
-              >
-                <Search className="w-5 h-5" />
-                <span>Busca Avançada</span>
-              </button>
-
-              {isAuthenticated && (
-                <button
-                  onClick={() => handleNavClick('profile')}
-                  className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                    currentTab === 'profile' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span>Meu Perfil</span>
-                </button>
-              )}
-              {isAuthenticated && !isAdmin && (
-                <button
-                  onClick={() => { logout(); handleNavClick('home'); }}
-                  className="flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all text-gray-300 bg-white/5"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Sair ({user?.name.split(' ')[0]})</span>
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={() => handleNavClick('admin')}
-                  className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                    currentTab === 'admin' ? 'bg-white text-black' : 'text-white bg-white/15'
-                  }`}
-                >
-                  <Server className="w-5 h-5" />
-                  <span>Painel Admin</span>
-                </button>
-              )}
-              {!isAuthenticated && (
-                <button
-                  onClick={() => handleNavClick('login-client')}
-                  className={`flex items-center gap-3 p-4 rounded-2xl text-base font-bold uppercase tracking-wider text-left transition-all ${
-                    currentTab === 'login-client' ? 'bg-white text-black' : 'text-gray-300 bg-white/5'
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span>Entrar</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-white/10 text-xs text-gray-400 text-center">
-            © 2026 {STORE_CONFIG.name}. Minimalist E-Commerce.
-          </div>
-        </div>
-      )}
+      <MobileMenu
+        open={menuOpen}
+        currentTab={currentTab}
+        isAuthenticated={isAuthenticated}
+        isAdmin={isAdmin}
+        firstName={firstName}
+        onNavigate={go}
+        onLogout={handleLogout}
+        onClose={() => setMenuOpen(false)}
+      />
     </>
   );
-};
+}
+
+interface MobileMenuProps {
+  open: boolean;
+  currentTab: string;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  firstName: string;
+  onNavigate: (tab: string) => void;
+  onLogout: () => void;
+  onClose: () => void;
+}
+
+function MobileMenu({ open, currentTab, isAuthenticated, isAdmin, firstName, onNavigate, onLogout, onClose }: MobileMenuProps) {
+  const reduced = usePrefersReducedMotion();
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseRef.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const links: NavLink[] = [
+    ...PRIMARY_LINKS,
+    ...(isAuthenticated ? [{ tab: 'profile', label: 'Meu perfil' }] : [{ tab: 'login-client', label: 'Entrar' }]),
+    ...(isAdmin ? [{ tab: 'admin', label: 'Painel admin' }] : []),
+  ];
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          id="mobile-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          className="fixed inset-0 z-30 flex flex-col bg-ink px-[var(--gutter)] pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(96px+env(safe-area-inset-top))] lg:hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+          transition={{ duration: 0.2 }}
+        >
+          <nav aria-label="Menu móvel" className="flex-1 overflow-y-auto overscroll-contain">
+            <ul className="border-t border-line">
+              {links.map((link, i) => {
+                const active = currentTab === link.tab;
+                return (
+                  <motion.li
+                    key={link.tab}
+                    className="border-b border-line"
+                    initial={reduced ? false : { opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.04 + i * 0.04, ease: EASE_OUT }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(link.tab)}
+                      aria-current={active ? 'page' : undefined}
+                      className="flex w-full items-baseline gap-4 py-4 text-left"
+                    >
+                      <span className="eyebrow w-6 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                      <span
+                        className={`font-display text-[34px] font-semibold uppercase leading-none tracking-[-0.03em] ${
+                          active ? 'text-paper' : 'text-paper/55'
+                        }`}
+                      >
+                        {link.label}
+                      </span>
+                    </button>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <div className="flex items-center justify-between pt-6">
+            <span className="eyebrow">{STORE_CONFIG.social.instagram}</span>
+            {isAuthenticated && (
+              <button type="button" onClick={onLogout} className="eyebrow tap-target flex items-center gap-2 text-paper">
+                <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Sair{firstName ? ` (${firstName})` : ''}
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
