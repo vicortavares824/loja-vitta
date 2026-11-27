@@ -73,6 +73,16 @@ export interface QuoteResponse {
   shippingServiceId: number | null; // opção usada em pricing.shippingCents
 }
 
+export interface CancelOrderRequest {
+  orderId: string;
+}
+
+export interface CancelOrderResponse {
+  orderId: string;
+  status: 'cancelled';
+  refunded: boolean; // true quando o pedido já estava pago e o valor foi estornado
+}
+
 export type CheckoutErrorCode =
   | 'VALIDATION_ERROR'
   | 'UNAUTHENTICATED'
@@ -88,6 +98,8 @@ export type CheckoutErrorCode =
   | 'PAYMENT_PROVIDER_ERROR'
   | 'SHIPPING_UNAVAILABLE'
   | 'SHIPPING_OPTION_UNAVAILABLE'
+  | 'ORDER_NOT_FOUND'
+  | 'ORDER_NOT_CANCELLABLE'
   | 'RATE_LIMITED'
   | 'TOO_MANY_PENDING_ORDERS'
   | 'SERVER_MISCONFIGURED'

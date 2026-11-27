@@ -38,6 +38,11 @@ export const ERROR_CATALOG: Readonly<Record<CheckoutErrorCode, ErrorCatalogEntry
     status: 422,
     message: 'A opção de frete escolhida não está disponível para este CEP.',
   },
+  ORDER_NOT_FOUND: { status: 404, message: 'Pedido não encontrado.' },
+  ORDER_NOT_CANCELLABLE: {
+    status: 409,
+    message: 'Este pedido não pode mais ser cancelado.',
+  },
   SERVER_MISCONFIGURED: { status: 500, message: 'Erro interno do servidor.' },
   INTERNAL_ERROR: { status: 500, message: 'Erro interno do servidor.' },
 };

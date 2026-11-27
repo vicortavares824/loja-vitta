@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CheckoutRequest, QuoteRequest } from '../../src/types/checkout.js';
+import type { CancelOrderRequest, CheckoutRequest, QuoteRequest } from '../../src/types/checkout.js';
 import { AppError } from './errors.js';
 
 const itemSchema = z
@@ -57,6 +57,10 @@ export const quoteSchema = z
     shippingServiceId: shippingServiceIdSchema.optional(),
   })
   .strip() satisfies z.ZodType<QuoteRequest>;
+
+export const cancelOrderSchema = z
+  .object({ orderId: z.string().uuid() })
+  .strip() satisfies z.ZodType<CancelOrderRequest>;
 
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const idempotencyKeySchema = z.string().regex(UUID_V4);

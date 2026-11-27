@@ -4,6 +4,7 @@ import { AppError } from './errors.js';
 export const RATE_LIMITS = {
   checkoutPerUser: { max: 10, windowMs: 60_000 },
   quotePerUser: { max: 30, windowMs: 60_000 },
+  cancelPerUser: { max: 5, windowMs: 60_000 },
   perIp: { max: 60, windowMs: 60_000 },
 } as const;
 

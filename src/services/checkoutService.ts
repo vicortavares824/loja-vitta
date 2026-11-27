@@ -5,6 +5,7 @@
  */
 
 import type {
+  CancelOrderResponse,
   CheckoutErrorCode,
   CheckoutRequest,
   CheckoutResponse,
@@ -31,6 +32,8 @@ export const CHECKOUT_ERROR_MESSAGES_PT: Record<ServiceErrorCode, string> = {
   PAYMENT_PROVIDER_ERROR: 'Não foi possível processar o pagamento agora. Tente novamente em instantes.',
   SHIPPING_UNAVAILABLE: 'Não foi possível calcular o frete agora. Tente novamente em instantes.',
   SHIPPING_OPTION_UNAVAILABLE: 'A opção de frete escolhida não está disponível para este CEP. Escolha outra.',
+  ORDER_NOT_FOUND: 'Pedido não encontrado.',
+  ORDER_NOT_CANCELLABLE: 'Este pedido não pode mais ser cancelado. Atualize a página para ver o status atual.',
   RATE_LIMITED: 'Muitas tentativas. Aguarde um momento e tente novamente.',
   TOO_MANY_PENDING_ORDERS: 'Você já tem pedidos aguardando pagamento. Conclua ou aguarde a expiração deles.',
   SERVER_MISCONFIGURED: 'Serviço temporariamente indisponível. Tente novamente mais tarde.',
@@ -109,6 +112,11 @@ export const checkoutService = {
 
   async createCheckout(req: CheckoutRequest, idempotencyKey: string): Promise<CheckoutResponse> {
     return post<CheckoutResponse>('/api/checkout', req, { 'Idempotency-Key': idempotencyKey });
+  },
+
+  /** Cancela o próprio pedido (até antes do envio). Pedido pago é estornado no servidor. */
+  async cancelOrder(orderId: string): Promise<CancelOrderResponse> {
+    return post<CancelOrderResponse>('/api/orders/cancel', { orderId });
   },
 
   /** Única leitura direta ao banco: o cliente lê o próprio pedido (RLS). */

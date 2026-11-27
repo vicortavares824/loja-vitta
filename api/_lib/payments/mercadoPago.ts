@@ -69,6 +69,8 @@ export interface MercadoPagoClient {
     paymentId: string,
   ): Promise<{ id: string; status: MpStatus; paidCents: number; externalReference: string }>;
   cancelPayment(paymentId: string): Promise<void>;
+  /** Estorno total. Idempotente por pagamento (mesma chave em repetições). */
+  refundPayment(paymentId: string): Promise<void>;
 }
 
 export interface MercadoPagoDeps {
@@ -255,6 +257,16 @@ export function createMercadoPagoClient(deps: MercadoPagoDeps): MercadoPagoClien
         idempotencyKey: `cancel-${paymentId}`,
         timeoutMs: DEFAULT_TIMEOUT_MS,
       });
+    },
+
+    async refundPayment(paymentId) {
+      // Corpo vazio = estorno do valor total.
+      await request(
+        'refundPayment',
+        'POST',
+        `/v1/payments/${encodeURIComponent(paymentId)}/refunds`,
+        { body: {}, idempotencyKey: `refund-${paymentId}`, timeoutMs: DEFAULT_TIMEOUT_MS },
+      );
     },
   };
 }

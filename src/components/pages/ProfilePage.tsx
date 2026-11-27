@@ -8,6 +8,7 @@ import { authService } from '../../services/authService';
 import { PersonalDetailsSection } from '../profile/PersonalDetailsSection';
 import { AddressesSection } from '../profile/AddressesSection';
 import { OrderJourney } from '../profile/OrderJourney';
+import { CancelOrderButton } from '../profile/CancelOrderButton';
 
 interface ProfilePageProps {
   onNavigate: (tab: string) => void;
@@ -45,6 +46,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
       .finally(() => { if (active) setOrdersLoading(false); });
     return () => { active = false; };
   }, [isAuthenticated]);
+
+  // Atualiza só o pedido cancelado (imutável), sem recarregar a lista.
+  const handleOrderCancelled = (orderId: string, refunded: boolean) => {
+    setOrders(prev => prev.map(o => (o.id === orderId ? { ...o, status: 'cancelled' } : o)));
+    showToast(
+      refunded ? 'Pedido cancelado. O estorno foi solicitado ao Mercado Pago.' : 'Pedido cancelado.',
+      'success'
+    );
+  };
   if (isLoading) {
     return (
       <div className="pt-28 pb-24 min-h-screen bg-black text-white flex items-center justify-center">
@@ -212,6 +222,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
                       </ul>
 
                       <OrderJourney order={order} />
+
+                      <CancelOrderButton
+                        order={order}
+                        onCancelled={handleOrderCancelled}
+                        onError={message => showToast(message, 'error')}
+                      />
 
                       {(order.shippingServiceName || order.trackingCode) && (
                         <div className="text-xs text-gray-400 space-y-1">
