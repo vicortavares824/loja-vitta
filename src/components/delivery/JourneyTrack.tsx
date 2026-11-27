@@ -9,11 +9,10 @@ const STOP_TIMES = [0, 0.3, 0.62, 1];
 const LAST_STEP = STOPS.length - 1;
 
 /** Fio ondulado: período e amplitude da onda (unidades do viewBox) e velocidade do fluxo. */
-const WAVE_PERIOD = 10;
+const WAVE_PERIOD = 5;
 const WAVE_AMPLITUDE = 3.5;
 const WAVE_HEIGHT = 12;
-const WAVE_FLOW_SECONDS = 1.4;
-
+const WAVE_FLOW_SECONDS = 15;
 const STEPS = [
   { key: 'payment', label: 'Pagamento', Icon: CreditCard },
   { key: 'packing', label: 'Separação', Icon: Package },
@@ -39,13 +38,8 @@ const WAVE_D = wavePath(WAVE_PERIODS * 2); // dobro: metade fica fora e entra ro
 const WAVE_VIEWBOX_WIDTH = WAVE_PERIODS * 2 * WAVE_PERIOD;
 
 export interface JourneyTrackProps {
-  /** Nome exibido na etapa de transporte (ex.: 'Correios'). */
   carrierLabel: string;
-  /**
-   * Etapa atual (0 = pagamento ... 3 = entregue). Sem valor, o caminhão percorre
-   * o trajeto inteiro em loop (prévia no carrinho).
-   */
-  currentStep?: number;
+  currentStep?: number;                                                                                               
 }
 
 /** Trecho atual em forma de fio ondulado, com a onda correndo no sentido da entrega. */
