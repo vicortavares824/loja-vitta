@@ -18,7 +18,8 @@ async function resolveUserWithRole(supabaseUser: any): Promise<User> {
     .eq('id', supabaseUser.id)
     .single();
 
-  const role: UserRole = (profile?.role as UserRole) || (meta.role as UserRole) || 'customer';
+  // Never trust user_metadata.role: the user can edit it with auth.updateUser.
+  const role: UserRole = (profile?.role as UserRole) || 'customer';
 
   return {
     id: supabaseUser.id,
@@ -38,7 +39,7 @@ function mapSupabaseUser(supabaseUser: any): User {
     id: supabaseUser.id,
     name: meta.name || supabaseUser.email?.split('@')[0] || 'Usuário',
     email: supabaseUser.email || '',
-    role: (meta.role as UserRole) || 'customer',
+    role: 'customer', // the real role comes from profiles (resolveUserWithRole)
   };
 }
 

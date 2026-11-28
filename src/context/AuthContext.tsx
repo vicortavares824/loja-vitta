@@ -24,18 +24,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Resolves the authoritative role from the `profiles` table.
-   * Falls back to user_metadata so the UI is never blocked if the DB is slow.
+   * Never falls back to user_metadata: the user can edit it (auth.updateUser).
    */
-  const resolveRole = useCallback(async (userId: string, metaRole?: string): Promise<string> => {
+  const resolveRole = useCallback(async (userId: string): Promise<string> => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
-      return profile?.role ?? metaRole ?? 'customer';
+      return profile?.role ?? 'customer';
     } catch {
-      return metaRole ?? 'customer';
+      return 'customer';
     }
   }, []);
 
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session && session.user) {
         // Resolve role from profiles table to catch recently-promoted admins
-        const role = await resolveRole(session.user.id, session.user.user_metadata?.role);
+        const role = await resolveRole(session.user.id);
 
         const user: User = {
           id: session.user.id,
